@@ -26,31 +26,32 @@ impl ConstraintSynthesizer<ark_ed_on_bls12_381::Fq> for TestCircuit {
 
 fn main() {}
 
-#[test]
-fn same_values_should_pass() {
-    use ark_relations::r1cs::ConstraintSystem;
+#[cfg(test)]
+mod tests {
+    use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
 
-    let circuit = TestCircuit { a: 1, b: 1 };
+    #[test]
+    fn same_values_should_pass() {
+        let circuit = super::TestCircuit { a: 1, b: 1 };
 
-    let cs = ConstraintSystem::new_ref();
-    circuit.generate_constraints(cs.clone()).unwrap();
+        let cs = ConstraintSystem::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
 
-    let is_satisfied = cs.is_satisfied().unwrap();
-    if !is_satisfied {
-        println!("{:?}", cs.which_is_unsatisfied().unwrap().unwrap());
+        let is_satisfied = cs.is_satisfied().unwrap();
+        if !is_satisfied {
+            println!("{:?}", cs.which_is_unsatisfied().unwrap().unwrap());
+        }
+        assert!(is_satisfied);
     }
-    assert!(is_satisfied);
-}
 
-#[test]
-fn different_values_should_fail() {
-    use ark_relations::r1cs::ConstraintSystem;
+    #[test]
+    fn different_values_should_fail() {
+        let circuit = super::TestCircuit { a: 1, b: 2 };
 
-    let circuit = TestCircuit { a: 1, b: 2 };
+        let cs = ConstraintSystem::new_ref();
+        circuit.generate_constraints(cs.clone()).unwrap();
 
-    let cs = ConstraintSystem::new_ref();
-    circuit.generate_constraints(cs.clone()).unwrap();
-
-    let is_satisfied = cs.is_satisfied().unwrap();
-    assert!(!is_satisfied);
+        let is_satisfied = cs.is_satisfied().unwrap();
+        assert!(!is_satisfied);
+    }
 }
