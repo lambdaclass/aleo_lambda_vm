@@ -8,4 +8,4 @@ cargo test --release --example test-circuit
 cargo test --release --example manual-contraints
 ```
 
-For a through explanation of these examples, read `docs/circuits_and_proofs.md`.
+For a thorough explanation of these examples, read `docs/circuits_and_proofs.md`.
