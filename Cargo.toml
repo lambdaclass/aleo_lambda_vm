@@ -32,7 +32,7 @@ blake2 = { version = "0.9" }
 rand_chacha = { version = "0.3.1" }
 
 [[example]]
-name = "manual-contraints"
+name = "manual-constraints"
 
 [[example]]
 name = "test-circuit"

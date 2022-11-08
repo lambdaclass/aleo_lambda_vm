@@ -5,7 +5,8 @@ Proof of concept for a ZK snark-based VM
 
 ``` shell
 cargo test --release --example test-circuit
-cargo test --release --example manual-contraints
+cargo test --release --example manual-constraints
+cargo test --release --example merkle-tree
 ```
 
-For a thorough explanation of these examples, read `docs/circuits_and_proofs.md`.
+You can check out the code for them under the `examples` directory, and a thorugh explanation of `test-circuit` and `manual-constraints` in `docs/circuits_and_proofs.md`.
