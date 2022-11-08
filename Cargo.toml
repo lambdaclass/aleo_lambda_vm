@@ -3,6 +3,10 @@ name = "vmtropy"
 version = "0.1.0"
 edition = "2021"
 
+[profile.test]
+opt-level = 3
+debug-assertions = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -32,3 +36,6 @@ name = "manual-contraints"
 
 [[example]]
 name = "test-circuit"
+
+[[example]]
+name = "merkle-tree"
