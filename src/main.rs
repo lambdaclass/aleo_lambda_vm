@@ -32,16 +32,13 @@ fn main() {
     let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
     // Retrieve hello function.
-    let hello_function = program
-        .functions()
-        .get(&Identifier::try_from("hello").unwrap())
-        .unwrap();
+    let hello_function = program.get_function(&Identifier::try_from("hello").unwrap()).unwrap();
 
     // Now we create a constraint system and the circuit that will verify
     // the signature, but we'll send a bad message.
     let cs = ConstraintSystem::<ConstraintF>::new_ref();
     // Here we map the parse inputs to circuit inputs.
-    let circuit_inputs = circuit_inputs(hello_function, cs.clone()).unwrap();
+    let circuit_inputs = circuit_inputs(hello_function.clone(), cs.clone()).unwrap();
     // Here we map the parse inputs to circuit outputs.
     let circuit_outputs = circuit_outputs(hello_function, circuit_inputs).unwrap();
 
@@ -55,12 +52,12 @@ fn main() {
     let universal_srs = MarlinInst::universal_setup(100000, 25000, 300000, &mut rng).unwrap();
 
     // Now, try to generate the verifying key and proving key with Marlin
-    let (index_pk, index_vk) =
+    let (index_proving_key, index_verifying_key) =
         MarlinInst::index_from_constraint_system(&universal_srs, cs.clone()).unwrap();
 
-    let proof = MarlinInst::prove_from_constraint_system(&index_pk, cs, &mut rng).unwrap();
+    let proof = MarlinInst::prove_from_constraint_system(&index_proving_key, cs, &mut rng).unwrap();
 
-    assert!(MarlinInst::verify(&index_vk, &[], &proof, &mut rng).unwrap());
+    assert!(MarlinInst::verify(&index_verifying_key, &[], &proof, &mut rng).unwrap());
 
     let mut bytes = Vec::new();
     proof.serialize(&mut bytes).unwrap();
@@ -69,7 +66,7 @@ fn main() {
 
 // TODO: The input values and the function result type are hardcoded.
 fn circuit_inputs(
-    function: &Function<Testnet3>,
+    function: Function<Testnet3>,
     cs: ConstraintSystemRef<ConstraintF>,
 ) -> Result<IndexMap<String, UInt32<ConstraintF>>> {
     let mut circuit_inputs = IndexMap::new();
@@ -78,7 +75,7 @@ fn circuit_inputs(
         let circuit_input = match input.value_type() {
             ValueType::Constant(_) => todo!(),
             ValueType::Public(PlaintextType::Literal(LiteralType::U32)) => {
-                UInt32::new_witness(Namespace::new(cs.clone(), None), || Ok(0))?
+                UInt32::new_input(Namespace::new(cs.clone(), None), || Ok(0))?
             }
             ValueType::Public(PlaintextType::Literal(_)) => todo!(),
             ValueType::Public(_) => todo!(),
@@ -98,7 +95,7 @@ fn circuit_inputs(
 // TODO: The circuit_inputs and the function result types are hardcoded to
 // we could use a generic type here because we except different value types.
 fn circuit_outputs(
-    function: &Function<Testnet3>,
+    function: Function<Testnet3>,
     circuit_inputs: IndexMap<String, UInt32<ConstraintF>>,
 ) -> Result<IndexMap<String, UInt32<ConstraintF>>> {
     let mut circuit_outputs = IndexMap::new();
