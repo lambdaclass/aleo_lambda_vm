@@ -18,7 +18,7 @@ ark-std = { version = "^0.3.0", default-features = false }
 ark-relations = { version = "^0.3.0", default-features = false  }
 ark-poly = { version = "^0.3.0", default-features = false  }
 ark-poly-commit = { version = "^0.3.0", default-features = false  }
-ark-marlin = { git = "https://github.com/arkworks-rs/marlin.git" }
+ark-marlin = { git = "https://github.com/Entropy1729/marlin.git", branch = "use-constraint-system-directly" }
 
 ark-r1cs-std = { version = "^0.3.0", default-features = false }
 ark-snark = { version = "^0.3.0", default-features = false }
@@ -30,6 +30,12 @@ tracing = { version = "0.1", default-features = false, features = [ "attributes"
 tracing-subscriber = { version = "0.2" }
 blake2 = { version = "0.9" }
 rand_chacha = { version = "0.3.1" }
+
+derivative = { version = "2.0", features = ["use_core"] }
+digest = "0.9"
+
+snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
+anyhow = "1"
 
 [[example]]
 name = "manual-constraints"
