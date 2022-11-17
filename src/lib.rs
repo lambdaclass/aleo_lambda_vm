@@ -1,3 +1,34 @@
+#![warn(warnings, rust_2018_idioms)]
+#![forbid(unsafe_code)]
+#![recursion_limit = "256"]
+#![warn(
+    clippy::allow_attributes_without_reason,
+    clippy::as_conversions,
+    clippy::unnecessary_cast,
+    clippy::clone_on_ref_ptr,
+    clippy::create_dir,
+    clippy::dbg_macro,
+    clippy::decimal_literal_representation,
+    clippy::default_numeric_fallback,
+    clippy::deref_by_slicing,
+    clippy::empty_structs_with_brackets,
+    clippy::float_cmp_const,
+    clippy::fn_to_numeric_cast_any,
+    clippy::indexing_slicing,
+    clippy::map_err_ignore,
+    clippy::single_char_lifetime_names,
+    clippy::str_to_string,
+    clippy::string_add,
+    clippy::string_slice,
+    clippy::string_to_string,
+    // Maybe we could not use this one.
+    // clippy::todo,
+    clippy::try_err,
+    clippy::unseparated_literal_suffix
+)]
+#![deny(clippy::unwrap_used, clippy::expect_used)]
+#![allow(clippy::module_inception, clippy::module_name_repetitions, clippy::let_underscore_must_use)]
+
 use crate::circuit_io_type::{
     CircuitIOType, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
@@ -161,7 +192,7 @@ fn circuit_outputs(
             Opcode::Literal(_) => todo!(),
         };
         // TODO: Destinations should be handled better.
-        circuit_outputs.insert(instruction.destinations()[0].to_string(), circuit_output);
+        circuit_outputs.insert(instruction.destinations().get(0).ok_or_else(|| anyhow!("Error getting the destination register"))?.to_string(), circuit_output);
     }
     Ok(circuit_outputs)
 }
