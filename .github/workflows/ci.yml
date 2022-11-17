@@ -10,6 +10,8 @@ jobs:
             toolchain: stable
             profile: minimal
       - uses: Swatinem/rust-cache@v2
+        with:
+          key:  "vmtropy"
       - run: cargo test
   clippy:
     runs-on: [self-hosted, nomad]
@@ -20,6 +22,8 @@ jobs:
             toolchain: stable
             components: clippy
       - uses: Swatinem/rust-cache@v2
+        with:
+          key:  "vmtropy"
       - run: apt install -y clang libclang1
       - run: cargo clippy --all-targets --all-features -- -D warnings
   format:
