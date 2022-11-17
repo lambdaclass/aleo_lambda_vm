@@ -1,0 +1,43 @@
+name: VMtropy build checks
+on: push
+jobs:
+  integration-tests:
+    runs-on: [self-hosted, nomad]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            profile: minimal
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test
+  clippy:
+    runs-on: [self-hosted, nomad]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: apt install -y clang libclang1
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+  format:
+    runs-on: [self-hosted, nomad]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: stable
+            components: rustfmt
+      - run: cargo fmt -- --check
+  # coverage:
+  #   runs-on: [self-hosted, nomad]
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - run: ls
+  #     - run: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin
+  #     - name: Upload coverage to codecov.io
+  #       uses: codecov/codecov-action@v3
+  #       with:
+  #         fail_ci_if_error: true

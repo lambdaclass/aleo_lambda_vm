@@ -27,7 +27,11 @@
     clippy::unseparated_literal_suffix
 )]
 #![deny(clippy::unwrap_used, clippy::expect_used)]
-#![allow(clippy::module_inception, clippy::module_name_repetitions, clippy::let_underscore_must_use)]
+#![allow(
+    clippy::module_inception,
+    clippy::module_name_repetitions,
+    clippy::let_underscore_must_use
+)]
 
 use crate::circuit_io_type::{
     CircuitIOType, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
@@ -87,8 +91,8 @@ pub fn execute_function(
     Ok((is_satisfied, circuit_outputs))
 }
 
-fn generate_proof() {
-    /*
+/*
+    fn generate_proof() {
         let mut rng = ark_std::test_rng();
         let universal_srs = MarlinInst::universal_setup(100000, 25000, 300000, &mut rng).unwrap();
 
@@ -103,8 +107,8 @@ fn generate_proof() {
         let mut bytes = Vec::new();
         proof.serialize(&mut bytes).unwrap();
         println!("Proof bytes: {:?}", bytes);
-    */
-}
+    }
+*/
 
 // TODO: The input values and the function result type are hardcoded.
 fn circuit_inputs(
@@ -192,15 +196,27 @@ fn circuit_outputs(
             Opcode::Literal(_) => todo!(),
         };
         // TODO: Destinations should be handled better.
-        circuit_outputs.insert(instruction.destinations().get(0).ok_or_else(|| anyhow!("Error getting the destination register"))?.to_string(), circuit_output);
+        circuit_outputs.insert(
+            instruction
+                .destinations()
+                .get(0)
+                .ok_or_else(|| anyhow!("Error getting the destination register"))?
+                .to_string(),
+            circuit_output,
+        );
     }
     Ok(circuit_outputs)
 }
 
 #[cfg(test)]
 mod tests {
-    fn hello_program_string(uint_type: &str, input_visibility: &str, output_visibility: &str) -> String {
-        format!("// The 'main.aleo' program.
+    fn hello_program_string(
+        uint_type: &str,
+        input_visibility: &str,
+        output_visibility: &str,
+    ) -> String {
+        format!(
+            "// The 'main.aleo' program.
         program main.aleo;
         
         function hello:
@@ -208,7 +224,8 @@ mod tests {
             input r1 as {uint_type}.{input_visibility};
             add r0 r1 into r2;
             output r2 as {uint_type}.{output_visibility};
-        ")
+        "
+        )
     }
 
     #[test]
@@ -219,8 +236,7 @@ mod tests {
         let program_string = std::fs::read_to_string(path).unwrap();
 
         // execute circuit
-        let (ret_ok, circuit_outputs) =
-            super::execute_function(&program_string, "hello").unwrap();
+        let (ret_ok, circuit_outputs) = super::execute_function(&program_string, "hello").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -233,8 +249,7 @@ mod tests {
         let program_string = hello_program_string("u16", "public", "public");
 
         // execute circuit
-        let (ret_ok, circuit_outputs) =
-            super::execute_function(&program_string, "hello").unwrap();
+        let (ret_ok, circuit_outputs) = super::execute_function(&program_string, "hello").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -245,7 +260,7 @@ mod tests {
     #[test]
     fn test02_hello_with_u16_private_inputs() {
         let program_string = hello_program_string("u16", "private", "private");
-        
+
         // execute circuit
         let (ret_ok, circuit_outputs) =
             super::execute_function(program_string.as_str(), "hello").unwrap();
@@ -273,7 +288,7 @@ mod tests {
     #[test]
     fn test04_hello_with_u32_public_inputs() {
         let program_string = hello_program_string("u32", "public", "public");
-        
+
         // execute circuit
         let (ret_ok, circuit_outputs) =
             super::execute_function(program_string.as_str(), "hello").unwrap();
@@ -287,7 +302,7 @@ mod tests {
     #[test]
     fn test05_hello_with_u32_private_inputs() {
         let program_string = hello_program_string("u32", "private", "private");
-        
+
         // execute circuit
         let (ret_ok, circuit_outputs) =
             super::execute_function(program_string.as_str(), "hello").unwrap();
@@ -301,7 +316,7 @@ mod tests {
     #[test]
     fn test06_hello_with_u32_private_and_public_inputs() {
         let program_string = hello_program_string("u32", "public", "private");
-        
+
         // execute circuit
         let (ret_ok, circuit_outputs) =
             super::execute_function(program_string.as_str(), "hello").unwrap();
@@ -358,7 +373,7 @@ mod tests {
     #[ignore = "U128 is supported in certain fields, TODO: Figure out if we want to support U128 operations"]
     fn test10_hello_with_u128_public_inputs() {
         let program_string = hello_program_string("u128", "public", "public");
-        
+
         // execute circuit
         let (ret_ok, circuit_outputs) =
             super::execute_function(program_string.as_str(), "hello").unwrap();
