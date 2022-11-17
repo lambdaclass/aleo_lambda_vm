@@ -36,12 +36,3 @@ digest = "0.9"
 
 snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
 anyhow = "1"
-
-[[example]]
-name = "manual-constraints"
-
-[[example]]
-name = "test-circuit"
-
-[[example]]
-name = "merkle-tree"
