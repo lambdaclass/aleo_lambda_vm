@@ -1,5 +1,5 @@
-// The 'foo.aleo' program.
-program foo.aleo;
+// The 'sample.aleo' program.
+program sample.aleo;
 
 function hello:
     input r0 as u32.public;

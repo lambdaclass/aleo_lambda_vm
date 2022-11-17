@@ -2966,6 +2966,7 @@ dependencies = [
  "ark-snark",
  "ark-std",
  "blake2",
+ "clap",
  "derivative",
  "digest 0.9.0",
  "rand_chacha",

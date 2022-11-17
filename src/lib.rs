@@ -210,60 +210,21 @@ fn circuit_outputs(
 
 #[cfg(test)]
 mod tests {
-    fn hello_program_string(
-        uint_type: &str,
-        input_visibility: &str,
-        output_visibility: &str,
-    ) -> String {
-        format!(
-            "// The 'main.aleo' program.
-        program main.aleo;
-        
-        function hello:
-            input r0 as {uint_type}.{input_visibility};
-            input r1 as {uint_type}.{input_visibility};
-            add r0 r1 into r2;
-            output r2 as {uint_type}.{output_visibility};
-        "
-        )
-    }
-
-    #[test]
-    fn test_file() {
-        // Open a file
+    use anyhow::Result;
+    fn read_add_program() -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push("tests/main.aleo");
-        let program_string = std::fs::read_to_string(path).unwrap();
-
-        // execute circuit
-        let (ret_ok, circuit_outputs) = super::execute_function(&program_string, "hello").unwrap();
-        assert!(ret_ok);
-
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        path.push("programs/add/main.aleo");
+        // let value = value.value().unwrap_or("".to_owned());
+        let program = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
+        Ok(program)
     }
 
     #[test]
-    fn test01_hello_with_u16_public_inputs() {
-        let program_string = hello_program_string("u16", "public", "public");
+    fn test01_add_with_u16_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
-        let (ret_ok, circuit_outputs) = super::execute_function(&program_string, "hello").unwrap();
-        assert!(ret_ok);
-
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
-    }
-
-    #[test]
-    fn test02_hello_with_u16_private_inputs() {
-        let program_string = hello_program_string("u16", "private", "private");
-
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(&program_string, "hello_1").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -272,12 +233,11 @@ mod tests {
     }
 
     #[test]
-    fn test03_hello_with_u16_private_and_public_inputs() {
-        let program_string = hello_program_string("u16", "public", "private");
+    fn test02_add_with_u16_private_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_2").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -286,12 +246,11 @@ mod tests {
     }
 
     #[test]
-    fn test04_hello_with_u32_public_inputs() {
-        let program_string = hello_program_string("u32", "public", "public");
+    fn test03_add_with_u16_private_and_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_3").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -300,12 +259,11 @@ mod tests {
     }
 
     #[test]
-    fn test05_hello_with_u32_private_inputs() {
-        let program_string = hello_program_string("u32", "private", "private");
+    fn test04_add_with_u32_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_4").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -314,12 +272,11 @@ mod tests {
     }
 
     #[test]
-    fn test06_hello_with_u32_private_and_public_inputs() {
-        let program_string = hello_program_string("u32", "public", "private");
+    fn test05_add_with_u32_private_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_5").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -328,12 +285,11 @@ mod tests {
     }
 
     #[test]
-    fn test07_hello_with_u64_public_inputs() {
-        let program_string = hello_program_string("u64", "public", "public");
+    fn test06_add_with_u32_private_and_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_6").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -342,12 +298,11 @@ mod tests {
     }
 
     #[test]
-    fn test08_hello_with_u64_private_inputs() {
-        let program_string = hello_program_string("u64", "private", "private");
+    fn test07_add_with_u64_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_7").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -356,12 +311,24 @@ mod tests {
     }
 
     #[test]
-    fn test09_hello_with_u64_private_and_public_inputs() {
-        let program_string = hello_program_string("u64", "public", "private");
+    fn test08_add_with_u64_private_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_8").unwrap();
+        assert!(ret_ok);
+
+        for (register, output) in circuit_outputs {
+            println!("{}: {:?}", register, output.value().unwrap());
+        }
+    }
+
+    #[test]
+    fn test09_add_with_u64_private_and_public_inputs() {
+        let program_string = read_add_program().unwrap();
+
+        let (ret_ok, circuit_outputs) =
+            super::execute_function(program_string.as_str(), "hello_9").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -371,12 +338,11 @@ mod tests {
 
     #[test]
     #[ignore = "U128 is supported in certain fields, TODO: Figure out if we want to support U128 operations"]
-    fn test10_hello_with_u128_public_inputs() {
-        let program_string = hello_program_string("u128", "public", "public");
+    fn test10_add_with_u128_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_10").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -386,12 +352,11 @@ mod tests {
 
     #[test]
     #[ignore = "U128 is supported in certain fields, TODO: Figure out if we want to support U128 operations"]
-    fn test11_hello_with_u128_private_inputs() {
-        let program_string = hello_program_string("u128", "private", "private");
+    fn test11_add_with_u128_private_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_11").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -401,12 +366,11 @@ mod tests {
 
     #[test]
     #[ignore = "U128 is supported in certain fields, TODO: Figure out if we want to support U128 operations"]
-    fn test12_hello_with_u128_private_and_public_inputs() {
-        let program_string = hello_program_string("u128", "public", "private");
+    fn test12_add_with_u128_private_and_public_inputs() {
+        let program_string = read_add_program().unwrap();
 
-        // execute circuit
         let (ret_ok, circuit_outputs) =
-            super::execute_function(program_string.as_str(), "hello").unwrap();
+            super::execute_function(program_string.as_str(), "hello_12").unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
