@@ -4,7 +4,11 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, nomad]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Give GH actions access to simpleworks
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
@@ -16,7 +20,11 @@ jobs:
   clippy:
     runs-on: [self-hosted, nomad]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Give GH actions access to simpleworks
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
@@ -29,7 +37,11 @@ jobs:
   format:
     runs-on: [self-hosted, nomad]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - name: Give GH actions access to simpleworks
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
