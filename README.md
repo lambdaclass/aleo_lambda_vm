@@ -16,7 +16,7 @@ Proof of concept for a ZK snark-based VM running Aleo Instructions.
 
 ## Out of scope for this current roadmap
 
-- Other instructions are not used by mint and transfer.
+- Other instructions not used by mint and transfer.
 - 0ther data types not used by mint and transfer (U64 and records are enough).
 
 ## Requirements
