@@ -20,13 +20,12 @@ fn main() -> Result<()> {
     let function_name = args.function_name;
     println!("Executing function {}...", function_name);
     // TODO Add function inputs as arguments once that's implemented.
-    let (_verifies, outputs) = vmtropy::execute_function(&program_string, &function_name)?;
+    // TODO Use proof
+    let (_verifies, outputs, _proof) = vmtropy::execute_function(&program_string, &function_name)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);
     }
-
-    // TODO: Add proof generation once that's implemented.
 
     Ok(())
 }

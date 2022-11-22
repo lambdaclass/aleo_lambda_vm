@@ -33,6 +33,9 @@
     clippy::let_underscore_must_use
 )]
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use crate::circuit_io_type::{
     CircuitIOType, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
@@ -66,7 +69,7 @@ pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 pub fn execute_function(
     program_string: &str,
     function_name: &str,
-) -> Result<(bool, CircuitOutputType)> {
+) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
     // FIXME: Maybe the program should be parsed once and then passed to the execute_function.
     // Parse Aleo Program
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
@@ -88,27 +91,21 @@ pub fn execute_function(
         circuit_outputs(&function, &circuit_inputs).map_err(|e| anyhow!("{}", e))?;
 
     let is_satisfied = cs.is_satisfied().map_err(|e| anyhow!("{}", e))?;
-    Ok((is_satisfied, circuit_outputs))
+
+    let cs_clone = (*cs
+        .borrow()
+        .ok_or("Error borrowing")
+        .map_err(|e| anyhow!("{}", e))?)
+    .clone();
+    let cs_ref_clone = ConstraintSystemRef::CS(Rc::new(RefCell::new(cs_clone)));
+
+    // generate marlin proof
+    let mut rng = simpleworks::marlin::generate_rand();
+    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
+    let bytes_proof = simpleworks::marlin::generate_proof(&universal_srs, &mut rng, cs_ref_clone)?;
+
+    Ok((is_satisfied, circuit_outputs, bytes_proof))
 }
-
-/*
-    fn generate_proof() {
-        let mut rng = ark_std::test_rng();
-        let universal_srs = MarlinInst::universal_setup(100000, 25000, 300000, &mut rng).unwrap();
-
-        // Now, try to generate the verifying key and proving key with Marlin
-        let (index_proving_key, index_verifying_key) =
-            MarlinInst::index_from_constraint_system(&universal_srs, cs.clone()).unwrap();
-
-        let proof = MarlinInst::prove_from_constraint_system(&index_proving_key, cs, &mut rng).unwrap();
-
-        assert!(MarlinInst::verify(&index_verifying_key, &[], &proof, &mut rng).unwrap());
-
-        let mut bytes = Vec::new();
-        proof.serialize(&mut bytes).unwrap();
-        println!("Proof bytes: {:?}", bytes);
-    }
-*/
 
 // TODO: The input values and the function result type are hardcoded.
 fn circuit_inputs(
@@ -214,7 +211,6 @@ mod tests {
     fn read_add_program() -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push("programs/add/main.aleo");
-        // let value = value.value().unwrap_or("".to_owned());
         let program = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         Ok(program)
     }
@@ -223,7 +219,8 @@ mod tests {
     fn test01_add_with_u16_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(&program_string, "hello_1").unwrap();
         assert!(ret_ok);
 
@@ -236,7 +233,8 @@ mod tests {
     fn test02_add_with_u16_private_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_2").unwrap();
         assert!(ret_ok);
 
@@ -249,7 +247,8 @@ mod tests {
     fn test03_add_with_u16_private_and_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_3").unwrap();
         assert!(ret_ok);
 
@@ -262,7 +261,8 @@ mod tests {
     fn test04_add_with_u32_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_4").unwrap();
         assert!(ret_ok);
 
@@ -275,7 +275,8 @@ mod tests {
     fn test05_add_with_u32_private_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_5").unwrap();
         assert!(ret_ok);
 
@@ -288,7 +289,8 @@ mod tests {
     fn test06_add_with_u32_private_and_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_6").unwrap();
         assert!(ret_ok);
 
@@ -301,7 +303,8 @@ mod tests {
     fn test07_add_with_u64_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_7").unwrap();
         assert!(ret_ok);
 
@@ -314,7 +317,8 @@ mod tests {
     fn test08_add_with_u64_private_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_8").unwrap();
         assert!(ret_ok);
 
@@ -327,7 +331,8 @@ mod tests {
     fn test09_add_with_u64_private_and_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_9").unwrap();
         assert!(ret_ok);
 
@@ -341,7 +346,8 @@ mod tests {
     fn test10_add_with_u128_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_10").unwrap();
         assert!(ret_ok);
 
@@ -355,7 +361,8 @@ mod tests {
     fn test11_add_with_u128_private_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_11").unwrap();
         assert!(ret_ok);
 
@@ -369,7 +376,8 @@ mod tests {
     fn test12_add_with_u128_private_and_public_inputs() {
         let program_string = read_add_program().unwrap();
 
-        let (ret_ok, circuit_outputs) =
+        // execute circuit
+        let (ret_ok, circuit_outputs, _bytes_proof) =
             super::execute_function(program_string.as_str(), "hello_12").unwrap();
         assert!(ret_ok);
 

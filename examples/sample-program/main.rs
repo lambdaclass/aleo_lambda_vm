@@ -4,7 +4,7 @@ fn main() {
     let program_string = std::fs::read_to_string(path).unwrap();
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (verifies, outputs) = vmtropy::execute_function(&program_string, "hello").unwrap();
+    let (verifies, outputs, _proof) = vmtropy::execute_function(&program_string, "hello").unwrap();
     assert!(verifies);
 
     for (register, value) in outputs {
