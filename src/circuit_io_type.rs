@@ -6,7 +6,7 @@ pub use CircuitIOType::{
     SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum CircuitIOType {
     SimpleUInt8(crate::UInt8Gadget),
     SimpleUInt16(crate::UInt16Gadget),

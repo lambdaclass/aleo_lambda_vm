@@ -3,8 +3,11 @@ fn main() {
     path.push("examples/sample-program/sample.aleo");
     let program_string = std::fs::read_to_string(path).unwrap();
 
+    let mut user_inputs = Vec::new();
+
     // Run the `hello` function defined in the `sample.aleo` program
-    let (verifies, outputs, _proof) = vmtropy::execute_function(&program_string, "hello").unwrap();
+    let (verifies, outputs, _proof) =
+        vmtropy::execute_function(&program_string, "hello", &mut user_inputs).unwrap();
     assert!(verifies);
 
     for (register, value) in outputs {

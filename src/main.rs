@@ -1,6 +1,7 @@
-use anyhow::Result;
-use clap::{Parser, ValueHint};
+use anyhow::{anyhow, bail, Result};
+use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use std::path::PathBuf;
+use vmtropy::value::SimpleworksValueType;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -11,21 +12,76 @@ struct Args {
     function_name: String,
 }
 
+fn parse_args() -> Result<(Vec<String>, String, String)> {
+    let matches = Command::new("vmtropy")
+        .subcommand(
+            Command::new("execute")
+                // Function to execute.
+                .arg(Arg::new("function").required(true))
+                // Path of the program.
+                .arg(Arg::new("from").required(true))
+                // Note: If another argument is to be added, we need to limit the
+                // number of inputs with value_terminator.
+                // Inputs required for the function (if needed).
+                .arg(Arg::new("inputs").num_args(1..).action(ArgAction::Append)),
+        )
+        .get_matches();
+
+    let (inputs, function_name, program_string) = match matches.subcommand() {
+        Some(("execute", execute_cmd)) => {
+            let function_name: String = execute_cmd
+                .get_one::<String>("function")
+                .ok_or_else(|| anyhow!("Error parsing function name parameter"))?
+                .to_string();
+            let program_string: String = execute_cmd
+                .get_one::<String>("from")
+                .ok_or_else(|| anyhow!("Error parsing program_string parameter"))?
+                .to_string();
+            let inputs: Vec<String> = execute_cmd
+                .grouped_values_of("inputs")
+                .ok_or_else(|| anyhow!("Error parsing input parameters"))?
+                .collect::<Vec<Vec<&str>>>()
+                .get(0)
+                .ok_or_else(|| anyhow!("Error parsing input parameters"))?
+                .iter()
+                .map(|v| v.to_string())
+                .collect();
+
+            (inputs, function_name, program_string)
+        }
+        _ => bail!("Unsupported command."),
+    };
+
+    Ok((inputs, function_name, program_string))
+}
+
 fn main() -> Result<()> {
-    let args = Args::parse();
+    let (function_inputs, function_name, program_string) = parse_args()?;
 
-    let program_path = args.program_path.to_str().unwrap();
-    let program_string = std::fs::read_to_string(program_path)?;
+    // parse inputs
+    // insert user input into this vector
+    let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
+    for input_value in function_inputs.iter().rev() {
+        let v = SimpleworksValueType::try_from(input_value)?;
+        vec_user_inputs.push(v);
+    }
 
-    let function_name = args.function_name;
+    execute(&function_name, &program_string, &mut vec_user_inputs)
+}
+
+fn execute(
+    function_name: &str,
+    program_string: &str,
+    user_inputs: &mut Vec<SimpleworksValueType>,
+) -> Result<()> {
     println!("Executing function {}...", function_name);
-    // TODO Add function inputs as arguments once that's implemented.
-    // TODO Use proof
-    let (_verifies, outputs, _proof) = vmtropy::execute_function(&program_string, &function_name)?;
+
+    let program_str = std::fs::read_to_string(program_string).unwrap();
+    let (_verifies, outputs, _proof) =
+        vmtropy::execute_function(&program_str, function_name, user_inputs)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);
     }
-
     Ok(())
 }

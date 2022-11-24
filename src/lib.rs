@@ -37,13 +37,15 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::circuit_io_type::{
-    CircuitIOType, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    CircuitIOType, SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+    SimpleUInt8,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
 use ark_r1cs_std::{
     uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
 };
+use ark_relations::r1cs::SynthesisError;
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
 use simpleworks::gadgets::Record;
 use snarkvm::prelude::{Operand, Register};
@@ -57,6 +59,7 @@ use snarkvm::{
 
 pub mod circuit_io_type;
 pub mod instructions;
+pub mod value;
 
 pub type ConstraintF = ark_ed_on_bls12_381::Fq;
 
@@ -69,9 +72,12 @@ pub type UInt128Gadget = UInt128<ConstraintF>;
 
 pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 
+use value::SimpleworksValueType;
+
 pub fn execute_function(
     program_string: &str,
     function_name: &str,
+    user_inputs: &mut Vec<SimpleworksValueType>,
 ) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
     // FIXME: Maybe the program should be parsed once and then passed to the execute_function.
     // Parse Aleo Program
@@ -86,8 +92,10 @@ pub fn execute_function(
     // Now we create a constraint system and the circuit that will verify
     // the signature, but we'll send a bad message.
     let cs = ConstraintSystem::<ConstraintF>::new_ref();
-    // Here we map the parse inputs to circuit inputs.
-    let circuit_inputs = circuit_inputs(&function, &cs).map_err(|e| anyhow!("{}", e))?;
+
+    // Here we map the parse user_inputs to circuit inputs.
+    let circuit_inputs =
+        circuit_inputs(&function, &cs, user_inputs).map_err(|e| anyhow!("{}", e))?;
 
     // Here we map the parse inputs to circuit outputs.
     let circuit_outputs =
@@ -114,9 +122,11 @@ pub fn execute_function(
 fn circuit_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
+    user_inputs: &mut Vec<SimpleworksValueType>,
 ) -> Result<IndexMap<String, CircuitIOType>> {
     let mut circuit_inputs = IndexMap::new();
     for input in function.inputs() {
+        let next_input = user_inputs.pop();
         let register = input.register();
         let circuit_input = match input.value_type() {
             ValueType::Record(_) => SimpleRecord(Record::new(UInt64Gadget::new_witness(
@@ -126,37 +136,80 @@ fn circuit_inputs(
             ValueType::Constant(_) => todo!(),
             // Public UInt
             ValueType::Public(PlaintextType::Literal(LiteralType::U8)) => SimpleUInt8(
-                UInt8Gadget::new_input(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt8Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U8(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Public(PlaintextType::Literal(LiteralType::U16)) => SimpleUInt16(
-                UInt16Gadget::new_input(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt16Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U16(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Public(PlaintextType::Literal(LiteralType::U32)) => SimpleUInt32(
-                UInt32Gadget::new_input(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt32Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U32(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Public(PlaintextType::Literal(LiteralType::U64)) => SimpleUInt64(
-                UInt64Gadget::new_input(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt64Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::U128)) => {
-                unimplemented!("TODO: Figure out if we want to support U128 operations")
-            }
+            ValueType::Public(PlaintextType::Literal(LiteralType::U128)) => SimpleUInt128(
+                UInt128Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U128(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
+            ),
             ValueType::Public(PlaintextType::Literal(_)) => todo!(),
             ValueType::Public(_) => todo!(),
             // Private UInt
             ValueType::Private(PlaintextType::Literal(LiteralType::U8)) => SimpleUInt8(
-                UInt8Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt8Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U8(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Private(PlaintextType::Literal(LiteralType::U16)) => SimpleUInt16(
-                UInt16Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt16Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U16(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Private(PlaintextType::Literal(LiteralType::U32)) => SimpleUInt32(
-                UInt32Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt32Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U32(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Private(PlaintextType::Literal(LiteralType::U64)) => SimpleUInt64(
-                UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(0))?,
+                UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
             ),
             ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
-                unimplemented!("TODO: Figure out if we want to support U128 operations")
+                SimpleUInt128(UInt128Gadget::new_witness(
+                    Namespace::new(cs.clone(), None),
+                    || match next_input {
+                        Some(value::SimpleworksValueType::U128(v)) => Ok(v),
+                        None => Err(SynthesisError::AssignmentMissing),
+                        _ => Err(SynthesisError::Unsatisfiable),
+                    },
+                )?)
             }
             ValueType::Private(PlaintextType::Literal(_)) => todo!(),
             ValueType::Private(_) => todo!(),
