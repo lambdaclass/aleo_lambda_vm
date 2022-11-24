@@ -189,6 +189,7 @@ fn circuit_outputs(
             Opcode::Hash(_) => todo!(),
             Opcode::Is(_) => todo!(),
             Opcode::Literal("add") => instructions::add(&instruction_operands)?,
+            Opcode::Literal("subtract") => instructions::subtract(&instruction_operands)?,
             Opcode::Literal(_) => todo!(),
         };
         // TODO: Destinations should be handled better.
