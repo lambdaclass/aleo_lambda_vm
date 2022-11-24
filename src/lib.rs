@@ -54,6 +54,7 @@ use snarkvm::{
 };
 
 pub mod circuit_io_type;
+pub mod instructions;
 
 pub type ConstraintF = ark_ed_on_bls12_381::Fq;
 
@@ -187,9 +188,7 @@ fn circuit_outputs(
             Opcode::Finalize(_) => todo!(),
             Opcode::Hash(_) => todo!(),
             Opcode::Is(_) => todo!(),
-            // FIXME: I don't know if it would be better to move
-            // CircuitIOType::addmany implementation here.
-            Opcode::Literal("add") => CircuitIOType::addmany(&instruction_operands)?,
+            Opcode::Literal("add") => instructions::add(&instruction_operands)?,
             Opcode::Literal(_) => todo!(),
         };
         // TODO: Destinations should be handled better.
