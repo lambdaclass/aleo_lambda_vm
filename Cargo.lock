@@ -2010,7 +2010,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Entropy1729/simpleworks.git#593e86d6fc256c6c78516040ec9bacf99d7ab381"
+source = "git+ssh://git@github.com/Entropy1729/simpleworks.git#2cda28fbf228fbf0f04b74e79c48ee2f92e26382"
 dependencies = [
  "anyhow",
  "ark-bls12-381",

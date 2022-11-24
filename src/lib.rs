@@ -37,14 +37,16 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::circuit_io_type::{
-    CircuitIOType, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    CircuitIOType, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
 use ark_r1cs_std::{
     uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
 };
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
+use simpleworks::gadgets::Record;
+use snarkvm::prelude::{Operand, Register};
 use snarkvm::{
     circuit::IndexMap,
     prelude::{
@@ -117,6 +119,10 @@ fn circuit_inputs(
     for input in function.inputs() {
         let register = input.register();
         let circuit_input = match input.value_type() {
+            ValueType::Record(_) => SimpleRecord(Record::new(UInt64Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(10),
+            )?)),
             ValueType::Constant(_) => todo!(),
             // Public UInt
             ValueType::Public(PlaintextType::Literal(LiteralType::U8)) => SimpleUInt8(
@@ -154,7 +160,6 @@ fn circuit_inputs(
             }
             ValueType::Private(PlaintextType::Literal(_)) => todo!(),
             ValueType::Private(_) => todo!(),
-            ValueType::Record(_) => todo!(),
             ValueType::ExternalRecord(_) => todo!(),
         };
         circuit_inputs.insert(register.to_string(), circuit_input);
@@ -170,14 +175,53 @@ fn circuit_outputs(
 ) -> Result<IndexMap<String, CircuitIOType>> {
     let mut circuit_outputs = IndexMap::new();
     for instruction in function.instructions() {
-        let instruction_operands = instruction
+        let instruction_operands_data = instruction
             .operands()
             .iter()
-            .map(|o| match circuit_inputs.get(&o.to_string()) {
-                Some(circuit_input) => circuit_input.clone(),
-                None => todo!(),
+            .map(|operand| {
+                match operand {
+                    Operand::Register(Register::Member(locator, members)) => {
+                        // TODO: Find a better way to access the register.
+                        // Atm operand.to_string() returns r0.gates for example.
+                        match circuit_inputs.get(&format!("r{locator}")) {
+                            Some(circuit_input) => (circuit_input.clone(), Some(members)),
+                            None => {
+                                println!("{}", operand);
+                                todo!()
+                            }
+                        }
+                    }
+                    Operand::Register(Register::Locator(_)) => {
+                        match circuit_inputs.get(&operand.to_string()) {
+                            Some(circuit_input) => (circuit_input.clone(), None),
+                            None => todo!(),
+                        }
+                    }
+                    _ => todo!(),
+                }
             })
             .collect::<Vec<_>>();
+
+        let mut instruction_operands: Vec<CircuitIOType> = Vec::new();
+        for operand_data in instruction_operands_data {
+            let operand = match operand_data {
+                (SimpleRecord(record), Some(members)) => {
+                    match members
+                        .get(0)
+                        .ok_or("Error getting the first member of a register member")
+                        .map_err(|e| anyhow!("{}", e))?
+                        .to_string()
+                        .as_str()
+                    {
+                        "gates" => SimpleUInt64(record.gates().clone()),
+                        _ => todo!(),
+                    }
+                }
+                (operand, None) => operand,
+                (_, Some(_)) => bail!("Invalid program, tried to add a record"),
+            };
+            instruction_operands.push(operand);
+        }
 
         let circuit_output = match instruction.opcode() {
             Opcode::Assert(_) => todo!(),
@@ -189,7 +233,7 @@ fn circuit_outputs(
             Opcode::Hash(_) => todo!(),
             Opcode::Is(_) => todo!(),
             Opcode::Literal("add") => instructions::add(&instruction_operands)?,
-            Opcode::Literal("subtract") => instructions::subtract(&instruction_operands)?,
+            Opcode::Literal("sub") => instructions::subtract(&instruction_operands)?,
             Opcode::Literal(_) => todo!(),
         };
         // TODO: Destinations should be handled better.
