@@ -17,7 +17,6 @@ pub enum CircuitIOType {
 }
 
 impl CircuitIOType {
-    // TODO: This is temporary, we need to find a better way to handle this method.
     pub fn value(&self) -> Result<String> {
         match self {
             SimpleUInt8(value) => Ok(value.value()?.to_string()),

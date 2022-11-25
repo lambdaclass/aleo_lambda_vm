@@ -58,8 +58,6 @@ fn parse_args() -> Result<(Vec<String>, String, String)> {
 fn main() -> Result<()> {
     let (function_inputs, function_name, program_string) = parse_args()?;
 
-    // parse inputs
-    // insert user input into this vector
     let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
     for input_value in function_inputs.iter().rev() {
         let v = SimpleworksValueType::try_from(input_value)?;

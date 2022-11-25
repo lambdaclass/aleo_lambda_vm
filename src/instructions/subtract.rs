@@ -16,7 +16,6 @@ pub use CircuitIOType::{SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,
 // where module = 2^size and module - n could be done negating bit by bit in binary so there are no subtractions.
 pub fn subtract(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
     match operands {
-        // [SimpleUInt8(addend), SimpleUInt8(augend)] => Ok(SimpleUInt8(UInt8::<ConstraintF>::addmany(&[addend.clone(), augend.clone()])?)),
         [SimpleUInt16(minuend), SimpleUInt16(subtrahend)] => {
             ensure!(
                 minuend.value()? >= subtrahend.value()?,

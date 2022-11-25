@@ -63,7 +63,6 @@ pub mod value;
 
 pub type ConstraintF = ark_ed_on_bls12_381::Fq;
 
-// TODO: Move these to simpleworks.
 pub type UInt8Gadget = UInt8<ConstraintF>;
 pub type UInt16Gadget = UInt16<ConstraintF>;
 pub type UInt32Gadget = UInt32<ConstraintF>;
@@ -79,25 +78,18 @@ pub fn execute_function(
     function_name: &str,
     user_inputs: &mut Vec<SimpleworksValueType>,
 ) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
-    // FIXME: Maybe the program should be parsed once and then passed to the execute_function.
-    // Parse Aleo Program
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
-    // Retrieve the function.
     let function_name = &Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?;
     let function = program
         .get_function(function_name)
         .map_err(|e| anyhow!("{}", e))?;
 
-    // Now we create a constraint system and the circuit that will verify
-    // the signature, but we'll send a bad message.
     let cs = ConstraintSystem::<ConstraintF>::new_ref();
 
-    // Here we map the parse user_inputs to circuit inputs.
     let circuit_inputs =
         circuit_inputs(&function, &cs, user_inputs).map_err(|e| anyhow!("{}", e))?;
 
-    // Here we map the parse inputs to circuit outputs.
     let circuit_outputs =
         circuit_outputs(&function, &circuit_inputs).map_err(|e| anyhow!("{}", e))?;
 
@@ -110,7 +102,6 @@ pub fn execute_function(
     .clone();
     let cs_ref_clone = ConstraintSystemRef::CS(Rc::new(RefCell::new(cs_clone)));
 
-    // generate marlin proof
     let mut rng = simpleworks::marlin::generate_rand();
     let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
     let bytes_proof = simpleworks::marlin::generate_proof(&universal_srs, &mut rng, cs_ref_clone)?;
@@ -118,7 +109,6 @@ pub fn execute_function(
     Ok((is_satisfied, circuit_outputs, bytes_proof))
 }
 
-// TODO: The input values and the function result type are hardcoded.
 fn circuit_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
@@ -220,8 +210,6 @@ fn circuit_inputs(
     Ok(circuit_inputs)
 }
 
-// TODO: The circuit_inputs and the function result types are hardcoded to
-// we could use a generic type here because we except different value types.
 fn circuit_outputs(
     function: &Function<Testnet3>,
     circuit_inputs: &IndexMap<String, CircuitIOType>,
@@ -231,27 +219,23 @@ fn circuit_outputs(
         let instruction_operands_data = instruction
             .operands()
             .iter()
-            .map(|operand| {
-                match operand {
-                    Operand::Register(Register::Member(locator, members)) => {
-                        // TODO: Find a better way to access the register.
-                        // Atm operand.to_string() returns r0.gates for example.
-                        match circuit_inputs.get(&format!("r{locator}")) {
-                            Some(circuit_input) => (circuit_input.clone(), Some(members)),
-                            None => {
-                                println!("{}", operand);
-                                todo!()
-                            }
+            .map(|operand| match operand {
+                Operand::Register(Register::Member(locator, members)) => {
+                    match circuit_inputs.get(&format!("r{locator}")) {
+                        Some(circuit_input) => (circuit_input.clone(), Some(members)),
+                        None => {
+                            println!("{}", operand);
+                            todo!()
                         }
                     }
-                    Operand::Register(Register::Locator(_)) => {
-                        match circuit_inputs.get(&operand.to_string()) {
-                            Some(circuit_input) => (circuit_input.clone(), None),
-                            None => todo!(),
-                        }
-                    }
-                    _ => todo!(),
                 }
+                Operand::Register(Register::Locator(_)) => {
+                    match circuit_inputs.get(&operand.to_string()) {
+                        Some(circuit_input) => (circuit_input.clone(), None),
+                        None => todo!(),
+                    }
+                }
+                _ => todo!(),
             })
             .collect::<Vec<_>>();
 
@@ -289,7 +273,7 @@ fn circuit_outputs(
             Opcode::Literal("sub") => instructions::subtract(&instruction_operands)?,
             Opcode::Literal(_) => todo!(),
         };
-        // TODO: Destinations should be handled better.
+
         circuit_outputs.insert(
             instruction
                 .destinations()
