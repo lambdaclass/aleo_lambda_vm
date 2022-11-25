@@ -22,11 +22,11 @@ mod tests {
             output r2 as u16.public;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(&program_string, "hello_1", &mut user_inputs).unwrap();
+            vmtropy::execute_function(&program_string, "hello_1", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -46,12 +46,11 @@ mod tests {
             output r2 as u16.private;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_2", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_2", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -71,12 +70,11 @@ mod tests {
             output r2 as u16.private;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_3", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_3", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -96,12 +94,11 @@ mod tests {
             output r2 as u32.public;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_4", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_4", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -121,12 +118,11 @@ mod tests {
             output r2 as u32.private;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_5", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_5", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -146,12 +142,11 @@ mod tests {
             output r2 as u32.private;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_6", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_6", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -171,12 +166,11 @@ mod tests {
             output r2 as u64.public;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_7", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_7", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -196,12 +190,11 @@ mod tests {
             output r2 as u64.private;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_8", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_8", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -221,12 +214,11 @@ mod tests {
             output r2 as u64.private;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_9", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_9", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -247,12 +239,11 @@ mod tests {
             output r2 as u128.public;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_10", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_10", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -273,12 +264,11 @@ mod tests {
             output r2 as u128.private;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_11", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_11", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -299,12 +289,11 @@ mod tests {
             output r2 as u128.private;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_12", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_12", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -324,11 +313,11 @@ mod tests {
             output r2 as u16.public;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(&program_string, "hello_1", &mut user_inputs).unwrap();
+            vmtropy::execute_function(&program_string, "hello_1", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -348,12 +337,11 @@ mod tests {
             output r2 as u16.private;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_2", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_2", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -373,12 +361,11 @@ mod tests {
             output r2 as u16.private;
         */
 
-        let mut user_inputs = vec![U16(1), U16(1)];
+        let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_3", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_3", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -398,12 +385,11 @@ mod tests {
             output r2 as u32.public;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_4", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_4", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -423,12 +409,11 @@ mod tests {
             output r2 as u32.private;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_5", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_5", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -448,12 +433,11 @@ mod tests {
             output r2 as u32.private;
         */
 
-        let mut user_inputs = vec![U32(1), U32(1)];
+        let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_6", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_6", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -473,12 +457,11 @@ mod tests {
             output r2 as u64.public;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_7", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_7", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -498,12 +481,11 @@ mod tests {
             output r2 as u64.private;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_8", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_8", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -523,12 +505,11 @@ mod tests {
             output r2 as u64.private;
         */
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_9", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_9", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -549,12 +530,11 @@ mod tests {
             output r2 as u128.public;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_10", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_10", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -575,12 +555,11 @@ mod tests {
             output r2 as u128.private;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_11", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_11", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -601,12 +580,11 @@ mod tests {
             output r2 as u128.private;
         */
 
-        let mut user_inputs = vec![U128(1), U128(1)];
+        let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_12", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_12", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -618,12 +596,11 @@ mod tests {
     fn test_record_add() {
         let program_string = read_add_program("record").unwrap();
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_1", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_1", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {
@@ -635,12 +612,11 @@ mod tests {
     fn test_record_subtract() {
         let program_string = read_add_program("record").unwrap();
 
-        let mut user_inputs = vec![U64(1), U64(1)];
+        let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(program_string.as_str(), "hello_2", &mut user_inputs)
-                .unwrap();
+            vmtropy::execute_function(program_string.as_str(), "hello_2", &user_inputs).unwrap();
         assert!(ret_ok);
 
         for (register, output) in circuit_outputs {

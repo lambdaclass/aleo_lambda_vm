@@ -64,19 +64,19 @@ fn main() -> Result<()> {
         vec_user_inputs.push(v);
     }
 
-    execute(&function_name, &program_string, &mut vec_user_inputs)
+    execute(&function_name, &program_string, vec_user_inputs)
 }
 
 fn execute(
     function_name: &str,
     program_string: &str,
-    user_inputs: &mut Vec<SimpleworksValueType>,
+    user_inputs: Vec<SimpleworksValueType>,
 ) -> Result<()> {
     println!("Executing function {}...", function_name);
 
     let program_str = std::fs::read_to_string(program_string).unwrap();
     let (_verifies, outputs, proof) =
-        vmtropy::execute_function(&program_str, function_name, user_inputs)?;
+        vmtropy::execute_function(&program_str, function_name, &user_inputs)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);

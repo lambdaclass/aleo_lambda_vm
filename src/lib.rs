@@ -21,8 +21,7 @@
     clippy::string_add,
     clippy::string_slice,
     clippy::string_to_string,
-    // Maybe we could not use this one.
-    // clippy::todo,
+    clippy::todo,
     clippy::try_err,
     clippy::unseparated_literal_suffix
 )]
@@ -45,7 +44,6 @@ use ark_r1cs_std::prelude::AllocVar;
 use ark_r1cs_std::{
     uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
 };
-use ark_relations::r1cs::SynthesisError;
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
 use simpleworks::gadgets::{AddressGadget, Record};
 use snarkvm::prelude::{Operand, Register};
@@ -76,7 +74,7 @@ use value::SimpleworksValueType;
 pub fn execute_function(
     program_string: &str,
     function_name: &str,
-    user_inputs: &mut Vec<SimpleworksValueType>,
+    user_inputs: &[SimpleworksValueType],
 ) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
@@ -112,109 +110,136 @@ pub fn execute_function(
 fn circuit_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
-    user_inputs: &mut Vec<SimpleworksValueType>,
+    user_inputs: &[SimpleworksValueType],
 ) -> Result<IndexMap<String, CircuitIOType>> {
     let mut circuit_inputs = IndexMap::new();
-    for input in function.inputs() {
-        let next_input = user_inputs.pop();
-        let register = input.register();
-        let circuit_input = match input.value_type() {
-            ValueType::Record(_) => SimpleRecord(Record::new(UInt64Gadget::new_witness(
-                Namespace::new(cs.clone(), None),
-                || match next_input {
-                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                },
-            )?)),
-            ValueType::Constant(_) => todo!(),
+    for (function_input, user_input) in function.inputs().iter().zip(user_inputs) {
+        let register = function_input.register();
+        let circuit_input = match (function_input.value_type(), user_input) {
             // Public UInt
-            ValueType::Public(PlaintextType::Literal(LiteralType::U8)) => SimpleUInt8(
-                UInt8Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U8(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::U16)) => SimpleUInt16(
-                UInt16Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U16(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::U32)) => SimpleUInt32(
-                UInt32Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U32(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::U64)) => SimpleUInt64(
-                UInt64Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::U128)) => SimpleUInt128(
-                UInt128Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U128(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(LiteralType::Address)) => SimpleAddress(
-                AddressGadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::Address(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Public(PlaintextType::Literal(_)) => todo!(),
-            ValueType::Public(_) => todo!(),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::U8)),
+                SimpleworksValueType::U8(v),
+            ) => SimpleUInt8(UInt8Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::U16)),
+                SimpleworksValueType::U16(v),
+            ) => SimpleUInt16(UInt16Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::U32)),
+                SimpleworksValueType::U32(v),
+            ) => SimpleUInt32(UInt32Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::U64)),
+                SimpleworksValueType::U64(v),
+            ) => SimpleUInt64(UInt64Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::U128)),
+                SimpleworksValueType::U128(v),
+            ) => SimpleUInt128(UInt128Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            // Public Address
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::Address)),
+                SimpleworksValueType::Address(a),
+            ) => SimpleAddress(AddressGadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(a),
+            )?),
             // Private UInt
-            ValueType::Private(PlaintextType::Literal(LiteralType::U8)) => SimpleUInt8(
-                UInt8Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U8(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Private(PlaintextType::Literal(LiteralType::U16)) => SimpleUInt16(
-                UInt16Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U16(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Private(PlaintextType::Literal(LiteralType::U32)) => SimpleUInt32(
-                UInt32Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U32(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Private(PlaintextType::Literal(LiteralType::U64)) => SimpleUInt64(
-                UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || match next_input {
-                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
-                    None => Err(SynthesisError::AssignmentMissing),
-                    _ => Err(SynthesisError::Unsatisfiable),
-                })?,
-            ),
-            ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
-                SimpleUInt128(UInt128Gadget::new_witness(
-                    Namespace::new(cs.clone(), None),
-                    || match next_input {
-                        Some(value::SimpleworksValueType::U128(v)) => Ok(v),
-                        None => Err(SynthesisError::AssignmentMissing),
-                        _ => Err(SynthesisError::Unsatisfiable),
-                    },
-                )?)
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::U8)),
+                SimpleworksValueType::U8(v),
+            ) => SimpleUInt8(UInt8Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::U16)),
+                SimpleworksValueType::U16(v),
+            ) => SimpleUInt16(UInt16Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::U32)),
+                SimpleworksValueType::U32(v),
+            ) => SimpleUInt32(UInt32Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::U64)),
+                SimpleworksValueType::U64(v),
+            ) => SimpleUInt64(UInt64Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::U128)),
+                SimpleworksValueType::U128(v),
+            ) => SimpleUInt128(UInt128Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            // Private Address
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::Address)),
+                SimpleworksValueType::Address(a),
+            ) => SimpleAddress(AddressGadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(a),
+            )?),
+            // Literal Type Error Cases
+            (
+                ValueType::Private(PlaintextType::Literal(
+                    LiteralType::Address
+                    | LiteralType::U128
+                    | LiteralType::U64
+                    | LiteralType::U32
+                    | LiteralType::U16
+                    | LiteralType::U8,
+                ))
+                | ValueType::Public(PlaintextType::Literal(
+                    LiteralType::Address
+                    | LiteralType::U128
+                    | LiteralType::U64
+                    | LiteralType::U32
+                    | LiteralType::U16
+                    | LiteralType::U8,
+                )),
+                _,
+            ) => {
+                bail!("Mismatched function input type with user input type")
             }
-            ValueType::Private(PlaintextType::Literal(_)) => todo!(),
-            ValueType::Private(_) => todo!(),
-            ValueType::ExternalRecord(_) => todo!(),
+            // Unsupported Cases
+            (ValueType::Public(_) | ValueType::Private(_), _) => bail!("Unsupported type"),
+            // Records
+            // TODO: User input should be SimpleworksValueType::Record.
+            (ValueType::Record(_), SimpleworksValueType::U64(gates)) => SimpleRecord(Record::new(
+                UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(gates))?,
+            )),
+            (ValueType::Record(_), _) => {
+                bail!("Mismatched function input type with user input type")
+            }
+            // Constant Types
+            (ValueType::Constant(_), _) => bail!("Constant types are not supported"),
+            // External Records
+            (ValueType::ExternalRecord(_), _) => bail!("ExternalRecord types are not supported"),
         };
         circuit_inputs.insert(register.to_string(), circuit_input);
     }
@@ -227,32 +252,34 @@ fn circuit_outputs(
 ) -> Result<IndexMap<String, CircuitIOType>> {
     let mut circuit_outputs = IndexMap::new();
     for instruction in function.instructions() {
-        let instruction_operands_data = instruction
-            .operands()
-            .iter()
-            .map(|operand| match operand {
+        let mut instruction_operands_data = Vec::new();
+        for operand in instruction.operands() {
+            instruction_operands_data.push(match operand {
                 // This is the case where the input is a register of record type accessing a field,
                 // so something of the form `r0.credits`. The locator is the register number, in this
                 // example 0.
                 Operand::Register(Register::Member(locator, members)) => {
                     match circuit_inputs.get(&format!("r{locator}")) {
                         Some(circuit_input) => (circuit_input.clone(), Some(members)),
-                        None => {
-                            println!("{}", operand);
-                            todo!()
-                        }
+                        None => bail!(
+                            "Operand was Register::Member and was not found in the circuit inputs"
+                        ),
                     }
                 }
                 // This is the case where the input is a register which is not a record,  so no field accessing.
                 Operand::Register(Register::Locator(_)) => {
                     match circuit_inputs.get(&operand.to_string()) {
                         Some(circuit_input) => (circuit_input.clone(), None),
-                        None => todo!(),
+                        None => bail!(
+                            "Operand was Register::Locator and was not found in the circuit inputs"
+                        ),
                     }
                 }
-                _ => todo!(),
-            })
-            .collect::<Vec<_>>();
+                Operand::Literal(_) => bail!("Literal operands are not supported"),
+                Operand::ProgramID(_) => bail!("ProgramID operands are not supported"),
+                Operand::Caller => bail!("Caller operands are not supported"),
+            });
+        }
 
         let mut instruction_operands: Vec<CircuitIOType> = Vec::new();
         for operand_data in instruction_operands_data {
@@ -266,7 +293,7 @@ fn circuit_outputs(
                         .as_str()
                     {
                         "gates" => SimpleUInt64(record.gates().clone()),
-                        _ => todo!(),
+                        _ => bail!("Unsupported record member"),
                     }
                 }
                 (operand, None) => operand,
@@ -276,17 +303,17 @@ fn circuit_outputs(
         }
 
         let circuit_output = match instruction.opcode() {
-            Opcode::Assert(_) => todo!(),
-            Opcode::Call => todo!(),
-            Opcode::Cast => todo!(),
-            Opcode::Command(_) => todo!(),
-            Opcode::Commit(_) => todo!(),
-            Opcode::Finalize(_) => todo!(),
-            Opcode::Hash(_) => todo!(),
-            Opcode::Is(_) => todo!(),
+            Opcode::Assert(_) => bail!("Assert operations are not supported"),
+            Opcode::Call => bail!("Call operation is not supported"),
+            Opcode::Cast => bail!("Cast operation is not supported"),
+            Opcode::Command(_) => bail!("Command operations are not supported"),
+            Opcode::Commit(_) => bail!("Commit operations are not supported"),
+            Opcode::Finalize(_) => bail!("Finalize operations are not supported"),
+            Opcode::Hash(_) => bail!("Hash operations are not supported"),
+            Opcode::Is(_) => bail!("Is operations are not supported"),
             Opcode::Literal("add") => instructions::add(&instruction_operands)?,
             Opcode::Literal("sub") => instructions::subtract(&instruction_operands)?,
-            Opcode::Literal(_) => todo!(),
+            Opcode::Literal(_) => bail!("Unsupported Literal operation"),
         };
 
         circuit_outputs.insert(

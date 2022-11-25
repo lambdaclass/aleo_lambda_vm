@@ -5,11 +5,11 @@ fn main() {
     path.push("examples/sample-program/sample.aleo");
     let program_string = std::fs::read_to_string(path).unwrap();
 
-    let mut user_inputs = vec![U32(2), U32(1)];
+    let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
     let (verifies, outputs, proof) =
-        vmtropy::execute_function(&program_string, "hello", &mut user_inputs).unwrap();
+        vmtropy::execute_function(&program_string, "hello", &user_inputs).unwrap();
     assert!(verifies);
 
     for (register, value) in outputs {

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use ark_r1cs_std::R1CSVar;
 use simpleworks::gadgets::{AddressGadget, Record};
 
@@ -26,7 +26,7 @@ impl CircuitIOType {
             SimpleUInt32(value) => Ok(value.value()?.to_string()),
             SimpleUInt64(value) => Ok(value.value()?.to_string()),
             SimpleUInt128(value) => Ok(value.value()?.to_string()),
-            _ => todo!(),
+            _ => bail!("value() is not implemented for this type"),
         }
     }
 }
