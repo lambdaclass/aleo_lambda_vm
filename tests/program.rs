@@ -635,7 +635,7 @@ mod tests {
     fn test_record_subtract() {
         let program_string = read_add_program("record").unwrap();
 
-        let mut user_inputs = vec![U64(2), U64(1)];
+        let mut user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =

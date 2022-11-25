@@ -37,8 +37,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::circuit_io_type::{
-    CircuitIOType, SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-    SimpleUInt8,
+    CircuitIOType, SimpleAddress, SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32,
+    SimpleUInt64, SimpleUInt8,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
@@ -47,7 +47,7 @@ use ark_r1cs_std::{
 };
 use ark_relations::r1cs::SynthesisError;
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
-use simpleworks::gadgets::Record;
+use simpleworks::gadgets::{AddressGadget, Record};
 use snarkvm::prelude::{Operand, Register};
 use snarkvm::{
     circuit::IndexMap,
@@ -121,7 +121,11 @@ fn circuit_inputs(
         let circuit_input = match input.value_type() {
             ValueType::Record(_) => SimpleRecord(Record::new(UInt64Gadget::new_witness(
                 Namespace::new(cs.clone(), None),
-                || Ok(10),
+                || match next_input {
+                    Some(value::SimpleworksValueType::U64(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                },
             )?)),
             ValueType::Constant(_) => todo!(),
             // Public UInt
@@ -156,6 +160,13 @@ fn circuit_inputs(
             ValueType::Public(PlaintextType::Literal(LiteralType::U128)) => SimpleUInt128(
                 UInt128Gadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
                     Some(value::SimpleworksValueType::U128(v)) => Ok(v),
+                    None => Err(SynthesisError::AssignmentMissing),
+                    _ => Err(SynthesisError::Unsatisfiable),
+                })?,
+            ),
+            ValueType::Public(PlaintextType::Literal(LiteralType::Address)) => SimpleAddress(
+                AddressGadget::new_input(Namespace::new(cs.clone(), None), || match next_input {
+                    Some(value::SimpleworksValueType::Address(v)) => Ok(v),
                     None => Err(SynthesisError::AssignmentMissing),
                     _ => Err(SynthesisError::Unsatisfiable),
                 })?,
@@ -220,6 +231,9 @@ fn circuit_outputs(
             .operands()
             .iter()
             .map(|operand| match operand {
+                // This is the case where the input is a register of record type accessing a field,
+                // so something of the form `r0.credits`. The locator is the register number, in this
+                // example 0.
                 Operand::Register(Register::Member(locator, members)) => {
                     match circuit_inputs.get(&format!("r{locator}")) {
                         Some(circuit_input) => (circuit_input.clone(), Some(members)),
@@ -229,6 +243,7 @@ fn circuit_outputs(
                         }
                     }
                 }
+                // This is the case where the input is a register which is not a record,  so no field accessing.
                 Operand::Register(Register::Locator(_)) => {
                     match circuit_inputs.get(&operand.to_string()) {
                         Some(circuit_input) => (circuit_input.clone(), None),

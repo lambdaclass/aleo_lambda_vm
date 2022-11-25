@@ -1,9 +1,10 @@
 use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
-use simpleworks::gadgets::Record;
+use simpleworks::gadgets::{AddressGadget, Record};
 
 pub use CircuitIOType::{
-    SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+    SimpleUInt8,
 };
 
 #[derive(Clone, Debug)]
@@ -14,6 +15,7 @@ pub enum CircuitIOType {
     SimpleUInt64(crate::UInt64Gadget),
     SimpleUInt128(crate::UInt128Gadget),
     SimpleRecord(Record),
+    SimpleAddress(AddressGadget),
 }
 
 impl CircuitIOType {

@@ -14,5 +14,5 @@ function hello_1:
 function hello_2:
     input r0 as credits.record;
     input r1 as u64.public;
-    subtract r0.gates r1 into r2;
+    sub r0.gates r1 into r2;
     output r2 as u64.public;

@@ -18,6 +18,7 @@ pub enum SimpleworksValueType {
     U32(u32),
     U64(u64),
     U128(u128),
+    Address([u8; 63]),
 }
 
 impl TryFrom<&String> for SimpleworksValueType {
