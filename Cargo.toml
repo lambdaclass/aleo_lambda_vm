@@ -38,6 +38,7 @@ digest = "0.9"
 snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
 simpleworks = { git = "ssh://git@github.com/Entropy1729/simpleworks.git" }
 anyhow = "1"
+hex = "0.4.3"
 
 [[example]]
 name = "sample-program"

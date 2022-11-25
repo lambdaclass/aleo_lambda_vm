@@ -1,12 +1,14 @@
+use vmtropy::value::SimpleworksValueType::U32;
+
 fn main() {
     let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.push("examples/sample-program/sample.aleo");
     let program_string = std::fs::read_to_string(path).unwrap();
 
-    let mut user_inputs = Vec::new();
+    let mut user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (verifies, outputs, _proof) =
+    let (verifies, outputs, proof) =
         vmtropy::execute_function(&program_string, "hello", &mut user_inputs).unwrap();
     assert!(verifies);
 
@@ -18,5 +20,5 @@ fn main() {
         }
     }
 
-    // TODO Add a proof generation step when it's merged
+    println!("Proof of execution: \n0x{}", hex::encode(proof));
 }

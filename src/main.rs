@@ -75,11 +75,13 @@ fn execute(
     println!("Executing function {}...", function_name);
 
     let program_str = std::fs::read_to_string(program_string).unwrap();
-    let (_verifies, outputs, _proof) =
+    let (_verifies, outputs, proof) =
         vmtropy::execute_function(&program_str, function_name, user_inputs)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);
     }
+
+    println!("Proof of execution: \n0x{}", hex::encode(proof));
     Ok(())
 }

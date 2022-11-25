@@ -38,14 +38,22 @@ cargo run --release --example sample-program
 To execute an aleo program, run
 
 ```
-cargo run --release -- <path_to_your_program> <function_name>
+cargo run --release -- execute <function_name> <path_to_your_program> <inputs>
 ```
 
 As an example, you can run the sample program mentioned above with
 
 ```
-cargo run --release -- ./examples/sample-program/sample.aleo hello
+cargo run --release -- execute hello ./examples/sample-program/sample.aleo 2u32 1u32
 ```
+
+Underneath this runs the binary located in `./target/release`, so you can also do instead:
+
+```
+./target/release/vmtropy execute hello ./examples/sample-program/sample.aleo 2u32 1u32
+```
+
+after having run `cargo build --release`.
 
 ## Tests
 
