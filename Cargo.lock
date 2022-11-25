@@ -2118,7 +2118,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Entropy1729/simpleworks.git#4aad87161421b351a9d883633b5a4ebbb1450958"
+source = "git+ssh://git@github.com/Entropy1729/simpleworks.git#a49036a872a16aac7492a815df82a88336068a5c"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2138,6 +2138,7 @@ dependencies = [
  "blake2",
  "derivative",
  "digest 0.9.0",
+ "hex",
  "rand",
  "rand_chacha",
  "tracing",

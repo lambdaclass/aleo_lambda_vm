@@ -1,8 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use vmtropy::value::SimpleworksValueType::{U128, U16, U32, U64};
-
     use anyhow::Result;
+    use simpleworks::types::value::SimpleworksValueType::{U128, U16, U32, U64};
     fn read_add_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push(&format!("programs/{instruction}/main.aleo"));

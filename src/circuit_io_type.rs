@@ -1,6 +1,7 @@
+use crate::record::Record;
 use anyhow::{bail, Result};
 use ark_r1cs_std::R1CSVar;
-use simpleworks::gadgets::{AddressGadget, Record};
+use simpleworks::gadgets::AddressGadget;
 
 pub use CircuitIOType::{
     SimpleAddress, SimpleRecord, SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,

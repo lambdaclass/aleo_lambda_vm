@@ -1,4 +1,4 @@
-use vmtropy::value::SimpleworksValueType::U32;
+use simpleworks::types::value::SimpleworksValueType::U32;
 
 fn main() {
     let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));

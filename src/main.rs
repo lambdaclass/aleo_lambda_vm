@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
+use simpleworks::types::value::SimpleworksValueType;
 use std::path::PathBuf;
-use vmtropy::value::SimpleworksValueType;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

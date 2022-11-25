@@ -45,7 +45,8 @@ use ark_r1cs_std::{
     uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
 };
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
-use simpleworks::gadgets::{AddressGadget, Record};
+use simpleworks::gadgets::AddressGadget;
+use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Operand, Register};
 use snarkvm::{
     circuit::IndexMap,
@@ -56,8 +57,11 @@ use snarkvm::{
 };
 
 pub mod circuit_io_type;
+pub mod circuit_param_type;
 pub mod instructions;
-pub mod value;
+pub mod record;
+
+use record::Record;
 
 pub type ConstraintF = ark_ed_on_bls12_381::Fq;
 
@@ -68,8 +72,6 @@ pub type UInt64Gadget = UInt64<ConstraintF>;
 pub type UInt128Gadget = UInt128<ConstraintF>;
 
 pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
-
-use value::SimpleworksValueType;
 
 pub fn execute_function(
     program_string: &str,
@@ -230,9 +232,22 @@ fn circuit_inputs(
             (ValueType::Public(_) | ValueType::Private(_), _) => bail!("Unsupported type"),
             // Records
             // TODO: User input should be SimpleworksValueType::Record.
-            (ValueType::Record(_), SimpleworksValueType::U64(gates)) => SimpleRecord(Record::new(
-                UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(gates))?,
-            )),
+            (ValueType::Record(_), SimpleworksValueType::U64(gates)) => {
+                let mut address = [0_u8; 63];
+                let address_string =
+                    "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh".as_bytes();
+                for (address_byte, address_string_byte) in address.iter_mut().zip(address_string) {
+                    *address_byte = *address_string_byte;
+                }
+                SimpleRecord(Record {
+                    owner: AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
+                        Ok(address)
+                    })?,
+                    gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || {
+                        Ok(gates)
+                    })?,
+                })
+            }
             (ValueType::Record(_), _) => {
                 bail!("Mismatched function input type with user input type")
             }
@@ -292,7 +307,7 @@ fn circuit_outputs(
                         .to_string()
                         .as_str()
                     {
-                        "gates" => SimpleUInt64(record.gates().clone()),
+                        "gates" => SimpleUInt64(record.gates.clone()),
                         _ => bail!("Unsupported record member"),
                     }
                 }
