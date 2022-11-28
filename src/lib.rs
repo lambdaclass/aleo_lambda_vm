@@ -45,16 +45,11 @@ use ark_r1cs_std::{
     uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
 };
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
+use indexmap::IndexMap;
 use simpleworks::gadgets::AddressGadget;
 use simpleworks::types::value::SimpleworksValueType;
+use snarkvm::prelude::{Function, Instruction, LiteralType, PlaintextType, Testnet3, ValueType};
 use snarkvm::prelude::{Operand, Register};
-use snarkvm::{
-    circuit::IndexMap,
-    prelude::{
-        Function, Identifier, LiteralType, Opcode, Parser, PlaintextType, Program, Testnet3,
-        ValueType,
-    },
-};
 
 pub mod circuit_io_type;
 pub mod circuit_param_type;
@@ -73,25 +68,20 @@ pub type UInt128Gadget = UInt128<ConstraintF>;
 
 pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 
+pub type SimpleProgramVariables = IndexMap<String, Option<CircuitIOType>>;
+
 pub fn execute_function(
-    program_string: &str,
-    function_name: &str,
+    function: Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
 ) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
-    let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
-
-    let function_name = &Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?;
-    let function = program
-        .get_function(function_name)
-        .map_err(|e| anyhow!("{}", e))?;
-
     let cs = ConstraintSystem::<ConstraintF>::new_ref();
 
-    let circuit_inputs =
-        circuit_inputs(&function, &cs, user_inputs).map_err(|e| anyhow!("{}", e))?;
+    let mut program_variables = program_variables(&function);
 
-    let circuit_outputs =
-        circuit_outputs(&function, &circuit_inputs).map_err(|e| anyhow!("{}", e))?;
+    process_inputs(&function, &cs, user_inputs, &mut program_variables)?;
+    process_outputs(&function, &mut program_variables)?;
+
+    let circuit_outputs = circuit_outputs(function, &program_variables)?;
 
     let is_satisfied = cs.is_satisfied().map_err(|e| anyhow!("{}", e))?;
 
@@ -109,12 +99,85 @@ pub fn execute_function(
     Ok((is_satisfied, circuit_outputs, bytes_proof))
 }
 
-fn circuit_inputs(
+// This function builds the scaffold of the program variables.
+// We use a hash map for such variables, where the key is the variable name
+// and the value is the variable type.
+// All the values start as None, and will be filled in the next steps.
+// For example, this would be the output of executing this function for
+// credits.aleo's transfer function:
+// {
+//     "r0": None,
+//     "r0.gates": None,
+//     "r0.owner": None,
+//     "r1": None,
+//     "r2": None,
+//     "r3": None,
+//     "r4": None,
+//     "r5": None,
+// }
+fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
+    let mut registers: SimpleProgramVariables = IndexMap::new();
+
+    let function_inputs: Vec<String> = function
+        .inputs()
+        .into_iter()
+        .map(|i| i.register().to_string())
+        .collect();
+
+    let function_outputs: Vec<String> = function
+        .outputs()
+        .into_iter()
+        .map(|o| o.register().to_string())
+        .collect();
+
+    function.inputs().into_iter().for_each(|i| {
+        registers.insert(i.register().to_string(), None);
+    });
+    function.instructions().iter().for_each(|i| {
+        i.operands().iter().for_each(|o| {
+            if !function_outputs.contains(&o.to_string())
+                && !function_inputs.contains(&o.to_string())
+            {
+                registers.insert(o.to_string(), None);
+            }
+        });
+        i.destinations().iter().for_each(|d| {
+            if !function_outputs.contains(&d.to_string()) {
+                registers.insert(d.to_string(), None);
+            }
+        });
+    });
+
+    for function_output in function_outputs {
+        registers.insert(function_output, None);
+    }
+
+    registers
+}
+
+fn circuit_outputs(
+    function: Function<Testnet3>,
+    program_variables: &SimpleProgramVariables,
+) -> Result<CircuitOutputType> {
+    let mut circuit_outputs = IndexMap::new();
+    function.outputs().iter().try_for_each(|o| {
+        let register = o.register().to_string();
+        let result = program_variables
+            .get(&register)
+            .ok_or_else(|| anyhow!("Register not found"))
+            .and_then(|r| r.clone().ok_or_else(|| anyhow!("Register not assigned")))?;
+        circuit_outputs.insert(register, result);
+        Ok::<_, anyhow::Error>(())
+    })?;
+    Ok(circuit_outputs)
+}
+
+fn process_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
     user_inputs: &[SimpleworksValueType],
-) -> Result<IndexMap<String, CircuitIOType>> {
-    let mut circuit_inputs = IndexMap::new();
+    program_variables: &mut SimpleProgramVariables,
+) -> Result<()> {
     for (function_input, user_input) in function.inputs().iter().zip(user_inputs) {
         let register = function_input.register();
         let circuit_input = match (function_input.value_type(), user_input) {
@@ -250,89 +313,76 @@ fn circuit_inputs(
             // External Records
             (ValueType::ExternalRecord(_), _) => bail!("ExternalRecord types are not supported"),
         };
-        circuit_inputs.insert(register.to_string(), circuit_input);
+        program_variables.insert(register.to_string(), Some(circuit_input));
     }
-    Ok(circuit_inputs)
+
+    Ok(())
 }
 
-fn circuit_outputs(
+fn process_outputs(
     function: &Function<Testnet3>,
-    circuit_inputs: &IndexMap<String, CircuitIOType>,
-) -> Result<IndexMap<String, CircuitIOType>> {
-    let mut circuit_outputs = IndexMap::new();
+    program_variables: &mut SimpleProgramVariables,
+) -> Result<()> {
     for instruction in function.instructions() {
-        let mut instruction_operands_data = Vec::new();
+        let mut instruction_operands = Vec::new();
         for operand in instruction.operands() {
-            instruction_operands_data.push(match operand {
-                // This is the case where the input is a register of record type accessing a field,
-                // so something of the form `r0.credits`. The locator is the register number, in this
-                // example 0.
-                Operand::Register(Register::Member(locator, members)) => {
-                    match circuit_inputs.get(&format!("r{locator}")) {
-                        Some(circuit_input) => (circuit_input.clone(), Some(members)),
-                        None => bail!(
-                            "Operand was Register::Member and was not found in the circuit inputs"
-                        ),
-                    }
-                }
-                // This is the case where the input is a register which is not a record,  so no field accessing.
-                Operand::Register(Register::Locator(_)) => {
-                    match circuit_inputs.get(&operand.to_string()) {
-                        Some(circuit_input) => (circuit_input.clone(), None),
-                        None => bail!(
-                            "Operand was Register::Locator and was not found in the circuit inputs"
-                        ),
-                    }
-                }
-                Operand::Literal(_) => bail!("Literal operands are not supported"),
-                Operand::ProgramID(_) => bail!("ProgramID operands are not supported"),
-                Operand::Caller => bail!("Caller operands are not supported"),
-            });
-        }
-
-        let mut instruction_operands: Vec<CircuitIOType> = Vec::new();
-        for operand_data in instruction_operands_data {
-            let operand = match operand_data {
-                (SimpleRecord(record), Some(members)) => {
-                    match members
-                        .get(0)
-                        .ok_or("Error getting the first member of a register member")
-                        .map_err(|e| anyhow!("{}", e))?
-                        .to_string()
-                        .as_str()
+            let variable_name = &operand.to_string();
+            match (operand, program_variables.get(variable_name)) {
+                (Operand::Register(Register::Member(locator, members)), Some(None)) => {
+                    if let Some(Some(SimpleRecord(record))) =
+                        program_variables.get(&format!("r{locator}"))
                     {
-                        "gates" => SimpleUInt64(record.gates.clone()),
-                        _ => bail!("Unsupported record member"),
+                        match members
+                            .get(0)
+                            .ok_or("Error getting the first member of a register member")
+                            .map_err(|e| anyhow!("{}", e))?
+                            .to_string()
+                            .as_str()
+                        {
+                            "owner" => {
+                                let owner_operand = SimpleAddress(record.owner.clone());
+                                program_variables
+                                    .insert(variable_name.to_string(), Some(owner_operand.clone()));
+                                instruction_operands.push(owner_operand);
+                            }
+                            "gates" => {
+                                let gates_operand = SimpleUInt64(record.gates.clone());
+                                program_variables
+                                    .insert(variable_name.to_string(), Some(gates_operand.clone()));
+                                instruction_operands.push(gates_operand);
+                            }
+                            _ => bail!("Unsupported record member"),
+                        };
                     }
                 }
-                (operand, None) => operand,
-                (_, Some(_)) => bail!("Invalid program, tried to add a record"),
+                (Operand::Register(_), Some(Some(operand))) => {
+                    instruction_operands.push(operand.clone());
+                }
+                (Operand::Register(_), Some(None)) => bail!("Register not assigned in registers"),
+                (Operand::Register(_), None) => bail!("Register not found in registers"),
+                (Operand::Literal(_), _) => bail!("Literal operands are not supported"),
+                (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
+                (Operand::Caller, _) => bail!("Caller operands are not supported"),
             };
-            instruction_operands.push(operand);
         }
 
-        let circuit_output = match instruction.opcode() {
-            Opcode::Assert(_) => bail!("Assert operations are not supported"),
-            Opcode::Call => bail!("Call operation is not supported"),
-            Opcode::Cast => instructions::cast(&instruction_operands)?,
-            Opcode::Command(_) => bail!("Command operations are not supported"),
-            Opcode::Commit(_) => bail!("Commit operations are not supported"),
-            Opcode::Finalize(_) => bail!("Finalize operations are not supported"),
-            Opcode::Hash(_) => bail!("Hash operations are not supported"),
-            Opcode::Is(_) => bail!("Is operations are not supported"),
-            Opcode::Literal("add") => instructions::add(&instruction_operands)?,
-            Opcode::Literal("sub") => instructions::subtract(&instruction_operands)?,
-            Opcode::Literal(_) => bail!("Unsupported Literal operation"),
+        let circuit_output = match instruction {
+            Instruction::Add(_) => instructions::add(&instruction_operands)?,
+            Instruction::Cast(_) => instructions::cast(&instruction_operands)?,
+            Instruction::Sub(_) => instructions::subtract(&instruction_operands)?,
+            _ => bail!(
+                "{} instruction is not supported currently",
+                instruction.opcode()
+            ),
         };
 
-        circuit_outputs.insert(
-            instruction
-                .destinations()
-                .get(0)
-                .ok_or_else(|| anyhow!("Error getting the destination register"))?
-                .to_string(),
-            circuit_output,
-        );
+        let destination = instruction
+            .destinations()
+            .get(0)
+            .ok_or_else(|| anyhow!("Error getting the destination register"))?
+            .to_string();
+
+        program_variables.insert(destination, Some(circuit_output));
     }
-    Ok(circuit_outputs)
+    Ok(())
 }

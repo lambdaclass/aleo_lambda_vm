@@ -1,6 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use simpleworks::types::value::SimpleworksValueType;
+use snarkvm::prelude::{Identifier, Parser as AleoParser, Program, Testnet3};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -75,8 +76,14 @@ fn execute(
     println!("Executing function {}...", function_name);
 
     let program_str = std::fs::read_to_string(program_string).unwrap();
-    let (_verifies, outputs, proof) =
-        vmtropy::execute_function(&program_str, function_name, user_inputs)?;
+
+    let (_, program) = Program::<Testnet3>::parse(&program_str).map_err(|e| anyhow!("{}", e))?;
+
+    let function = program
+        .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
+        .map_err(|e| anyhow!("{}", e))?;
+
+    let (_verifies, outputs, proof) = vmtropy::execute_function(function, user_inputs)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);
