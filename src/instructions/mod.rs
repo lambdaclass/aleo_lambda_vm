@@ -3,5 +3,8 @@
 mod add;
 pub use add::add;
 
+mod cast;
+pub use cast::cast;
+
 mod subtract;
 pub use subtract::subtract;

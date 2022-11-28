@@ -1,7 +1,10 @@
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use simpleworks::types::value::SimpleworksValueType::{U128, U16, U32, U64};
+    use ark_r1cs_std::R1CSVar;
+    use simpleworks::types::value::SimpleworksValueType::{Address, Record, U128, U16, U32, U64};
+    use vmtropy::circuit_io_type::CircuitIOType::SimpleRecord;
+
     fn read_add_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push(&format!("programs/{instruction}/main.aleo"));
@@ -595,7 +598,14 @@ mod tests {
     fn test_record_add() {
         let program_string = read_add_program("record").unwrap();
 
-        let user_inputs = vec![U64(1), U64(1)];
+        let mut address = [0_u8; 63];
+        let address_string = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh";
+        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+
+        let user_inputs = vec![Record(address, 0), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
@@ -611,7 +621,14 @@ mod tests {
     fn test_record_subtract() {
         let program_string = read_add_program("record").unwrap();
 
-        let user_inputs = vec![U64(1), U64(1)];
+        let mut address = [0_u8; 63];
+        let address_string = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh";
+        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+
+        let user_inputs = vec![Record(address, 1), U64(1)];
 
         // execute circuit
         let (ret_ok, circuit_outputs, _bytes_proof) =
@@ -620,6 +637,34 @@ mod tests {
 
         for (register, output) in circuit_outputs {
             println!("{}: {:?}", register, output.value().unwrap());
+        }
+    }
+
+    #[test]
+    fn test_credits_mint() {
+        let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("programs/credits.aleo");
+        let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
+
+        let mut address = [0_u8; 63];
+        let address_string = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh";
+        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+
+        let user_inputs = vec![Address(address), U64(1)];
+
+        let (ret_ok, circuit_outputs, _bytes_proof) =
+            vmtropy::execute_function(program_string.as_str(), "mint", &user_inputs).unwrap();
+
+        let expected_output_register_locator = &"r2".to_string();
+        assert!(ret_ok);
+        assert!(circuit_outputs.len() == 1);
+        if let (output_register_locator, SimpleRecord(record)) = circuit_outputs.first().unwrap() {
+            assert_eq!(output_register_locator, expected_output_register_locator);
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), 1);
         }
     }
 }

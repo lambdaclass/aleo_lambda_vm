@@ -232,13 +232,7 @@ fn circuit_inputs(
             (ValueType::Public(_) | ValueType::Private(_), _) => bail!("Unsupported type"),
             // Records
             // TODO: User input should be SimpleworksValueType::Record.
-            (ValueType::Record(_), SimpleworksValueType::U64(gates)) => {
-                let mut address = [0_u8; 63];
-                let address_string =
-                    "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh".as_bytes();
-                for (address_byte, address_string_byte) in address.iter_mut().zip(address_string) {
-                    *address_byte = *address_string_byte;
-                }
+            (ValueType::Record(_), SimpleworksValueType::Record(address, gates)) => {
                 SimpleRecord(Record {
                     owner: AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
                         Ok(address)
@@ -320,7 +314,7 @@ fn circuit_outputs(
         let circuit_output = match instruction.opcode() {
             Opcode::Assert(_) => bail!("Assert operations are not supported"),
             Opcode::Call => bail!("Call operation is not supported"),
-            Opcode::Cast => bail!("Cast operation is not supported"),
+            Opcode::Cast => instructions::cast(&instruction_operands)?,
             Opcode::Command(_) => bail!("Command operations are not supported"),
             Opcode::Commit(_) => bail!("Commit operations are not supported"),
             Opcode::Finalize(_) => bail!("Finalize operations are not supported"),

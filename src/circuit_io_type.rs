@@ -1,5 +1,5 @@
 use crate::record::Record;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
 use simpleworks::gadgets::AddressGadget;
 
@@ -27,7 +27,12 @@ impl CircuitIOType {
             SimpleUInt32(value) => Ok(value.value()?.to_string()),
             SimpleUInt64(value) => Ok(value.value()?.to_string()),
             SimpleUInt128(value) => Ok(value.value()?.to_string()),
-            _ => bail!("value() is not implemented for this type"),
+            SimpleRecord(value) => {
+                let owner = value.owner.value()?;
+                let gates = value.gates.value()?;
+                Ok(format!("Record {{ owner: {}, gates: {} }}", owner, gates))
+            }
+            SimpleAddress(value) => Ok(value.value()?),
         }
     }
 }
