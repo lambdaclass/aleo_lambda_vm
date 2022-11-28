@@ -2,31 +2,27 @@ name: VMtropy build checks
 on: push
 jobs:
   integration-tests:
-    runs-on: ubuntu-20.04
+    runs-on: [self-hosted, nomad]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
             profile: minimal
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key:  "vmtropy"
+      - run: apt install -y libssl-dev
       - run: cargo test
   clippy:
-    runs-on: ubuntu-20.04
+    runs-on: [self-hosted, nomad]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
             components: clippy
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key:  "vmtropy"
+      - run: apt install -y clang libclang1
       - run: cargo clippy --all-targets --all-features -- -D warnings
   format:
-    runs-on: ubuntu-20.04
+    runs-on: [self-hosted, nomad]
     steps:
       - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
@@ -35,7 +31,7 @@ jobs:
             components: rustfmt
       - run: cargo fmt -- --check
   # coverage:
-  #   runs-on: ubuntu-20.04
+  #   runs-on: [self-hosted, nomad]
   #   steps:
   #     - uses: actions/checkout@v3
   #     - run: ls
