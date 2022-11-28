@@ -36,7 +36,7 @@ derivative = { version = "2.0", features = ["use_core"] }
 digest = "0.9"
 
 snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
-simpleworks = { git = "ssh://git@github.com/Entropy1729/simpleworks.git" }
+simpleworks = { git = "https://github.com/Entropy1729/simpleworks.git" }
 anyhow = "1"
 hex = "0.4.3"
 

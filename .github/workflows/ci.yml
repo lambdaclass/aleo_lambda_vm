@@ -2,13 +2,9 @@ name: VMtropy build checks
 on: push
 jobs:
   integration-tests:
-    runs-on: [self-hosted, nomad]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Give GH actions access to simpleworks
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
@@ -18,13 +14,9 @@ jobs:
           key:  "vmtropy"
       - run: cargo test
   clippy:
-    runs-on: [self-hosted, nomad]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Give GH actions access to simpleworks
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
@@ -32,23 +24,18 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key:  "vmtropy"
-      - run: apt install -y clang libclang1
       - run: cargo clippy --all-targets --all-features -- -D warnings
   format:
-    runs-on: [self-hosted, nomad]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Give GH actions access to simpleworks
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.PRIVATE_SSH_KEY }}
       - uses: actions-rs/toolchain@v1
         with:
             toolchain: stable
             components: rustfmt
       - run: cargo fmt -- --check
   # coverage:
-  #   runs-on: [self-hosted, nomad]
+  #   runs-on: ubuntu-20.04
   #   steps:
   #     - uses: actions/checkout@v3
   #     - run: ls
