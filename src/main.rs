@@ -45,7 +45,7 @@ fn parse_args() -> Result<(Vec<String>, String, String)> {
                 .get(0)
                 .ok_or_else(|| anyhow!("Error parsing input parameters"))?
                 .iter()
-                .map(|v| v.to_string())
+                .map(|v| (*v).to_string())
                 .collect();
 
             (inputs, function_name, program_string)

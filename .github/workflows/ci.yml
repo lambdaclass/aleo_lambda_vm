@@ -19,7 +19,7 @@ jobs:
         with:
             toolchain: stable
             components: clippy
-      - run: apt install -y clang libclang1
+      - run: apt install -y clang libclang1 libssl-dev
       - run: cargo clippy --all-targets --all-features -- -D warnings
   format:
     runs-on: [self-hosted, nomad]

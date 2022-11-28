@@ -81,7 +81,7 @@ pub fn execute_function(
     process_inputs(&function, &cs, user_inputs, &mut program_variables)?;
     process_outputs(&function, &mut program_variables)?;
 
-    let circuit_outputs = circuit_outputs(function, &program_variables)?;
+    let circuit_outputs = circuit_outputs(&function, &program_variables)?;
 
     let is_satisfied = cs.is_satisfied().map_err(|e| anyhow!("{}", e))?;
 
@@ -156,7 +156,7 @@ fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
 }
 
 fn circuit_outputs(
-    function: Function<Testnet3>,
+    function: &Function<Testnet3>,
     program_variables: &SimpleProgramVariables,
 ) -> Result<CircuitOutputType> {
     let mut circuit_outputs = IndexMap::new();
