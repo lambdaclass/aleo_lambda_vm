@@ -50,6 +50,7 @@ use simpleworks::gadgets::AddressGadget;
 use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Function, Instruction, LiteralType, PlaintextType, Testnet3, ValueType};
 use snarkvm::prelude::{Operand, Register};
+use std::collections::HashMap;
 
 pub mod circuit_io_type;
 pub mod circuit_param_type;
@@ -303,6 +304,7 @@ fn process_inputs(
                     gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || {
                         Ok(gates)
                     })?,
+                    entries: HashMap::new(),
                 })
             }
             (ValueType::Record(_), _) => {

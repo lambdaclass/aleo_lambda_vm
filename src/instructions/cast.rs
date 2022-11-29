@@ -1,5 +1,6 @@
 use crate::{circuit_io_type::CircuitIOType, record::Record};
 use anyhow::{bail, Result};
+use std::collections::HashMap;
 
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
@@ -8,6 +9,7 @@ pub fn cast(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
         [SimpleAddress(address), SimpleUInt64(gates)] => Ok(SimpleRecord(Record {
             owner: address.clone(),
             gates: gates.clone(),
+            entries: HashMap::new(),
         })),
         [SimpleUInt64(_gates), SimpleAddress(_address)] => {
             bail!("The order of the operands when casting into a record is reversed")
