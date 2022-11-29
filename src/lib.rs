@@ -41,12 +41,10 @@ use crate::circuit_io_type::{
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
-use ark_r1cs_std::{
-    uint128::UInt128, uint16::UInt16, uint32::UInt32, uint64::UInt64, uint8::UInt8,
-};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
+use ark_serialize::CanonicalDeserialize;
 use indexmap::IndexMap;
-use simpleworks::gadgets::AddressGadget;
+use simpleworks::marlin::{MarlinProof, VerifyingKey};
 use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Function, Instruction, LiteralType, PlaintextType, Testnet3, ValueType};
 use snarkvm::prelude::{Operand, Register};
@@ -57,16 +55,14 @@ pub mod circuit_param_type;
 pub mod instructions;
 pub mod record;
 
+use simpleworks::gadgets::traits::ToFieldElements;
+
 use record::Record;
 
-pub type ConstraintF = ark_ed_on_bls12_381::Fq;
-
-pub type UInt8Gadget = UInt8<ConstraintF>;
-pub type UInt16Gadget = UInt16<ConstraintF>;
-pub type UInt32Gadget = UInt32<ConstraintF>;
-pub type UInt64Gadget = UInt64<ConstraintF>;
-pub type UInt128Gadget = UInt128<ConstraintF>;
-
+use simpleworks::gadgets::{
+    AddressGadget, ConstraintF, UInt128Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+    UInt8Gadget,
+};
 pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 
 pub type SimpleProgramVariables = IndexMap<String, Option<CircuitIOType>>;
@@ -98,6 +94,23 @@ pub fn execute_function(
     let bytes_proof = simpleworks::marlin::generate_proof(&universal_srs, &mut rng, cs_ref_clone)?;
 
     Ok((is_satisfied, circuit_outputs, bytes_proof))
+}
+
+pub fn verify_execution(
+    verifying_key_serialized: Vec<u8>,
+    public_inputs: &[CircuitIOType],
+    proof_serialized: Vec<u8>,
+) -> Result<bool> {
+    let verifying_key = VerifyingKey::deserialize(&mut verifying_key_serialized.as_slice())?;
+    let proof = MarlinProof::deserialize(&mut proof_serialized.as_slice())?;
+
+    let mut inputs = vec![];
+    for gadget in public_inputs {
+        inputs.push(gadget.to_field_elements()?);
+    }
+    let inputs_flattened: Vec<ConstraintF> = inputs.into_iter().flatten().collect();
+
+    simpleworks::marlin::verify_proof(verifying_key, &inputs_flattened, proof)
 }
 
 // This function builds the scaffold of the program variables.
