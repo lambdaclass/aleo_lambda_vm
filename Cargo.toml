@@ -41,6 +41,7 @@ anyhow = "1"
 hex = "0.4.3"
 
 indexmap = "1"
+dirs = "4.0.0"
 
 [[example]]
 name = "sample-program"

@@ -1,8 +1,11 @@
 use anyhow::{anyhow, bail, Result};
+use ark_serialize::{CanonicalSerialize, Write};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Identifier, Parser as AleoParser, Program, Testnet3};
+use std::fs;
 use std::path::PathBuf;
+use vmtropy::generate_universal_srs;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -13,7 +16,7 @@ struct Args {
     function_name: String,
 }
 
-fn parse_args() -> Result<(Vec<String>, String, String)> {
+fn main() -> Result<()> {
     let matches = Command::new("vmtropy")
         .subcommand(
             Command::new("execute")
@@ -26,46 +29,74 @@ fn parse_args() -> Result<(Vec<String>, String, String)> {
                 // Inputs required for the function (if needed).
                 .arg(Arg::new("inputs").num_args(1..).action(ArgAction::Append)),
         )
+        .subcommand(Command::new("generate_parameters"))
         .get_matches();
 
-    let (inputs, function_name, program_string) = match matches.subcommand() {
-        Some(("execute", execute_cmd)) => {
-            let function_name: String = execute_cmd
-                .get_one::<String>("function")
-                .ok_or_else(|| anyhow!("Error parsing function name parameter"))?
-                .to_string();
-            let program_string: String = execute_cmd
-                .get_one::<String>("from")
-                .ok_or_else(|| anyhow!("Error parsing program_string parameter"))?
-                .to_string();
-            let inputs: Vec<String> = execute_cmd
-                .grouped_values_of("inputs")
-                .ok_or_else(|| anyhow!("Error parsing input parameters"))?
-                .collect::<Vec<Vec<&str>>>()
-                .get(0)
-                .ok_or_else(|| anyhow!("Error parsing input parameters"))?
-                .iter()
-                .map(|v| (*v).to_string())
-                .collect();
+    match matches.subcommand_name() {
+        Some("execute") => {
+            let (inputs, function_name, program_string) = match matches.subcommand() {
+                Some(("execute", execute_cmd)) => {
+                    let function_name: String = execute_cmd
+                        .get_one::<String>("function")
+                        .ok_or_else(|| anyhow!("Error parsing function name parameter"))?
+                        .to_string();
+                    let program_string: String = execute_cmd
+                        .get_one::<String>("from")
+                        .ok_or_else(|| anyhow!("Error parsing program_string parameter"))?
+                        .to_string();
+                    let inputs: Vec<String> = execute_cmd
+                        .grouped_values_of("inputs")
+                        .ok_or_else(|| anyhow!("Error parsing input parameters"))?
+                        .collect::<Vec<Vec<&str>>>()
+                        .get(0)
+                        .ok_or_else(|| anyhow!("Error parsing input parameters"))?
+                        .iter()
+                        .map(|v| (*v).to_string())
+                        .collect();
 
-            (inputs, function_name, program_string)
+                    (inputs, function_name, program_string)
+                }
+                _ => bail!("Unsupported command."),
+            };
+
+            let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
+            for input_value in inputs.iter().rev() {
+                let v = SimpleworksValueType::try_from(input_value)?;
+                vec_user_inputs.push(v);
+            }
+
+            execute(&function_name, &program_string, &vec_user_inputs)
         }
-        _ => bail!("Unsupported command."),
-    };
+        Some("generate_parameters") => {
+            let universal_srs = generate_universal_srs()?;
 
-    Ok((inputs, function_name, program_string))
-}
+            let mut bytes = Vec::new();
+            universal_srs.serialize(&mut bytes).unwrap();
 
-fn main() -> Result<()> {
-    let (function_inputs, function_name, program_string) = parse_args()?;
+            let parameters_dir = dirs::home_dir()
+                .ok_or_else(|| anyhow!("Home dir not found. Set a home directory"))?
+                .join(".vmtropy");
+            let file_dir = parameters_dir.join("universal_srs");
+            fs::create_dir_all(parameters_dir)?;
 
-    let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
-    for input_value in function_inputs.iter().rev() {
-        let v = SimpleworksValueType::try_from(input_value)?;
-        vec_user_inputs.push(v);
+            let mut file = std::fs::OpenOptions::new()
+                // create or open if it already exists
+                .create(true)
+                .write(true)
+                // Overwrite file, do not append
+                .append(false)
+                .open(&file_dir)?;
+
+            // This let is so clippy doesn't complain
+            let _written_amount = file.write(&bytes)?;
+
+            println!("Stored universal parameters under {:?}", file_dir);
+
+            Ok(())
+        }
+        Some(other_value) => bail!("Unsupported command: {}", other_value),
+        None => bail!("No subcommand name given"),
     }
-
-    execute(&function_name, &program_string, &vec_user_inputs)
 }
 
 fn execute(

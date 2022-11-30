@@ -44,7 +44,7 @@ use ark_r1cs_std::prelude::AllocVar;
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
 use ark_serialize::CanonicalDeserialize;
 use indexmap::IndexMap;
-use simpleworks::marlin::{MarlinProof, VerifyingKey};
+use simpleworks::marlin::{MarlinProof, UniversalSRS, VerifyingKey};
 use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Function, Instruction, LiteralType, PlaintextType, Testnet3, ValueType};
 use snarkvm::prelude::{Operand, Register};
@@ -94,6 +94,15 @@ pub fn execute_function(
     let bytes_proof = simpleworks::marlin::generate_proof(&universal_srs, &mut rng, cs_ref_clone)?;
 
     Ok((is_satisfied, circuit_outputs, bytes_proof))
+}
+
+/// Note: this function will always generate the same universal parameters because
+/// the rng seed is hardcoded. This is not going to be the case forever, though, as eventually
+/// these parameters will be something generated in a setup ceremony and thus it will not be possible
+/// to derive them deterministically like this.
+pub fn generate_universal_srs() -> Result<UniversalSRS> {
+    let rng = &mut simpleworks::marlin::generate_rand();
+    simpleworks::marlin::generate_universal_srs(rng)
 }
 
 pub fn verify_execution(
