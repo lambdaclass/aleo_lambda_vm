@@ -1,9 +1,8 @@
 use crate::record::Record;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
 use simpleworks::gadgets::{
-    traits::ToFieldElements, AddressGadget, ConstraintF, UInt128Gadget, UInt16Gadget, UInt32Gadget,
-    UInt64Gadget, UInt8Gadget,
+    AddressGadget, UInt128Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 
 pub use CircuitIOType::{
@@ -36,20 +35,6 @@ impl CircuitIOType {
                 Ok(format!("Record {{ owner: {}, gates: {} }}", owner, gates))
             }
             SimpleAddress(value) => Ok(value.value()?),
-        }
-    }
-}
-
-impl ToFieldElements<ConstraintF> for CircuitIOType {
-    fn to_field_elements(&self) -> Result<Vec<ConstraintF>> {
-        match self {
-            SimpleUInt8(value) => value.to_field_elements(),
-            SimpleUInt16(value) => value.to_field_elements(),
-            SimpleUInt32(value) => value.to_field_elements(),
-            SimpleUInt64(value) => value.to_field_elements(),
-            SimpleUInt128(value) => value.to_field_elements(),
-            SimpleAddress(value) => value.to_field_elements(),
-            SimpleRecord(_value) => bail!("Converting records to field elements is not supported"),
         }
     }
 }

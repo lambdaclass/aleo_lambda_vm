@@ -114,12 +114,16 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (_verifies, outputs, proof) = vmtropy::execute_function(function, user_inputs)?;
+    let (outputs, proof) = vmtropy::execute_function(&function, user_inputs)?;
 
     for (register, value) in outputs {
         println!("Output register {} has value {}", register, value.value()?);
     }
 
-    println!("Proof of execution: \n0x{}", hex::encode(proof));
+    let mut bytes_proof = Vec::new();
+    match proof.serialize(&mut bytes_proof) {
+        Ok(_) => println!("Proof of execution: \n0x{}", hex::encode(bytes_proof)),
+        Err(_) => println!("⚠️ Error serializing proof"),
+    }
     Ok(())
 }

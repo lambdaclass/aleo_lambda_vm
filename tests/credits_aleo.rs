@@ -3,7 +3,7 @@ mod credits_functions_tests {
     use ark_r1cs_std::R1CSVar;
     use simpleworks::types::value::SimpleworksValueType::{Address, Record, U64};
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::circuit_io_type::CircuitIOType::SimpleRecord;
+    use vmtropy::{build_program, circuit_io_type::CircuitIOType::SimpleRecord, verify_execution};
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
@@ -31,17 +31,24 @@ mod credits_functions_tests {
 
         let user_inputs = vec![Address(address_bytes), U64(1)];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_output_register_locator = &"r2".to_string();
-        assert!(constraint_system_is_satisfied);
+
         assert!(circuit_outputs.len() == 1);
         if let (output_register_locator, SimpleRecord(record)) = circuit_outputs.first().unwrap() {
             assert_eq!(output_register_locator, expected_output_register_locator);
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), 1);
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.get("genesis").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -58,17 +65,24 @@ mod credits_functions_tests {
 
         let user_inputs = vec![Address(address_bytes), U64(1)];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_output_register_locator = &"r2".to_string();
-        assert!(constraint_system_is_satisfied);
+
         assert!(circuit_outputs.len() == 1);
         if let (output_register_locator, SimpleRecord(record)) = circuit_outputs.first().unwrap() {
             assert_eq!(output_register_locator, expected_output_register_locator);
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), 1);
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.get("mint").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -91,13 +105,11 @@ mod credits_functions_tests {
             U64(amount_to_transfer),
         ];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let receiver_record_output_register = &"r4".to_string();
         let sender_record_output_register = &"r5".to_string();
 
-        assert!(constraint_system_is_satisfied);
         assert_eq!(circuit_outputs.len(), 2);
 
         let mut circuit_outputs = circuit_outputs.iter();
@@ -131,6 +143,15 @@ mod credits_functions_tests {
                 "Sender gates is incorrect"
             );
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get("transfer").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -148,18 +169,24 @@ mod credits_functions_tests {
 
         let user_inputs = vec![Record(address_bytes, amount), Record(address_bytes, amount)];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_output_register_locator = &"r3".to_string();
 
-        assert!(constraint_system_is_satisfied);
         assert_eq!(circuit_outputs.len(), 1);
         if let (output_register_locator, SimpleRecord(record)) = circuit_outputs.first().unwrap() {
             assert_eq!(output_register_locator, expected_output_register_locator);
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), amount * 2);
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.get("combine").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -181,10 +208,8 @@ mod credits_functions_tests {
             U64(gates_for_new_record),
         ];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        assert!(constraint_system_is_satisfied);
         assert_eq!(circuit_outputs.len(), 2, "Two output records were expected");
 
         let mut circuit_outputs = circuit_outputs.iter();
@@ -216,6 +241,14 @@ mod credits_functions_tests {
                 "Record gates is incorrect"
             );
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.get("split").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -234,10 +267,8 @@ mod credits_functions_tests {
 
         let user_inputs = vec![Record(address_bytes, amount), U64(fee)];
 
-        let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        assert!(constraint_system_is_satisfied);
         assert_eq!(circuit_outputs.len(), 1, "One output records was expected");
 
         if let Some((_output_register_locator, SimpleRecord(record))) =
@@ -254,5 +285,13 @@ mod credits_functions_tests {
                 "Record amount is incorrect"
             );
         }
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.get("fee").unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 }

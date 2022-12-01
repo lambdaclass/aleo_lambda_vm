@@ -42,11 +42,19 @@ use crate::circuit_io_type::{
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef, Namespace};
-use ark_serialize::CanonicalDeserialize;
+use ark_std::rand::rngs::StdRng;
 use indexmap::IndexMap;
-use simpleworks::marlin::{MarlinProof, UniversalSRS, VerifyingKey};
-use simpleworks::types::value::SimpleworksValueType;
-use snarkvm::prelude::{Function, Instruction, LiteralType, PlaintextType, Testnet3, ValueType};
+use simpleworks::{
+    gadgets::{
+        traits::ToFieldElements, AddressGadget, ConstraintF, UInt128Gadget, UInt16Gadget,
+        UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    },
+    marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
+    types::value::SimpleworksValueType,
+};
+use snarkvm::prelude::{
+    Function, Instruction, LiteralType, Parser, PlaintextType, Program, Testnet3, ValueType,
+};
 use snarkvm::prelude::{Operand, Register};
 use std::collections::HashMap;
 
@@ -54,18 +62,13 @@ pub mod circuit_io_type;
 pub mod circuit_param_type;
 pub mod instructions;
 pub mod record;
-
-use simpleworks::gadgets::traits::ToFieldElements;
-
 use record::Record;
 
-use simpleworks::gadgets::{
-    AddressGadget, ConstraintF, UInt128Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
-    UInt8Gadget,
-};
 pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 
-pub type SimpleProgramVariables = IndexMap<String, Option<CircuitIOType>>;
+pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
+pub type ProgramBuild = IndexMap<String, FunctionKeys>;
+pub type FunctionKeys = (ProvingKey, VerifyingKey);
 
 /// Returns the circuit outputs and the marlin proof.
 ///
@@ -79,32 +82,146 @@ pub type SimpleProgramVariables = IndexMap<String, Option<CircuitIOType>>;
 /// -  Marlin Proof of the function.
 ///
 pub fn execute_function(
-    function: Function<Testnet3>,
+    function: &Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
-) -> Result<(bool, CircuitOutputType, Vec<u8>)> {
-    let cs = ConstraintSystem::<ConstraintF>::new_ref();
+) -> Result<(CircuitOutputType, MarlinProof)> {
+    let mut rng = simpleworks::marlin::generate_rand();
+    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
+    let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
-    let mut program_variables = program_variables(&function);
+    let mut function_variables = function_variables(function);
+    let (function_proving_key, _function_verifying_key) = build_function(
+        function,
+        user_inputs,
+        constraint_system.clone(),
+        &universal_srs,
+        &mut function_variables,
+    )?;
 
-    process_inputs(&function, &cs, user_inputs, &mut program_variables)?;
-    process_outputs(&function, &mut program_variables)?;
+    let circuit_outputs = circuit_outputs(function, &function_variables)?;
 
-    let circuit_outputs = circuit_outputs(&function, &program_variables)?;
-
-    let is_satisfied = cs.is_satisfied().map_err(|e| anyhow!("{}", e))?;
-
-    let cs_clone = (*cs
+    // Here we clone the constraint system because deep down when generating
+    // the proof the constraint system is consumed and it has to have one
+    // reference for it to be consumed.
+    let cs_clone = (*constraint_system
         .borrow()
         .ok_or("Error borrowing")
         .map_err(|e| anyhow!("{}", e))?)
     .clone();
     let cs_ref_clone = ConstraintSystemRef::CS(Rc::new(RefCell::new(cs_clone)));
 
+    let proof = simpleworks::marlin::generate_proof(cs_ref_clone, function_proving_key, &mut rng)?;
+
+    Ok((circuit_outputs, proof))
+}
+
+/// Builds a program, which means generating the proving and verifying keys
+/// for each function in the program.
+pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
     let mut rng = simpleworks::marlin::generate_rand();
     let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
-    let bytes_proof = simpleworks::marlin::generate_proof(&universal_srs, &mut rng, cs_ref_clone)?;
 
-    Ok((is_satisfied, circuit_outputs, bytes_proof))
+    let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
+
+    let mut program_build: ProgramBuild = IndexMap::new();
+    for (function_identifier, function) in program.functions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+        let inputs = default_user_inputs(function)?;
+        let (function_proving_key, function_verifying_key) = match build_function(
+            function,
+            &inputs,
+            constraint_system.clone(),
+            &universal_srs,
+            &mut function_variables(function),
+        ) {
+            Ok((function_proving_key, function_verifying_key)) => {
+                (function_proving_key, function_verifying_key)
+            }
+            Err(e) => {
+                bail!(
+                    "Couldn't build function \"{}\": {}",
+                    function_identifier.to_string(),
+                    e
+                );
+            }
+        };
+        program_build.insert(
+            function.name().to_string(),
+            (function_proving_key, function_verifying_key),
+        );
+    }
+
+    Ok(program_build)
+}
+
+// We are using this function to build a program because in order to do that
+// we need inputs.
+/// Defaults the inputs for a given function.
+fn default_user_inputs(function: &Function<Testnet3>) -> Result<Vec<SimpleworksValueType>> {
+    let mut default_user_inputs: Vec<SimpleworksValueType> = Vec::new();
+    for function_input in function.inputs() {
+        let default_user_input = match function_input.value_type() {
+            // UInt
+            ValueType::Public(PlaintextType::Literal(LiteralType::U8))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::U8)) => {
+                SimpleworksValueType::U8(u8::default())
+            }
+            ValueType::Public(PlaintextType::Literal(LiteralType::U16))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::U16)) => {
+                SimpleworksValueType::U16(u16::default())
+            }
+            ValueType::Public(PlaintextType::Literal(LiteralType::U32))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::U32)) => {
+                SimpleworksValueType::U32(u32::default())
+            }
+            ValueType::Public(PlaintextType::Literal(LiteralType::U64))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::U64)) => {
+                SimpleworksValueType::U64(u64::default())
+            }
+            ValueType::Public(PlaintextType::Literal(LiteralType::U128))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
+                SimpleworksValueType::U128(u128::default())
+            }
+            // Address
+            ValueType::Public(PlaintextType::Literal(LiteralType::Address))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::Address)) => {
+                SimpleworksValueType::Address(
+                    *b"aleo11111111111111111111111111111111111111111111111111111111111",
+                )
+            }
+            // Unsupported Cases
+            ValueType::Public(_) | ValueType::Private(_) => bail!("Unsupported type"),
+            // Records
+            ValueType::Record(_) => SimpleworksValueType::Record(
+                *b"aleo11111111111111111111111111111111111111111111111111111111111",
+                u64::default(),
+            ),
+            // Constant Types
+            ValueType::Constant(_) => bail!("Constant types are not supported"),
+            // External Records
+            ValueType::ExternalRecord(_) => bail!("ExternalRecord types are not supported"),
+        };
+        default_user_inputs.push(default_user_input);
+    }
+    Ok(default_user_inputs)
+}
+
+/// Builds a function, which means generating its proving and verifying keys.
+fn build_function(
+    function: &Function<Testnet3>,
+    user_inputs: &[SimpleworksValueType],
+    constraint_system: ConstraintSystemRef<ConstraintF>,
+    universal_srs: &UniversalSRS,
+    function_variables: &mut SimpleFunctionVariables,
+) -> Result<FunctionKeys> {
+    process_inputs(
+        function,
+        &constraint_system,
+        user_inputs,
+        function_variables,
+    )?;
+    process_outputs(function, function_variables)?;
+    simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 
 /// Note: this function will always generate the same universal parameters because
@@ -117,38 +234,36 @@ pub fn generate_universal_srs() -> Result<UniversalSRS> {
 }
 
 pub fn verify_execution(
-    verifying_key_serialized: Vec<u8>,
-    public_inputs: &[CircuitIOType],
-    proof_serialized: Vec<u8>,
+    verifying_key: VerifyingKey,
+    public_inputs: &[SimpleworksValueType],
+    proof: MarlinProof,
+    rng: &mut StdRng,
 ) -> Result<bool> {
-    let verifying_key = VerifyingKey::deserialize(&mut verifying_key_serialized.as_slice())?;
-    let proof = MarlinProof::deserialize(&mut proof_serialized.as_slice())?;
-
     let mut inputs = vec![];
     for gadget in public_inputs {
-        inputs.push(gadget.to_field_elements()?);
+        inputs.extend_from_slice(&gadget.to_field_elements()?);
     }
-    let inputs_flattened: Vec<ConstraintF> = inputs.into_iter().flatten().collect();
-
-    simpleworks::marlin::verify_proof(verifying_key, &inputs_flattened, proof)
+    simpleworks::marlin::verify_proof(verifying_key, &inputs, proof, rng)
 }
 
-// This function builds the scaffold of the program variables.
-// We use a hash map for such variables, where the key is the variable name
-// and the value is the variable type.
-// All the values start as None, and will be filled in the next steps.
-// For example, this would be the output of executing this function for
-// credits.aleo's transfer function:
-// {
-//     "r0": None,
-//     "r0.gates": None,
-//     "r0.owner": None,
-//     "r1": None,
-//     "r2": None,
-//     "r3": None,
-//     "r4": None,
-//     "r5": None,
-// }
+/// This function builds the scaffold of the program variables.
+/// We use a hash map for such variables, where the key is the variable name
+/// and the value is the variable type.
+/// All the values start as None, and will be filled in the next steps.
+/// For example, this would be the output of executing this function for
+/// credits.aleo's transfer function:
+/// ```json
+/// {
+///     "r0": None,
+///     "r0.gates": None,
+///     "r0.owner": None,
+///     "r1": None,
+///     "r2": None,
+///     "r3": None,
+///     "r4": None,
+///     "r5": None,
+/// }
+/// ```
 ///
 /// # Parameters
 /// - `function` - function to be analyzed.
@@ -156,8 +271,8 @@ pub fn verify_execution(
 /// # Returns
 /// - `IndexMap` with the program variables and its `CircuitIOType` values.
 ///
-fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
-    let mut registers: SimpleProgramVariables = IndexMap::new();
+fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
+    let mut registers: SimpleFunctionVariables = IndexMap::new();
 
     let function_inputs: Vec<String> = function
         .inputs()
@@ -207,15 +322,18 @@ fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
 ///
 fn circuit_outputs(
     function: &Function<Testnet3>,
-    program_variables: &SimpleProgramVariables,
+    program_variables: &SimpleFunctionVariables,
 ) -> Result<CircuitOutputType> {
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
         let result = program_variables
             .get(&register)
-            .ok_or_else(|| anyhow!("Register not found"))
-            .and_then(|r| r.clone().ok_or_else(|| anyhow!("Register not assigned")))?;
+            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .and_then(|r| {
+                r.clone()
+                    .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+            })?;
         circuit_outputs.insert(register, result);
         Ok::<_, anyhow::Error>(())
     })?;
@@ -243,7 +361,7 @@ fn process_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
     user_inputs: &[SimpleworksValueType],
-    program_variables: &mut SimpleProgramVariables,
+    program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
     for (function_input, user_input) in function.inputs().iter().zip(user_inputs) {
         let register = function_input.register();
@@ -409,7 +527,7 @@ fn process_inputs(
 ///
 fn process_outputs(
     function: &Function<Testnet3>,
-    program_variables: &mut SimpleProgramVariables,
+    program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
     for instruction in function.instructions() {
         let mut instruction_operands = Vec::new();
@@ -439,15 +557,19 @@ fn process_outputs(
                                     .insert(variable_name.to_string(), Some(gates_operand.clone()));
                                 instruction_operands.push(gates_operand);
                             }
-                            _ => bail!("Unsupported record member"),
+                            other => bail!("\"{other}\" is an unsupported record member"),
                         };
                     }
                 }
                 (Operand::Register(_), Some(Some(operand))) => {
                     instruction_operands.push(operand.clone());
                 }
-                (Operand::Register(_), Some(None)) => bail!("Register not assigned in registers"),
-                (Operand::Register(_), None) => bail!("Register not found in registers"),
+                (Operand::Register(r), Some(None)) => {
+                    bail!("Register \"{}\" not assigned in registers", r.to_string())
+                }
+                (Operand::Register(r), None) => {
+                    bail!("Register \"{}\" not found in registers", r.to_string())
+                }
                 (Operand::Literal(_), _) => bail!("Literal operands are not supported"),
                 (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
                 (Operand::Caller, _) => bail!("Caller operands are not supported"),

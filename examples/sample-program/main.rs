@@ -1,3 +1,4 @@
+use ark_serialize::CanonicalSerialize;
 use simpleworks::types::value::SimpleworksValueType::U32;
 use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
 
@@ -13,8 +14,7 @@ fn main() {
     let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (verifies, outputs, proof) = vmtropy::execute_function(function, &user_inputs).unwrap();
-    assert!(verifies);
+    let (outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
     for (register, value) in outputs {
         if let Ok(value) = value.value() {
@@ -24,5 +24,9 @@ fn main() {
         }
     }
 
-    println!("Proof of execution: \n0x{}", hex::encode(proof));
+    let mut bytes_proof = Vec::new();
+    match proof.serialize(&mut bytes_proof) {
+        Ok(_) => println!("Proof of execution: \n0x{}", hex::encode(bytes_proof)),
+        Err(_) => println!("⚠️ Error serializing proof"),
+    }
 }

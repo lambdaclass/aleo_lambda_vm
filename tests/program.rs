@@ -3,6 +3,7 @@ mod tests {
     use anyhow::Result;
     use simpleworks::types::value::SimpleworksValueType::{Record, U128, U16, U32, U64};
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+    use vmtropy::{build_program, verify_execution};
 
     fn read_add_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -15,8 +16,9 @@ mod tests {
     fn test01_add_with_u16_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_1";
         let function = program
-            .get_function(&Identifier::try_from("hello_1").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
         /*
         function hello_1:
@@ -29,21 +31,27 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        assert!(verify_execution(function_verifying_key.clone(), &user_inputs, proof, rng).unwrap())
     }
 
     #[test]
     fn test02_add_with_u16_private_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_2";
         let function = program
-            .get_function(&Identifier::try_from("hello_2").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -56,22 +64,34 @@ mod tests {
 
         let user_inputs = vec![U16(1), U16(1)];
 
-        // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        println!("{}", function);
+        println!("{:?}", user_inputs);
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        // execute circuit
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test03_add_with_u16_private_and_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_3";
         let function = program
-            .get_function(&Identifier::try_from("hello_3").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -85,21 +105,30 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test04_add_with_u32_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_4";
         let function = program
-            .get_function(&Identifier::try_from("hello_4").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -113,21 +142,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test05_add_with_u32_private_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_5";
         let function = program
-            .get_function(&Identifier::try_from("hello_5").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -141,21 +179,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test06_add_with_u32_private_and_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_6";
         let function = program
-            .get_function(&Identifier::try_from("hello_6").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -169,21 +216,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test07_add_with_u64_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_7";
         let function = program
-            .get_function(&Identifier::try_from("hello_7").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -197,21 +253,30 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test08_add_with_u64_private_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_8";
         let function = program
-            .get_function(&Identifier::try_from("hello_8").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -225,21 +290,30 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test09_add_with_u64_private_and_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_9";
         let function = program
-            .get_function(&Identifier::try_from("hello_9").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -253,13 +327,21 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -267,8 +349,9 @@ mod tests {
     fn test10_add_with_u128_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_10";
         let function = program
-            .get_function(&Identifier::try_from("hello_10").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -282,13 +365,21 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -296,8 +387,9 @@ mod tests {
     fn test11_add_with_u128_private_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_11";
         let function = program
-            .get_function(&Identifier::try_from("hello_11").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -311,13 +403,21 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -325,8 +425,9 @@ mod tests {
     fn test12_add_with_u128_private_and_public_inputs() {
         let program_string = read_add_program("add").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_12";
         let function = program
-            .get_function(&Identifier::try_from("hello_12").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -340,21 +441,30 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "2"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u16_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_1";
         let function = program
-            .get_function(&Identifier::try_from("hello_1").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -368,21 +478,30 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u16_private_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_2";
         let function = program
-            .get_function(&Identifier::try_from("hello_2").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -396,21 +515,30 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u16_private_and_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_3";
         let function = program
-            .get_function(&Identifier::try_from("hello_3").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -424,21 +552,30 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u32_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_4";
         let function = program
-            .get_function(&Identifier::try_from("hello_4").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -452,21 +589,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u32_private_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_5";
         let function = program
-            .get_function(&Identifier::try_from("hello_5").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -480,21 +626,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u32_private_and_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_6";
         let function = program
-            .get_function(&Identifier::try_from("hello_6").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -508,21 +663,30 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u64_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_7";
         let function = program
-            .get_function(&Identifier::try_from("hello_7").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -536,21 +700,30 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u64_private_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_8";
         let function = program
-            .get_function(&Identifier::try_from("hello_8").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -564,21 +737,30 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_subtract_with_u64_private_and_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_9";
         let function = program
-            .get_function(&Identifier::try_from("hello_9").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -592,13 +774,21 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -606,8 +796,9 @@ mod tests {
     fn test_subtract_with_u128_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_10";
         let function = program
-            .get_function(&Identifier::try_from("hello_10").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -621,13 +812,21 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -635,8 +834,9 @@ mod tests {
     fn test_subtract_with_u128_private_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_11";
         let function = program
-            .get_function(&Identifier::try_from("hello_11").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -650,13 +850,21 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = [];
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
@@ -664,8 +872,9 @@ mod tests {
     fn test_subtract_with_u128_private_and_public_inputs() {
         let program_string = read_add_program("subtract").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_12";
         let function = program
-            .get_function(&Identifier::try_from("hello_12").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         /*
@@ -679,21 +888,30 @@ mod tests {
         let user_inputs = vec![U128(1), U128(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
 
-        for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
-        }
+        assert_eq!(
+            circuit_outputs.values().next().unwrap().value().unwrap(),
+            "0"
+        );
+
+        let rng = &mut ark_std::test_rng();
+        let program_build = build_program(&program_string).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.get(function_name).unwrap();
+        let public_inputs = user_inputs;
+        assert!(
+            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
+        )
     }
 
     #[test]
     fn test_record_add() {
         let program_string = read_add_program("record").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_1";
         let function = program
-            .get_function(&Identifier::try_from("hello_1").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         let mut address = [0_u8; 63];
@@ -706,9 +924,8 @@ mod tests {
         let user_inputs = vec![Record(address, 0), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, _bytes_proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         for (register, output) in circuit_outputs {
             println!("{}: {:?}", register, output.value().unwrap());
@@ -719,8 +936,9 @@ mod tests {
     fn test_record_subtract() {
         let program_string = read_add_program("record").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_2";
         let function = program
-            .get_function(&Identifier::try_from("hello_2").unwrap())
+            .get_function(&Identifier::try_from(function_name).unwrap())
             .unwrap();
 
         let mut address = [0_u8; 63];
@@ -733,9 +951,8 @@ mod tests {
         let user_inputs = vec![Record(address, 1), U64(1)];
 
         // execute circuit
-        let (ret_ok, circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(function, &user_inputs).unwrap();
-        assert!(ret_ok);
+        let (circuit_outputs, _bytes_proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         for (register, output) in circuit_outputs {
             println!("{}: {:?}", register, output.value().unwrap());
