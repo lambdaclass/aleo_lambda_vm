@@ -67,6 +67,17 @@ pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
 
 pub type SimpleProgramVariables = IndexMap<String, Option<CircuitIOType>>;
 
+/// Returns the circuit outputs and the marlin proof.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `user_inputs` - user inputs of the function.
+///  
+/// # Returns
+/// -  indicates if it´s satisfied the `ConstraintSystem`.
+/// -  Circuit Output of the function.
+/// -  Marlin Proof of the function.
+///
 pub fn execute_function(
     function: Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
@@ -138,6 +149,13 @@ pub fn verify_execution(
 //     "r4": None,
 //     "r5": None,
 // }
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+///  
+/// # Returns
+/// - `IndexMap` with the program variables and its `CircuitIOType` values.
+///
 fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
     let mut registers: SimpleProgramVariables = IndexMap::new();
 
@@ -178,6 +196,15 @@ fn program_variables(function: &Function<Testnet3>) -> SimpleProgramVariables {
     registers
 }
 
+/// Returns a hash map with the circuit outputs of a given function and its variables.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - `IndexMap` of the Circuit Output.
+///
 fn circuit_outputs(
     function: &Function<Testnet3>,
     program_variables: &SimpleProgramVariables,
@@ -195,6 +222,23 @@ fn circuit_outputs(
     Ok(circuit_outputs)
 }
 
+/// Instantiates the inputs inside the given constraint system.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `cs` - Constraint System.
+/// - `user_inputs` - user inputs of the function.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - If Succeeded return Unit type.
+///
+/// # Errors
+/// Literal 'Mismatched function input type with user input type' when function input type differs from user input type.
+/// Literal 'Unsupported type' when user input type is unsupported.
+/// Literal 'Constant types are not supported' when the input is a constant.
+/// Literal 'ExternalRecord types are not supported' when the input is a External Record.
+///
 fn process_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
@@ -343,6 +387,26 @@ fn process_inputs(
     Ok(())
 }
 
+/// Executes the given function's instructions, adding the necessary constraints for each one and filling in
+/// all the variables in the given `program_variables` index map.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - If Succeeded return Unit type.
+///
+/// # Errors
+/// Literal 'Error getting the first member of a register member' when an error occurs with the first register element.
+/// Literal 'Unsupported record member' When the record member is not an `owner` nor a `gates `.
+/// Literal 'Register not assigned in registers' when a register not assigned in the registers.
+/// Literal 'Register not found in registers' when a specific register not exists in the registers.
+/// Literal 'Literal operands are not supported' when a literal is found in the operands.
+/// Literal 'ProgramID operands are not supported' when a ProgramID is found in the operands.
+/// Literal 'Caller operands are not supported' when a Caller is found in the operands.
+/// Literal 'instruction is not supported currently' when a instruction in the circuit output is not supported.
+///
 fn process_outputs(
     function: &Function<Testnet3>,
     program_variables: &mut SimpleProgramVariables,
