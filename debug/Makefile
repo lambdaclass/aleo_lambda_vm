@@ -2,7 +2,7 @@ build:
 	cargo build --release
 
 valgrind: build
-	valgrind --leak-check=full --show-reachable=yes --log-file="valgrind.${FN}.txt" ./target/release/vmtropy_debug --f ${FN} 
+	valgrind --leak-check=full --show-reachable=yes --log-file="${OUTDIR}valgrind.${FN}.txt" ./target/release/vmtropy_debug --f ${FN} 
 
 valgrind-full: build
 	./valgrind-full.sh
@@ -19,3 +19,6 @@ clean-heaptrack:
 profile-full:
 	heaptrack-full
 	valgrind-full
+
+reports:
+	tar -zcvf reports.tar.gz reports/

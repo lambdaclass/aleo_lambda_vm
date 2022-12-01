@@ -13,3 +13,6 @@ debug-assertions = true
 vmtropy = { path = "../" }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
+ark-r1cs-std = { version = "^0.3.0", default-features = false }
+simpleworks = { git = "https://github.com/Entropy1729/simpleworks.git" }
+snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }

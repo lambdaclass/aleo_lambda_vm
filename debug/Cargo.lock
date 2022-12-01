@@ -2046,7 +2046,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+ssh://git@github.com/Entropy1729/simpleworks.git#475bf8722c4e32dcccea26d60d5771d7b7d1efce"
+source = "git+https://github.com/Entropy1729/simpleworks.git#11a54a19d0df57081764280836c95664f1495439"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
@@ -2066,6 +2066,7 @@ dependencies = [
  "blake2",
  "derivative",
  "digest 0.9.0",
+ "hex",
  "rand",
  "rand_chacha",
  "tracing",
@@ -3091,9 +3092,11 @@ dependencies = [
  "ark-snark",
  "ark-std",
  "blake2",
- "clap 3.2.23",
+ "clap 4.0.26",
  "derivative",
  "digest 0.9.0",
+ "hex",
+ "indexmap",
  "rand_chacha",
  "simpleworks",
  "snarkvm",
@@ -3106,7 +3109,10 @@ name = "vmtropy_debug"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ark-r1cs-std",
  "clap 4.0.26",
+ "simpleworks",
+ "snarkvm",
  "vmtropy",
 ]
 
