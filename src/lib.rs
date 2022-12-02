@@ -48,6 +48,7 @@ use simpleworks::{
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
+use universal_srs::load_universal_srs_from_file;
 
 pub mod circuit_io_type;
 mod helpers;
@@ -114,10 +115,8 @@ pub fn execute_function(
 
 /// Builds a program, which means generating the proving and verifying keys
 /// for each function in the program.
-pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, ProgramBuild)> {
-    let mut rng = simpleworks::marlin::generate_rand();
-    let universal_srs =
-        simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut rng)?;
+pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
+    let universal_srs = load_universal_srs_from_file()?;
 
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
