@@ -6,5 +6,5 @@ pub use add::add;
 mod cast;
 pub use cast::cast;
 
-mod subtract;
-pub use subtract::subtract;
+mod sub;
+pub use sub::sub;

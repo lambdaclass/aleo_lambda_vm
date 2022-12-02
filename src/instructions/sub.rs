@@ -5,7 +5,7 @@ use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 
 use anyhow::{bail, ensure, Result};
 
-pub use CircuitIOType::{SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the subtraction of two numbers and not for UInt8.
 // We compute the subtraction as an addition thanks to the following:
@@ -14,7 +14,7 @@ pub use CircuitIOType::{SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64,
 // module - (minuend + module - subtrahend) = difference
 // not(minuend + not(subtrahend)) = difference
 // where module = 2^size and module - n could be done negating bit by bit in binary so there are no subtractions.
-pub fn subtract(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
+pub fn sub(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
     match operands {
         [SimpleUInt16(minuend), SimpleUInt16(subtrahend)] => {
             ensure!(
@@ -91,9 +91,6 @@ pub fn subtract(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
 
             Ok(SimpleUInt64(difference))
         }
-        [SimpleUInt128(_minuend), SimpleUInt128(_subtrahend)] => {
-            unimplemented!("TODO: Figure out if we want to support U128 operations")
-        }
         [_, _] => bail!("Subtraction is not supported for the given types"),
         [..] => bail!("Subtraction requires two operands"),
     }
@@ -133,7 +130,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -157,7 +154,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -178,7 +175,7 @@ mod subtract_tests {
             UInt16Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]);
+        let result_var = super::sub(&[minuend_var, subtrahend_var]);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -205,7 +202,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -229,7 +226,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -250,7 +247,7 @@ mod subtract_tests {
             UInt32Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]);
+        let result_var = super::sub(&[minuend_var, subtrahend_var]);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -277,7 +274,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -301,7 +298,7 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]).unwrap();
+        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -322,7 +319,7 @@ mod subtract_tests {
             UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::subtract(&[minuend_var, subtrahend_var]);
+        let result_var = super::sub(&[minuend_var, subtrahend_var]);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");

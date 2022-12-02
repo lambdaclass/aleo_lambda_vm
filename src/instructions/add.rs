@@ -2,7 +2,7 @@ use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Ga
 
 use anyhow::{bail, Result};
 
-pub use CircuitIOType::{SimpleUInt128, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the addition of two numbers and not for UInt8.
 pub fn add(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
@@ -25,9 +25,6 @@ pub fn add(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
                 addend.clone(),
                 augend.clone(),
             ])?))
-        }
-        [SimpleUInt128(_addend), SimpleUInt128(_augend)] => {
-            unimplemented!("TODO: Figure out if we want to support U128 operations")
         }
         [..] => bail!("Unsupported operand types for addmany"),
     }
