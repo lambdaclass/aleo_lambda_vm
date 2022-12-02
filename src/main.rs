@@ -75,10 +75,7 @@ fn main() -> Result<()> {
             let mut bytes = Vec::new();
             universal_srs.serialize(&mut bytes).unwrap();
 
-            let parameters_dir = dirs::home_dir()
-                .ok_or_else(|| anyhow!("Home dir not found. Set a home directory"))?
-                .join(".vmtropy");
-            let file_dir = parameters_dir.join("universal_srs");
+            let (parameters_dir, file_dir) = vmtropy::get_universal_srs_dir_and_filepath()?;
             fs::create_dir_all(parameters_dir)?;
 
             let mut file = std::fs::OpenOptions::new()

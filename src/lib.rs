@@ -46,6 +46,7 @@ use simpleworks::{
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 pub use snarkvm;
