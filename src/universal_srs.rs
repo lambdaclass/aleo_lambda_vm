@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
-use ark_serialize::CanonicalDeserialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
 use simpleworks::marlin::UniversalSRS;
-use std::fs::File;
+use std::fs;
 use std::io::BufReader;
 use std::path::PathBuf;
 
@@ -24,7 +24,29 @@ pub fn get_universal_srs_dir_and_filepath() -> Result<(PathBuf, PathBuf)> {
 
 pub fn load_universal_srs_from_file() -> Result<UniversalSRS> {
     let (_parameters_dir, file_dir) = get_universal_srs_dir_and_filepath()?;
-    let f = File::open(file_dir)?;
+    let f = fs::File::open(file_dir)?;
     let reader = BufReader::new(f);
     UniversalSRS::deserialize(reader).map_err(|_e| anyhow!("Error deserializing Universal SRS"))
+}
+
+pub fn generate_universal_srs_and_write_to_file() -> Result<PathBuf> {
+    let universal_srs = generate_universal_srs()?;
+
+    let mut bytes = Vec::new();
+    universal_srs.serialize(&mut bytes).unwrap();
+
+    let (parameters_dir, file_dir) = get_universal_srs_dir_and_filepath()?;
+    fs::create_dir_all(parameters_dir)?;
+
+    let mut file = std::fs::OpenOptions::new()
+        // create or open if it already exists
+        .create(true)
+        .write(true)
+        // Overwrite file, do not append
+        .append(false)
+        .open(&file_dir)?;
+
+    // This let is so clippy doesn't complain
+    let _written_amount = file.write(&bytes)?;
+    Ok(file_dir)
 }
