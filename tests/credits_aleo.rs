@@ -1,6 +1,13 @@
 mod helpers;
 
 #[cfg(test)]
+#[ctor::ctor]
+fn init() {
+    // generate universal srs file before running tests
+    let _ = vmtropy::universal_srs::generate_universal_srs_and_write_to_file();
+}
+
+#[cfg(test)]
 mod credits_functions_tests {
     use std::str::FromStr;
 
