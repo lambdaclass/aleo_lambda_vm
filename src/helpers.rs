@@ -18,7 +18,6 @@ use simpleworks::{
 use snarkvm::prelude::{
     Function, Instruction, LiteralType, Operand, PlaintextType, Register, Testnet3, ValueType,
 };
-use std::collections::HashMap;
 
 /// Builds a function, which means generating its proving and verifying keys.
 pub fn build_function(
@@ -316,7 +315,7 @@ pub fn process_inputs(
                     gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || {
                         Ok(gates)
                     })?,
-                    entries: HashMap::new(),
+                    entries: IndexMap::new(),
                 })
             }
             (ValueType::Record(_), _) => {
