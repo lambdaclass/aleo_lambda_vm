@@ -33,7 +33,7 @@ pub fn generate_universal_srs_and_write_to_file() -> Result<PathBuf> {
     let universal_srs = generate_universal_srs()?;
 
     let mut bytes = Vec::new();
-    universal_srs.serialize(&mut bytes).unwrap();
+    universal_srs.serialize(&mut bytes)?;
 
     let (parameters_dir, file_dir) = get_universal_srs_dir_and_filepath()?;
     fs::create_dir_all(parameters_dir)?;
