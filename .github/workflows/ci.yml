@@ -30,13 +30,23 @@ jobs:
             toolchain: stable
             components: rustfmt
       - run: cargo fmt -- --check
-  # coverage:
-  #   runs-on: [self-hosted, nomad]
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - run: ls
-  #     - run: docker run --security-opt seccomp=unconfined -v "${PWD}:/volume" xd009642/tarpaulin
-  #     - name: Upload coverage to codecov.io
-  #       uses: codecov/codecov-action@v3
-  #       with:
-  #         fail_ci_if_error: true
+  coverage:
+    runs-on: [self-hosted, nomad]
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Generate code coverage
+        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: true
