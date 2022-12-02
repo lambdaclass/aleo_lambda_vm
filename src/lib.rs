@@ -42,18 +42,15 @@ use simpleworks::{
         traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
         UInt64Gadget,
     },
-    marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
+    marlin::{MarlinProof, ProvingKey, VerifyingKey},
+    types::value::SimpleworksValueType,
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
-use std::path::PathBuf;
 use std::rc::Rc;
 
-pub use snarkvm;
-
-mod circuit_io_type;
-pub use circuit_io_type::CircuitIOType;
-pub mod helpers;
+pub mod circuit_io_type;
+mod helpers;
 pub mod instructions;
 pub mod jaleo;
 mod record;
@@ -63,9 +60,9 @@ pub use variable_type::VariableType;
 mod program_build;
 pub use program_build::ProgramBuild;
 pub use simpleworks::marlin::generate_rand;
+pub mod universal_srs;
 
-pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
-pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
+pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
 

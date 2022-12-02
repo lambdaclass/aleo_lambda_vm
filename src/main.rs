@@ -4,7 +4,7 @@ use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
 use std::fs;
 use std::path::PathBuf;
-use vmtropy::generate_universal_srs;
+use vmtropy::universal_srs::{generate_universal_srs, get_universal_srs_dir_and_filepath};
 use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
             let mut bytes = Vec::new();
             universal_srs.serialize(&mut bytes).unwrap();
 
-            let (parameters_dir, file_dir) = vmtropy::get_universal_srs_dir_and_filepath()?;
+            let (parameters_dir, file_dir) = get_universal_srs_dir_and_filepath()?;
             fs::create_dir_all(parameters_dir)?;
 
             let mut file = std::fs::OpenOptions::new()
