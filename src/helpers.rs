@@ -7,13 +7,13 @@ use crate::{
     CircuitOutputType, FunctionKeys, SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
-use ark_r1cs_std::prelude::AllocVar;
+use ark_r1cs_std::{prelude::AllocVar, R1CSVar};
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
     marlin::UniversalSRS,
-    types::value::SimpleworksValueType,
+    types::value::{RecordEntriesMap, SimpleworksValueType},
 };
 use snarkvm::prelude::{
     Function, Instruction, LiteralType, Operand, PlaintextType, Register, Testnet3, ValueType,
@@ -75,10 +75,11 @@ pub fn default_user_inputs(function: &Function<Testnet3>) -> Result<Vec<Simplewo
             // Unsupported Cases
             ValueType::Public(_) | ValueType::Private(_) => bail!("Unsupported type"),
             // Records
-            ValueType::Record(_) => SimpleworksValueType::Record(
-                *b"aleo11111111111111111111111111111111111111111111111111111111111",
-                u64::default(),
-            ),
+            ValueType::Record(_) => SimpleworksValueType::Record {
+                owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
+                gates: u64::default(),
+                entries: RecordEntriesMap::default(),
+            },
             // Constant Types
             ValueType::Constant(_) => bail!("Constant types are not supported"),
             // External Records
@@ -170,13 +171,39 @@ pub fn circuit_outputs(
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
-        let result = program_variables
+        let result = match program_variables
             .get(&register)
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
                 r.clone()
                     .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
-            })?;
+            })? {
+            SimpleUInt8(v) => SimpleworksValueType::U8(v.value()?),
+            SimpleUInt16(v) => SimpleworksValueType::U16(v.value()?),
+            SimpleUInt32(v) => SimpleworksValueType::U32(v.value()?),
+            SimpleUInt64(v) => SimpleworksValueType::U64(v.value()?),
+            SimpleRecord(r) => {
+                let mut primitive_bytes = [0_u8; 63];
+                for (primitive_byte, byte) in
+                    primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
+                {
+                    *primitive_byte = *byte;
+                }
+                SimpleworksValueType::Record {
+                    owner: primitive_bytes,
+                    gates: r.gates.value()?,
+                    entries: r.entries,
+                }
+            }
+            SimpleAddress(a) => {
+                let mut primitive_bytes = [0_u8; 63];
+                for (primitive_byte, byte) in primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                {
+                    *primitive_byte = *byte;
+                }
+                SimpleworksValueType::Address(primitive_bytes)
+            }
+        };
         circuit_outputs.insert(register, result);
         Ok::<_, anyhow::Error>(())
     })?;
@@ -306,18 +333,20 @@ pub fn process_inputs(
             // Unsupported Cases
             (ValueType::Public(_) | ValueType::Private(_), _) => bail!("Unsupported type"),
             // Records
-            // TODO: User input should be SimpleworksValueType::Record.
-            (ValueType::Record(_), SimpleworksValueType::Record(address, gates)) => {
-                SimpleRecord(Record {
-                    owner: AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
-                        Ok(address)
-                    })?,
-                    gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || {
-                        Ok(gates)
-                    })?,
-                    entries: IndexMap::new(),
-                })
-            }
+            (
+                ValueType::Record(_),
+                SimpleworksValueType::Record {
+                    owner: address,
+                    gates,
+                    entries,
+                },
+            ) => SimpleRecord(Record {
+                owner: AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
+                    Ok(address)
+                })?,
+                gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(gates))?,
+                entries: entries.clone(),
+            }),
             (ValueType::Record(_), _) => {
                 bail!("Mismatched function input type with user input type")
             }

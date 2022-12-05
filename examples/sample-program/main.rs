@@ -14,14 +14,15 @@ fn main() {
     let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+    let (outputs, proof) = vmtropy::execute_function(
+        &function,
+        &user_inputs,
+        &mut simpleworks::marlin::generate_rand(),
+    )
+    .unwrap();
 
     for (register, value) in outputs {
-        if let Ok(value) = value.value() {
-            println!("Output register {} has value {}", register, value);
-        } else {
-            println!("⚠️ Error reading value from register {}", register);
-        }
+        println!("Output register {} has value {}", register, value);
     }
 
     let mut bytes_proof = Vec::new();

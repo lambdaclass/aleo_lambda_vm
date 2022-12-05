@@ -4,9 +4,9 @@ use ark_r1cs_std::R1CSVar;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 use simpleworks::types::value::SimpleworksValueType;
 
-pub type RecordFieldsType = indexmap::IndexMap<String, SimpleworksValueType>;
+pub type RecordEntriesMap = indexmap::IndexMap<String, SimpleworksValueType>;
 
-fn hashmap_to_string(hashmap: &RecordFieldsType) -> Result<String> {
+fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
     let mut ret = String::new();
     ret.push('{');
 
@@ -26,7 +26,7 @@ pub struct Record {
     pub owner: AddressGadget,
     pub gates: UInt64Gadget,
     // custom fields
-    pub entries: RecordFieldsType,
+    pub entries: RecordEntriesMap,
 }
 
 impl Serialize for Record {
@@ -55,7 +55,7 @@ impl Serialize for Record {
 #[cfg(test)]
 mod tests {
     use super::super::{AddressGadget, UInt64Gadget};
-    use super::{Record, RecordFieldsType};
+    use super::{Record, RecordEntriesMap};
     use ark_r1cs_std::alloc::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
     use simpleworks::types::value::SimpleworksValueType;
@@ -68,7 +68,7 @@ mod tests {
         })
         .unwrap();
         let gates = UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(1)).unwrap();
-        let mut entries = RecordFieldsType::new();
+        let mut entries = RecordEntriesMap::new();
         entries.insert("age".to_owned(), SimpleworksValueType::U8(35));
 
         let record = Record {
