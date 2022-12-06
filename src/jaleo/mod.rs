@@ -15,6 +15,20 @@ const MAX_INPUTS: usize = 8;
 const MAX_OUTPUTS: usize = 8;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
+pub enum XXX {
+    /// The plaintext hash and (optional) plaintext.
+    // Constant(ConstraintF, SimpleworksValueType),
+    /// The plaintext hash and (optional) plaintext.
+    Public(String, SimpleworksValueType),
+    /// The ciphertext hash and (optional) ciphertext.
+    // Private(ConstraintF, Option<Ciphertext>),
+    /// The serial number, and the origin of the record.
+    Record(String, String),
+    // The input commitment to the external record. Note: This is **not** the record commitment.
+    // ExternalRecord(ConstraintF),
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Transition {
     // /// The transition ID.
     // id: String,
@@ -23,9 +37,9 @@ pub struct Transition {
     /// The function name.
     function_name: String,
     /// The transition inputs.
-    inputs: Vec<SimpleworksValueType>,
+    inputs: Vec<XXX>,
     /// The transition outputs.
-    outputs: Vec<SimpleworksValueType>,
+    outputs: Vec<XXX>,
     // /// The inputs for finalize.
     // finalize: Option<Vec<Value>>,
     /// The transition proof.
