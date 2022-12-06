@@ -1,7 +1,7 @@
 use crate::record::Record;
 use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
-use simpleworks::gadgets::{AddressGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget};
+use simpleworks::gadgets::{traits::IsWitness, AddressGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget};
 
 pub use CircuitIOType::{
     SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
@@ -30,6 +30,19 @@ impl CircuitIOType {
                 Ok(format!("Record {{ owner: {}, gates: {} }}", owner, gates))
             }
             SimpleAddress(value) => Ok(value.value()?),
+        }
+    }
+
+    pub fn is_witness(&self) -> Result<bool> {
+        match self {
+            // UInt8 gadget does not implement ToBytesGadget but [UInt8] does,
+            // so we are making a special case for it.
+            SimpleUInt8(v) => [v.clone()].is_witness(),
+            SimpleUInt16(v) => v.is_witness(),
+            SimpleUInt32(v) => v.is_witness(),
+            SimpleUInt64(v) => v.is_witness(),
+            SimpleRecord(_) => Ok(true),
+            SimpleAddress(v) => v.is_witness(),
         }
     }
 }
