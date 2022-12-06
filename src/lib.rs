@@ -45,6 +45,7 @@ use simpleworks::{
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
+use xxx::XXX;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -53,8 +54,9 @@ mod helpers;
 pub mod instructions;
 pub mod record;
 pub use simpleworks::types::value::SimpleworksValueType;
+pub mod xxx;
 
-pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
+pub type CircuitOutputType = IndexMap<String, XXX>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
