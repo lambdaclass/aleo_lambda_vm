@@ -233,6 +233,9 @@ fn execute(
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
 
+    // TODO: Map SimpleworksValueType inputs to XXX
+    // TODO: Map SimpleworksValueType outputs to XXX
+
     let transtition = Transition {
         program_id: program.id().to_string(),
         function_name: function_name.to_string(),
