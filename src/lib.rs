@@ -53,6 +53,7 @@ mod helpers;
 pub mod instructions;
 pub mod record;
 pub use simpleworks::types::value::SimpleworksValueType;
+pub mod jaleo;
 
 pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
