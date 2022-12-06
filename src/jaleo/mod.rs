@@ -53,8 +53,23 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn output_records(&self) -> Vec<SimpleworksValueType> {
-        self.outputs.clone().into_iter().filter(|o| matches!(o, SimpleworksValueType::Record { owner: _, gates: _, entries: _ })).collect()
+    pub fn output_records(&self) -> Vec<XXX> {
+        self.outputs.clone().into_iter().filter(|o| matches!(o, XXX::Record(..))).collect()
+    }
+    
+    pub fn origins(&self) -> Vec<String> {
+        self
+            .input_records()
+            .iter()
+            .map(|r| {
+                let XXX::Record(serial_number, origin) = r;
+                origin.clone()
+            })
+            .collect()
+    }
+
+    fn input_records(&self) -> Vec<XXX> {
+        self.inputs.clone().into_iter().filter(|o| matches!(o, XXX::Record(..))).collect()
     }
 }
 
