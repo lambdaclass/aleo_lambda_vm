@@ -37,8 +37,8 @@ impl CircuitIOType {
 
     pub fn is_witness(&self) -> Result<bool> {
         match self {
-            // UInt8 gadget does not implement ToBytesGadget which is needed 
-            // by IsWitness implementors but [UInt8] does so we are making a 
+            // UInt8 gadget does not implement ToBytesGadget which is needed
+            // by IsWitness implementors but [UInt8] does so we are making a
             // special case for it.
             SimpleUInt8(v) => [v.clone()].is_witness(),
             SimpleUInt16(v) => v.is_witness(),
