@@ -1,9 +1,12 @@
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use simpleworks::types::value::SimpleworksValueType::{Record, U16, U32, U64};
+    use simpleworks::types::value::{
+        RecordEntriesMap,
+        SimpleworksValueType::{Record, U16, U32, U64},
+    };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, verify_execution};
+    use vmtropy::{build_program, verify_proof};
 
     fn read_add_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -31,18 +34,19 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
-        assert!(verify_execution(function_verifying_key.clone(), &user_inputs, proof, rng).unwrap())
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -68,21 +72,20 @@ mod tests {
         println!("{:?}", user_inputs);
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -105,21 +108,20 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -142,21 +144,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -179,21 +180,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -216,21 +216,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -253,21 +252,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -290,21 +288,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -327,21 +324,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "2"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "2u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -364,21 +360,20 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -401,21 +396,20 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -438,21 +432,20 @@ mod tests {
         let user_inputs = vec![U16(1), U16(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u16".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -475,21 +468,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -512,21 +504,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -549,21 +540,20 @@ mod tests {
         let user_inputs = vec![U32(1), U32(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u32".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -586,21 +576,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -623,21 +612,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -660,21 +648,20 @@ mod tests {
         let user_inputs = vec![U64(1), U64(1)];
 
         // execute circuit
-        let (circuit_outputs, proof) = vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let rng = &mut ark_std::test_rng();
+        let (circuit_outputs, proof) =
+            vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
-            circuit_outputs.values().next().unwrap().value().unwrap(),
-            "0"
+            circuit_outputs.values().next().unwrap().to_string(),
+            "0u64".to_owned()
         );
 
-        let rng = &mut ark_std::test_rng();
         let program_build = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
-        assert!(
-            verify_execution(function_verifying_key.clone(), &public_inputs, proof, rng).unwrap()
-        )
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
 
     #[test]
@@ -693,14 +680,25 @@ mod tests {
             *address_byte = *address_string_byte;
         }
 
-        let user_inputs = vec![Record(address, 0), U64(1)];
+        let user_inputs = vec![
+            Record {
+                owner: address,
+                gates: 0,
+                entries: RecordEntriesMap::default(),
+            },
+            U64(1),
+        ];
 
         // execute circuit
-        let (circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let (circuit_outputs, _bytes_proof) = vmtropy::execute_function(
+            &function,
+            &user_inputs,
+            &mut simpleworks::marlin::generate_rand(),
+        )
+        .unwrap();
 
         for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
+            println!("{}: {:?}", register, output);
         }
     }
 
@@ -720,14 +718,25 @@ mod tests {
             *address_byte = *address_string_byte;
         }
 
-        let user_inputs = vec![Record(address, 1), U64(1)];
+        let user_inputs = vec![
+            Record {
+                owner: address,
+                gates: 1,
+                entries: RecordEntriesMap::default(),
+            },
+            U64(1),
+        ];
 
         // execute circuit
-        let (circuit_outputs, _bytes_proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+        let (circuit_outputs, _bytes_proof) = vmtropy::execute_function(
+            &function,
+            &user_inputs,
+            &mut simpleworks::marlin::generate_rand(),
+        )
+        .unwrap();
 
         for (register, output) in circuit_outputs {
-            println!("{}: {:?}", register, output.value().unwrap());
+            println!("{}: {:?}", register, output);
         }
     }
 }

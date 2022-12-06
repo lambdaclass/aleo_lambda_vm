@@ -1,16 +1,6 @@
 name: VMtropy build checks
 on: push
 jobs:
-  integration-tests:
-    runs-on: [self-hosted, nomad]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
-            profile: minimal
-      - run: apt install -y libssl-dev
-      - run: cargo test
   clippy:
     runs-on: [self-hosted, nomad]
     steps:

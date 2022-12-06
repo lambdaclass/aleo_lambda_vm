@@ -61,7 +61,7 @@ fn main() -> Result<()> {
 
             let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
             for input_value in inputs.iter().rev() {
-                let v = SimpleworksValueType::try_from(input_value)?;
+                let v = SimpleworksValueType::try_from(input_value.clone())?;
                 vec_user_inputs.push(v);
             }
 
@@ -114,10 +114,14 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (outputs, proof) = vmtropy::execute_function(&function, user_inputs)?;
+    let (outputs, proof) = vmtropy::execute_function(
+        &function,
+        user_inputs,
+        &mut simpleworks::marlin::generate_rand(),
+    )?;
 
     for (register, value) in outputs {
-        println!("Output register {} has value {}", register, value.value()?);
+        println!("Output register {} has value {}", register, value);
     }
 
     let mut bytes_proof = Vec::new();

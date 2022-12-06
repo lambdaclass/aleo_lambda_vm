@@ -43,7 +43,6 @@ use simpleworks::{
         UInt64Gadget,
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
-    types::value::SimpleworksValueType,
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
@@ -53,8 +52,9 @@ pub mod circuit_io_type;
 mod helpers;
 pub mod instructions;
 pub mod record;
+pub use simpleworks::types::value::SimpleworksValueType;
 
-pub type CircuitOutputType = IndexMap<String, CircuitIOType>;
+pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
@@ -73,9 +73,9 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 pub fn execute_function(
     function: &Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
+    rng: &mut StdRng,
 ) -> Result<(CircuitOutputType, MarlinProof)> {
-    let mut rng = simpleworks::marlin::generate_rand();
-    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
+    let universal_srs = simpleworks::marlin::generate_universal_srs(rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
     let mut function_variables = helpers::function_variables(function);
@@ -99,7 +99,7 @@ pub fn execute_function(
     .clone();
     let cs_ref_clone = ConstraintSystemRef::CS(Rc::new(RefCell::new(cs_clone)));
 
-    let proof = simpleworks::marlin::generate_proof(cs_ref_clone, function_proving_key, &mut rng)?;
+    let proof = simpleworks::marlin::generate_proof(cs_ref_clone, function_proving_key, rng)?;
 
     Ok((circuit_outputs, proof))
 }
@@ -152,10 +152,10 @@ pub fn generate_universal_srs() -> Result<UniversalSRS> {
     simpleworks::marlin::generate_universal_srs(rng)
 }
 
-pub fn verify_execution(
+pub fn verify_proof(
     verifying_key: VerifyingKey,
     public_inputs: &[SimpleworksValueType],
-    proof: MarlinProof,
+    proof: &MarlinProof,
     rng: &mut StdRng,
 ) -> Result<bool> {
     let mut inputs = vec![];
