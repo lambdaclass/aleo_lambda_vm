@@ -7,7 +7,7 @@ mod credits_functions_tests {
         types::value::{RecordEntriesMap, SimpleworksValueType},
     };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, verify_proof};
+    use vmtropy::{build_program, verify_proof, xxx::VariableType};
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
@@ -50,11 +50,15 @@ mod credits_functions_tests {
         assert!(circuit_outputs.len() == 1);
         if let (
             output_register_locator,
-            SimpleworksValueType::Record {
-                owner: a,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: a,
+                    gates,
+                    entries: _,
+                },
+            ),
         ) = circuit_outputs.first().unwrap()
         {
             assert_eq!(output_register_locator, expected_output_register_locator);
@@ -98,11 +102,15 @@ mod credits_functions_tests {
         assert!(circuit_outputs.len() == 1);
         if let (
             output_register_locator,
-            SimpleworksValueType::Record {
-                owner: o,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: o,
+                    gates,
+                    entries: _,
+                },
+            ),
         ) = circuit_outputs.first().unwrap()
         {
             assert_eq!(output_register_locator, expected_output_register_locator);
@@ -158,11 +166,15 @@ mod credits_functions_tests {
         // The first output is the resulting record of the receiver.
         if let Some((
             output_register_locator,
-            SimpleworksValueType::Record {
-                owner: receiver,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: receiver,
+                    gates,
+                    entries: _,
+                },
+            ),
         )) = circuit_outputs.next()
         {
             assert_eq!(output_register_locator, receiver_record_output_register);
@@ -177,11 +189,15 @@ mod credits_functions_tests {
         // The second output is the resulting record of the sender.
         if let Some((
             output_register_locator,
-            SimpleworksValueType::Record {
-                owner: sender,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: sender,
+                    gates,
+                    entries: _,
+                },
+            ),
         )) = circuit_outputs.next()
         {
             assert_eq!(output_register_locator, sender_record_output_register);
@@ -233,11 +249,15 @@ mod credits_functions_tests {
         assert_eq!(circuit_outputs.len(), 1);
         if let (
             output_register_locator,
-            SimpleworksValueType::Record {
-                owner: o,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: o,
+                    gates,
+                    entries: _,
+                },
+            ),
         ) = circuit_outputs.first().unwrap()
         {
             assert_eq!(output_register_locator, expected_output_register_locator);
@@ -289,11 +309,15 @@ mod credits_functions_tests {
         // The first output is new record.
         if let Some((
             _output_register_locator,
-            SimpleworksValueType::Record {
-                owner: o,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: o,
+                    gates,
+                    entries: _,
+                },
+            ),
         )) = circuit_outputs.next()
         {
             assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
@@ -303,11 +327,15 @@ mod credits_functions_tests {
         // The second output is the splitted record.
         if let Some((
             _output_register_locator,
-            SimpleworksValueType::Record {
-                owner: o,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: o,
+                    gates,
+                    entries: _,
+                },
+            ),
         )) = circuit_outputs.next()
         {
             assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
@@ -357,11 +385,15 @@ mod credits_functions_tests {
 
         if let Some((
             _output_register_locator,
-            SimpleworksValueType::Record {
-                owner: o,
-                gates,
-                entries: _,
-            },
+            VariableType::Record(
+                _serial_number,
+                _commitment,
+                SimpleworksValueType::Record {
+                    owner: o,
+                    gates,
+                    entries: _,
+                },
+            ),
         )) = circuit_outputs.iter().next()
         {
             assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
