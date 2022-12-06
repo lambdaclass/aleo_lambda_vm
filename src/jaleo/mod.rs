@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::ProgramBuild;
+use crate::{ProgramBuild, VariableType};
 use anyhow::{anyhow, ensure, Result};
 use ark_std::rand::rngs::StdRng;
 use log::debug;
@@ -15,20 +15,6 @@ const MAX_INPUTS: usize = 8;
 const MAX_OUTPUTS: usize = 8;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub enum XXX {
-    /// The plaintext hash and (optional) plaintext.
-    // Constant(ConstraintF, SimpleworksValueType),
-    /// The plaintext hash and (optional) plaintext.
-    Public(String, SimpleworksValueType),
-    /// The ciphertext hash and (optional) ciphertext.
-    // Private(ConstraintF, Option<Ciphertext>),
-    /// The serial number, and the origin of the record.
-    Record(String, String),
-    // The input commitment to the external record. Note: This is **not** the record commitment.
-    // ExternalRecord(ConstraintF),
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Transition {
     // /// The transition ID.
     // id: String,
@@ -37,9 +23,9 @@ pub struct Transition {
     /// The function name.
     function_name: String,
     /// The transition inputs.
-    inputs: Vec<XXX>,
+    inputs: Vec<VariableType>,
     /// The transition outputs.
-    outputs: Vec<XXX>,
+    outputs: Vec<VariableType>,
     // /// The inputs for finalize.
     // finalize: Option<Vec<Value>>,
     /// The transition proof.
@@ -53,29 +39,32 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn output_records(&self) -> Vec<XXX> {
+    pub fn output_records(&self) -> Vec<VariableType> {
         self.outputs
             .clone()
             .into_iter()
-            .filter(|o| matches!(o, XXX::Record(..)))
+            .filter(|o| matches!(o, VariableType::Record(..)))
             .collect()
     }
 
-    pub fn origins(&self) -> Vec<String> {
+    pub fn origins(&self) -> Vec<Option<String>> {
         self.input_records()
             .iter()
             .map(|r| {
-                let XXX::Record(serial_number, origin) = r;
-                origin.clone()
+                if let VariableType::Record(_serial_number, origin, _record) = r {
+                    Some(origin.clone())
+                } else {
+                    None
+                }
             })
             .collect()
     }
 
-    fn input_records(&self) -> Vec<XXX> {
+    fn input_records(&self) -> Vec<VariableType> {
         self.inputs
             .clone()
             .into_iter()
-            .filter(|o| matches!(o, XXX::Record(..)))
+            .filter(|o| matches!(o, VariableType::Record(..)))
             .collect()
     }
 }
@@ -153,7 +142,7 @@ pub fn verify_execution(transitions: &Vec<Transition>, program_build: &ProgramBu
             .inputs
             .iter()
             .filter_map(|i| match i {
-                XXX::Public(_, value) => Some(value.clone()),
+                VariableType::Public(_, value) => Some(value.clone()),
                 _ => None,
             })
             .collect();
@@ -233,22 +222,24 @@ fn execute(
         .get_function(&function_name)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (outputs, proof) = crate::execute_function(&function, inputs, rng)?;
+    let (inputs, outputs, proof) = crate::execute_function(&function, inputs, rng)?;
 
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
 
-    // TODO: Map SimpleworksValueType inputs to XXX
-    // TODO: Map SimpleworksValueType outputs to XXX
+    let public_inputs = inputs
+        .into_values()
+        .filter(|i| matches!(i, VariableType::Public(..)))
+        .collect_vec();
 
-    let transtition = Transition {
+    let transition = Transition {
         program_id: program.id().to_string(),
         function_name: function_name.to_string(),
-        inputs: inputs.to_vec(),
+        inputs: public_inputs,
         outputs: outputs.into_values().collect_vec(),
         proof: encoded_proof,
         fee: 0,
     };
 
-    Ok(vec![transtition])
+    Ok(vec![transition])
 }
