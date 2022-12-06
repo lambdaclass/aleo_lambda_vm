@@ -121,7 +121,7 @@ fn execute(
     )?;
 
     for (register, value) in outputs {
-        println!("Output register {} has value {}", register, value);
+        println!("Output register {} has value {}", register, value.value()?);
     }
 
     let mut bytes_proof = Vec::new();
