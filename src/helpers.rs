@@ -4,7 +4,7 @@ use crate::{
     },
     instructions,
     record::Record,
-    xxx::XXX,
+    variable_type::VariableType,
     CircuitOutputType, FunctionKeys, SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
@@ -183,18 +183,22 @@ pub fn circuit_outputs(
         circuit_outputs.insert(register, {
             if program_variable.is_witness()? {
                 match program_variable {
-                    SimpleUInt8(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U8(v.value()?))
-                    }
-                    SimpleUInt16(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U16(v.value()?))
-                    }
-                    SimpleUInt32(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U32(v.value()?))
-                    }
-                    SimpleUInt64(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U64(v.value()?))
-                    }
+                    SimpleUInt8(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U8(v.value()?),
+                    ),
+                    SimpleUInt16(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U16(v.value()?),
+                    ),
+                    SimpleUInt32(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U32(v.value()?),
+                    ),
+                    SimpleUInt64(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U64(v.value()?),
+                    ),
                     SimpleRecord(r) => {
                         let mut primitive_bytes = [0_u8; 63];
                         for (primitive_byte, byte) in
@@ -202,7 +206,7 @@ pub fn circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        XXX::Record(
+                        VariableType::Record(
                             "serial_number".to_owned(),
                             "commitment".to_owned(),
                             SimpleworksValueType::Record {
@@ -219,7 +223,7 @@ pub fn circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        XXX::Private(
+                        VariableType::Private(
                             "hash".to_owned(),
                             SimpleworksValueType::Address(primitive_bytes),
                         )
@@ -227,18 +231,22 @@ pub fn circuit_outputs(
                 }
             } else {
                 match program_variable {
-                    SimpleUInt8(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U8(v.value()?))
-                    }
-                    SimpleUInt16(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U16(v.value()?))
-                    }
-                    SimpleUInt32(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U32(v.value()?))
-                    }
-                    SimpleUInt64(v) => {
-                        XXX::Private("hash".to_owned(), SimpleworksValueType::U64(v.value()?))
-                    }
+                    SimpleUInt8(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U8(v.value()?),
+                    ),
+                    SimpleUInt16(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U16(v.value()?),
+                    ),
+                    SimpleUInt32(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U32(v.value()?),
+                    ),
+                    SimpleUInt64(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U64(v.value()?),
+                    ),
                     SimpleRecord(_) => bail!("Records cannot be public"),
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
@@ -247,7 +255,7 @@ pub fn circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        XXX::Private(
+                        VariableType::Private(
                             "hash".to_owned(),
                             SimpleworksValueType::Address(primitive_bytes),
                         )

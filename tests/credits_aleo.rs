@@ -7,7 +7,7 @@ mod credits_functions_tests {
         types::value::{RecordEntriesMap, SimpleworksValueType},
     };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, verify_proof, xxx::VariableType};
+    use vmtropy::{build_program, verify_proof, variable_type::VariableType};
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
