@@ -142,11 +142,22 @@ pub fn verify_execution(transitions: &Vec<Transition>, program_build: &ProgramBu
         let proof_bytes = hex::decode(&transition.proof)?;
         let proof = deserialize_proof(proof_bytes)?;
 
+        let inputs: Vec<SimpleworksValueType> = transition
+            .inputs
+            .iter()
+            .filter_map(|i| {
+                match i {
+                    XXX::Public(_, value) => Some(value.clone()),
+                    _ => None,
+                }
+            })
+            .collect();
+
         // Ensure the proof is valid.
         ensure!(
             crate::verify_proof(
                 verifying_key.clone(),
-                &transition.inputs,
+                &inputs,
                 &proof,
                 &mut simpleworks::marlin::generate_rand()
             )?,
