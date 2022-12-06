@@ -114,7 +114,7 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (outputs, proof) = vmtropy::execute_function(
+    let (_inputs, outputs, proof) = vmtropy::execute_function(
         &function,
         user_inputs,
         &mut simpleworks::marlin::generate_rand(),

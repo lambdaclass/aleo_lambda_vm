@@ -35,7 +35,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -73,7 +73,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -109,7 +109,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -145,7 +145,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -181,7 +181,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -217,7 +217,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -253,7 +253,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -289,7 +289,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -325,7 +325,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -361,7 +361,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -397,7 +397,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -433,7 +433,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -469,7 +469,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -505,7 +505,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -541,7 +541,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -577,7 +577,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -613,7 +613,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -649,7 +649,7 @@ mod tests {
 
         // execute circuit
         let rng = &mut ark_std::test_rng();
-        let (circuit_outputs, proof) =
+        let (_circuit_inputs, circuit_outputs, proof) =
             vmtropy::execute_function(&function, &user_inputs, rng).unwrap();
 
         assert_eq!(
@@ -690,7 +690,7 @@ mod tests {
         ];
 
         // execute circuit
-        let (circuit_outputs, _bytes_proof) = vmtropy::execute_function(
+        let (_circuit_input, circuit_outputs, _bytes_proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -728,7 +728,7 @@ mod tests {
         ];
 
         // execute circuit
-        let (circuit_outputs, _bytes_proof) = vmtropy::execute_function(
+        let (_circuit_input, circuit_outputs, _bytes_proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),

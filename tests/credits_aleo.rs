@@ -38,7 +38,7 @@ mod credits_functions_tests {
             SimpleworksValueType::U64(1),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -90,7 +90,7 @@ mod credits_functions_tests {
             SimpleworksValueType::U64(1),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -149,7 +149,7 @@ mod credits_functions_tests {
             SimpleworksValueType::U64(amount_to_transfer),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -237,7 +237,7 @@ mod credits_functions_tests {
         };
         let user_inputs = vec![record.clone(), record];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -295,7 +295,7 @@ mod credits_functions_tests {
             SimpleworksValueType::U64(gates_for_new_record),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),
@@ -374,7 +374,7 @@ mod credits_functions_tests {
         };
         let user_inputs = vec![record, SimpleworksValueType::U64(fee)];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
+        let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
             &function,
             &user_inputs,
             &mut simpleworks::marlin::generate_rand(),

@@ -14,7 +14,7 @@ fn main() {
     let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (outputs, proof) = vmtropy::execute_function(
+    let (_inputs, outputs, proof) = vmtropy::execute_function(
         &function,
         &user_inputs,
         &mut simpleworks::marlin::generate_rand(),

@@ -5,7 +5,7 @@ use crate::{
     instructions,
     record::Record,
     variable_type::VariableType,
-    CircuitOutputType, FunctionKeys, SimpleFunctionVariables,
+    CircuitInputType, CircuitOutputType, FunctionKeys, SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::{prelude::AllocVar, R1CSVar};
@@ -154,6 +154,118 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
     }
 
     registers
+}
+
+/// Returns a hash map with the circuit inputs of a given function and its variables.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - `IndexMap` of the Circuit Output.
+///
+pub fn circuit_inputs(
+    function: &Function<Testnet3>,
+    program_variables: &SimpleFunctionVariables,
+) -> Result<CircuitInputType> {
+    let mut circuit_inputs = IndexMap::new();
+    function.inputs().iter().try_for_each(|o| {
+        let register = o.register().to_string();
+        let program_variable = program_variables
+            .get(&register)
+            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .and_then(|r| {
+                r.clone()
+                    .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+            })?;
+
+        circuit_inputs.insert(register, {
+            if program_variable.is_witness()? {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U8(v.value()?),
+                    ),
+                    SimpleUInt16(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U16(v.value()?),
+                    ),
+                    SimpleUInt32(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U32(v.value()?),
+                    ),
+                    SimpleUInt64(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U64(v.value()?),
+                    ),
+                    SimpleRecord(r) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Record(
+                            "serial_number".to_owned(),
+                            "commitment".to_owned(),
+                            SimpleworksValueType::Record {
+                                owner: primitive_bytes,
+                                gates: r.gates.value()?,
+                                entries: r.entries,
+                            },
+                        )
+                    }
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Private(
+                            "hash".to_owned(),
+                            SimpleworksValueType::Address(primitive_bytes),
+                        )
+                    }
+                }
+            } else {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U8(v.value()?),
+                    ),
+                    SimpleUInt16(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U16(v.value()?),
+                    ),
+                    SimpleUInt32(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U32(v.value()?),
+                    ),
+                    SimpleUInt64(v) => VariableType::Private(
+                        "hash".to_owned(),
+                        SimpleworksValueType::U64(v.value()?),
+                    ),
+                    SimpleRecord(_) => bail!("Records cannot be public"),
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Private(
+                            "hash".to_owned(),
+                            SimpleworksValueType::Address(primitive_bytes),
+                        )
+                    }
+                }
+            }
+        });
+        Ok::<_, anyhow::Error>(())
+    })?;
+    Ok(circuit_inputs)
 }
 
 /// Returns a hash map with the circuit outputs of a given function and its variables.

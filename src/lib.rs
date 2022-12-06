@@ -58,6 +58,7 @@ pub mod jaleo;
 pub mod variable_type;
 
 pub type CircuitOutputType = IndexMap<String, VariableType>;
+pub type CircuitInputType = IndexMap<String, VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
@@ -77,7 +78,7 @@ pub fn execute_function(
     function: &Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
     rng: &mut StdRng,
-) -> Result<(CircuitOutputType, MarlinProof)> {
+) -> Result<(CircuitInputType, CircuitOutputType, MarlinProof)> {
     let universal_srs = simpleworks::marlin::generate_universal_srs(rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
@@ -90,6 +91,7 @@ pub fn execute_function(
         &mut function_variables,
     )?;
 
+    let circuit_inputs = helpers::circuit_inputs(function, &function_variables)?;
     let circuit_outputs = helpers::circuit_outputs(function, &function_variables)?;
 
     // Here we clone the constraint system because deep down when generating
@@ -104,7 +106,7 @@ pub fn execute_function(
 
     let proof = simpleworks::marlin::generate_proof(cs_ref_clone, function_proving_key, rng)?;
 
-    Ok((circuit_outputs, proof))
+    Ok((circuit_inputs, circuit_outputs, proof))
 }
 
 /// Builds a program, which means generating the proving and verifying keys
