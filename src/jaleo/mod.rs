@@ -54,12 +54,15 @@ pub struct Transition {
 
 impl Transition {
     pub fn output_records(&self) -> Vec<XXX> {
-        self.outputs.clone().into_iter().filter(|o| matches!(o, XXX::Record(..))).collect()
+        self.outputs
+            .clone()
+            .into_iter()
+            .filter(|o| matches!(o, XXX::Record(..)))
+            .collect()
     }
-    
+
     pub fn origins(&self) -> Vec<String> {
-        self
-            .input_records()
+        self.input_records()
             .iter()
             .map(|r| {
                 let XXX::Record(serial_number, origin) = r;
@@ -69,7 +72,11 @@ impl Transition {
     }
 
     fn input_records(&self) -> Vec<XXX> {
-        self.inputs.clone().into_iter().filter(|o| matches!(o, XXX::Record(..))).collect()
+        self.inputs
+            .clone()
+            .into_iter()
+            .filter(|o| matches!(o, XXX::Record(..)))
+            .collect()
     }
 }
 
@@ -145,11 +152,9 @@ pub fn verify_execution(transitions: &Vec<Transition>, program_build: &ProgramBu
         let inputs: Vec<SimpleworksValueType> = transition
             .inputs
             .iter()
-            .filter_map(|i| {
-                match i {
-                    XXX::Public(_, value) => Some(value.clone()),
-                    _ => None,
-                }
+            .filter_map(|i| match i {
+                XXX::Public(_, value) => Some(value.clone()),
+                _ => None,
             })
             .collect();
 
