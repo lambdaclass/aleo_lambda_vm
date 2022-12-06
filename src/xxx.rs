@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use simpleworks::types::value::SimpleworksValueType;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

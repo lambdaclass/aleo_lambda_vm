@@ -45,9 +45,9 @@ use simpleworks::{
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
-use xxx::XXX;
 use std::cell::RefCell;
 use std::rc::Rc;
+use xxx::XXX;
 
 pub mod circuit_io_type;
 mod helpers;
