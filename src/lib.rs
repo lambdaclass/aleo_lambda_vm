@@ -47,14 +47,16 @@ use simpleworks::{
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
+pub use variable_type::VariableType;
 
 pub mod circuit_io_type;
 mod helpers;
 pub mod instructions;
 pub mod record;
 pub use simpleworks::types::value::SimpleworksValueType;
+pub mod variable_type;
 
-pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
+pub type CircuitOutputType = IndexMap<String, VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
