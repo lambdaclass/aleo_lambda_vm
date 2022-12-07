@@ -161,20 +161,17 @@ pub fn verify_execution(transitions: &Vec<Transition>, program_build: &ProgramBu
     Ok(())
 }
 
-pub fn credits() -> Result<Program<Testnet3>> {
-    let mut credits_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    credits_path.push("programs/credits.aleo");
-    let program_string = std::fs::read_to_string(credits_path).map_err(|e| anyhow!("{}", e))?;
-    generate_program(&program_string)
-}
-
+/// Executes `credits.aleo` program.
 pub fn credits_execution(
     function_name: Identifier<Testnet3>,
     inputs: &[SimpleworksValueType],
     private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
-    let credits_program = credits()?;
+    let mut credits_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    credits_path.push("programs/credits.aleo");
+    let program_string = std::fs::read_to_string(credits_path).map_err(|e| anyhow!("{}", e))?;
+    let credits_program = generate_program(&program_string)?;
     execute(credits_program, function_name, inputs, private_key, rng)
 }
 
