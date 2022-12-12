@@ -9,7 +9,7 @@ use std::path::PathBuf;
 /// the rng seed is hardcoded. This is not going to be the case forever, though, as eventually
 /// these parameters will be something generated in a setup ceremony and thus it will not be possible
 /// to derive them deterministically like this.
-pub fn generate_universal_srs() -> Result<UniversalSRS> {
+pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
     simpleworks::marlin::generate_universal_srs(rng)
 }
@@ -22,11 +22,13 @@ pub fn get_universal_srs_dir_and_filepath() -> Result<(PathBuf, PathBuf)> {
     Ok((parameters_dir, file_dir))
 }
 
-pub fn load_universal_srs_from_file() -> Result<UniversalSRS> {
+pub fn load_universal_srs_from_file() -> Result<Box<UniversalSRS>> {
     let (_parameters_dir, file_dir) = get_universal_srs_dir_and_filepath()?;
     let f = fs::File::open(file_dir)?;
     let reader = BufReader::new(f);
-    UniversalSRS::deserialize(reader).map_err(|_e| anyhow!("Error deserializing Universal SRS"))
+    Ok(Box::new(UniversalSRS::deserialize(reader).map_err(
+        |_e| anyhow!("Error deserializing Universal SRS"),
+    )?))
 }
 
 pub fn generate_universal_srs_and_write_to_file() -> Result<PathBuf> {
