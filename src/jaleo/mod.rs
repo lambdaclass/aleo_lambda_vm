@@ -4,6 +4,7 @@ use crate::variable_type::VariableType;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use snarkvm::prelude::Testnet3;
+pub use snarkvm::prelude::Itertools;
 
 mod execute;
 pub use execute::{credits_execution, generate_execution, verify_execution};
