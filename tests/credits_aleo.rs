@@ -9,12 +9,26 @@ fn init() {
 
 #[cfg(test)]
 mod credits_functions_tests {
-    use std::str::FromStr;
-
-    use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
-    use ark_r1cs_std::R1CSVar;
+    use ark_r1cs_std::{prelude::AllocVar, R1CSVar};
+    use ark_relations::r1cs::ConstraintSystem;
+    use simpleworks::{
+        gadgets::{AddressGadget, ConstraintF},
+        types::value::{RecordEntriesMap, SimpleworksValueType},
+    };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{helpers, jaleo, VMRecordEntriesMap};
+    use vmtropy::{build_program, verify_proof, variable_type::VariableType};
+
+    fn address(n: u64) -> (String, [u8; 63]) {
+        let mut address_bytes = [0_u8; 63];
+        let address_string =
+            format!("aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z{n}");
+        for (address_byte, address_string_byte) in
+            address_bytes.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+        (address_string, address_bytes)
+    }
 
     #[test]
     fn test_genesis() {
