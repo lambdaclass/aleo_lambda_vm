@@ -1,10 +1,14 @@
-use super::{Transition, credits};
-use crate::{ProgramBuild, VariableType, jaleo::{program_is_coinbase, generate_program}};
+use super::{credits, Transition};
+use crate::{
+    jaleo::{generate_program, program_is_coinbase},
+    variable_type::VariableType,
+    ProgramBuild,
+};
 use anyhow::{anyhow, ensure, Result};
 use ark_std::rand::rngs::StdRng;
 use log::debug;
 use simpleworks::{
-    marlin::{deserialize_proof, serialize_proof},
+    marlin::serialization::{deserialize_proof, serialize_proof},
     types::value::SimpleworksValueType,
 };
 use snarkvm::prelude::{Identifier, Itertools, PrivateKey, Program, Testnet3};
@@ -106,8 +110,7 @@ pub fn credits_execution(
     private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
-    let credits_program = credits()?;
-    execute(credits_program, function_name, inputs, private_key, rng)
+    execute(&credits()?, function_name, inputs, private_key, rng)
 }
 
 pub fn generate_execution(
@@ -134,11 +137,11 @@ pub fn generate_execution(
         program, function_name, inputs
     );
 
-    execute(program, function_name, inputs, private_key, rng)
+    execute(&program, function_name, inputs, private_key, rng)
 }
 
 fn execute(
-    program: Program<Testnet3>,
+    program: &Program<Testnet3>,
     function_name: Identifier<Testnet3>,
     inputs: &[SimpleworksValueType],
     _private_key: &PrivateKey<Testnet3>,

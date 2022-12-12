@@ -20,8 +20,18 @@ use snarkvm::prelude::{
     Function, Instruction, LiteralType, Operand, PlaintextType, Register, Testnet3, ValueType,
 };
 
+pub fn to_address(primitive_address: String) -> [u8; 63] {
+    let mut address = [0_u8; 63];
+    for (address_byte, primitive_address_byte) in
+        address.iter_mut().zip(primitive_address.as_bytes())
+    {
+        *address_byte = *primitive_address_byte;
+    }
+    address
+}
+
 /// Builds a function, which means generating its proving and verifying keys.
-pub fn build_function(
+pub(crate) fn build_function(
     function: &Function<Testnet3>,
     user_inputs: &[SimpleworksValueType],
     constraint_system: ConstraintSystemRef<ConstraintF>,
@@ -41,7 +51,9 @@ pub fn build_function(
 // We are using this function to build a program because in order to do that
 // we need inputs.
 /// Defaults the inputs for a given function.
-pub fn default_user_inputs(function: &Function<Testnet3>) -> Result<Vec<SimpleworksValueType>> {
+pub(crate) fn default_user_inputs(
+    function: &Function<Testnet3>,
+) -> Result<Vec<SimpleworksValueType>> {
     let mut default_user_inputs: Vec<SimpleworksValueType> = Vec::new();
     for function_input in function.inputs() {
         let default_user_input = match function_input.value_type() {
@@ -116,7 +128,7 @@ pub fn default_user_inputs(function: &Function<Testnet3>) -> Result<Vec<Simplewo
 /// # Returns
 /// - `IndexMap` with the program variables and its `CircuitIOType` values.
 ///
-pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
+pub(crate) fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
     let mut registers: SimpleFunctionVariables = IndexMap::new();
 
     let function_inputs: Vec<String> = function
@@ -165,7 +177,7 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
 /// # Returns
 /// - `IndexMap` of the Circuit Output.
 ///
-pub fn circuit_inputs(
+pub(crate) fn circuit_inputs(
     function: &Function<Testnet3>,
     program_variables: &SimpleFunctionVariables,
 ) -> Result<CircuitInputType> {
@@ -277,7 +289,7 @@ pub fn circuit_inputs(
 /// # Returns
 /// - `IndexMap` of the Circuit Output.
 ///
-pub fn circuit_outputs(
+pub(crate) fn circuit_outputs(
     function: &Function<Testnet3>,
     program_variables: &SimpleFunctionVariables,
 ) -> Result<CircuitOutputType> {
@@ -397,7 +409,7 @@ pub fn circuit_outputs(
 /// Literal 'Constant types are not supported' when the input is a constant.
 /// Literal 'ExternalRecord types are not supported' when the input is a External Record.
 ///
-pub fn process_inputs(
+pub(crate) fn process_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
     user_inputs: &[SimpleworksValueType],
@@ -551,7 +563,7 @@ pub fn process_inputs(
 /// Literal 'Caller operands are not supported' when a Caller is found in the operands.
 /// Literal 'instruction is not supported currently' when a instruction in the circuit output is not supported.
 ///
-pub fn process_outputs(
+pub(crate) fn process_outputs(
     function: &Function<Testnet3>,
     program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {

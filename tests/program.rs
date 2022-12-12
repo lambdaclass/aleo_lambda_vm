@@ -43,7 +43,7 @@ mod tests {
             "2u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof, rng).unwrap())
@@ -81,7 +81,7 @@ mod tests {
             "2u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -117,7 +117,7 @@ mod tests {
             "2u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -153,7 +153,7 @@ mod tests {
             "2u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -189,7 +189,7 @@ mod tests {
             "2u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -225,7 +225,7 @@ mod tests {
             "2u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -261,7 +261,7 @@ mod tests {
             "2u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -297,7 +297,7 @@ mod tests {
             "2u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -333,7 +333,7 @@ mod tests {
             "2u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -369,7 +369,7 @@ mod tests {
             "0u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -405,7 +405,7 @@ mod tests {
             "0u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -441,7 +441,7 @@ mod tests {
             "0u16".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -477,7 +477,7 @@ mod tests {
             "0u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -513,7 +513,7 @@ mod tests {
             "0u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -549,7 +549,7 @@ mod tests {
             "0u32".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -585,7 +585,7 @@ mod tests {
             "0u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;
@@ -621,7 +621,7 @@ mod tests {
             "0u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = [];
@@ -657,7 +657,7 @@ mod tests {
             "0u64".to_owned()
         );
 
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get(function_name).unwrap();
         let public_inputs = user_inputs;

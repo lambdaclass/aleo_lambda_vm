@@ -1,12 +1,15 @@
 use std::str::FromStr;
 
-use crate::VariableType;
+use crate::variable_type::VariableType;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use snarkvm::prelude::{Program, Testnet3};
 
 mod execute;
-pub use execute::{generate_execution, credits_execution, verify_execution};
+pub use execute::{credits_execution, generate_execution, verify_execution};
+
+mod deploy;
+pub use deploy::{generate_deployment, verify_deployment, Deployment, VerifyingKeyMap};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Transition {
@@ -41,10 +44,10 @@ impl Transition {
             .collect()
     }
 
-    pub fn origins(&self) -> Vec<Option<String>> {
+    pub fn origins(&self) -> Vec<String> {
         self.input_records()
             .iter()
-            .map(|r| {
+            .filter_map(|r| {
                 if let VariableType::Record(_serial_number, origin, _record) = r {
                     Some(origin.clone())
                 } else {

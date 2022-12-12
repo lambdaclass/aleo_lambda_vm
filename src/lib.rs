@@ -44,21 +44,24 @@ use simpleworks::{
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
+pub use simpleworks::{
+    marlin::serialization::{deserialize_verifying_key, serialize_verifying_key},
+    types::value::SimpleworksValueType,
+};
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
-pub use variable_type::VariableType;
 
 pub mod circuit_io_type;
-mod helpers;
+pub mod helpers;
 pub mod instructions;
-pub mod record;
-pub use simpleworks::types::value::SimpleworksValueType;
 pub mod jaleo;
-pub mod variable_type;
+pub mod record;
+mod variable_type;
+pub use variable_type::VariableType;
 
-pub type CircuitOutputType = IndexMap<String, VariableType>;
-pub type CircuitInputType = IndexMap<String, VariableType>;
+pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
+pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
@@ -111,7 +114,7 @@ pub fn execute_function(
 
 /// Builds a program, which means generating the proving and verifying keys
 /// for each function in the program.
-pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
+pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, ProgramBuild)> {
     let mut rng = simpleworks::marlin::generate_rand();
     let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
 
@@ -145,14 +148,14 @@ pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
         );
     }
 
-    Ok(program_build)
+    Ok((program, program_build))
 }
 
 /// Note: this function will always generate the same universal parameters because
 /// the rng seed is hardcoded. This is not going to be the case forever, though, as eventually
 /// these parameters will be something generated in a setup ceremony and thus it will not be possible
 /// to derive them deterministically like this.
-pub fn generate_universal_srs() -> Result<UniversalSRS> {
+pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
     simpleworks::marlin::generate_universal_srs(rng)
 }

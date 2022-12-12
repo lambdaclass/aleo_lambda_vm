@@ -7,7 +7,7 @@ mod credits_functions_tests {
         types::value::{RecordEntriesMap, SimpleworksValueType},
     };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, variable_type::VariableType, verify_proof};
+    use vmtropy::{build_program, verify_proof, VariableType};
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
@@ -67,7 +67,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.get("genesis").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
@@ -119,7 +119,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.get("mint").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
@@ -210,7 +210,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.get("transfer").unwrap();
         let public_inputs = [];
@@ -266,7 +266,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.get("combine").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
@@ -347,7 +347,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.get("split").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
@@ -401,7 +401,7 @@ mod credits_functions_tests {
         }
 
         let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.get("fee").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())

@@ -18,7 +18,7 @@ ark-std = { version = "^0.3.0", default-features = false }
 ark-relations = { version = "^0.3.0", default-features = false  }
 ark-poly = { version = "^0.3.0", default-features = false  }
 ark-poly-commit = { version = "^0.3.0", default-features = false  }
-ark-marlin = { git = "https://github.com/Entropy1729/marlin.git", branch = "use-constraint-system-directly" }
+ark-marlin = { git = "https://github.com/Entropy1729/marlin.git", branch = "impl_debug_for_vk" }
 
 ark-r1cs-std = { version = "^0.3.0", default-features = false }
 ark-snark = { version = "^0.3.0", default-features = false }
