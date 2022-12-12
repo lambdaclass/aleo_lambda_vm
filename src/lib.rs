@@ -52,6 +52,8 @@ use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
 
+pub use snarkvm;
+
 pub mod circuit_io_type;
 pub mod helpers;
 pub mod instructions;
