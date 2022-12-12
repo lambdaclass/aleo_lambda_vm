@@ -49,6 +49,7 @@ use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
 use universal_srs::load_universal_srs_from_file;
+use variable_type::VariableType;
 
 pub mod circuit_io_type;
 mod helpers;
@@ -62,6 +63,7 @@ mod program_build;
 pub use program_build::ProgramBuild;
 pub use simpleworks::marlin::generate_rand;
 pub mod universal_srs;
+pub mod variable_type;
 
 pub type CircuitOutputType = IndexMap<String, SimpleworksValueType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
