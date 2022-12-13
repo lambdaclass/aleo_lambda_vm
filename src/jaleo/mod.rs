@@ -10,7 +10,7 @@ mod execute;
 pub use execute::{credits_execution, generate_execution, verify_execution};
 
 mod deploy;
-pub use deploy::{generate_deployment, verify_deployment, Deployment, VerifyingKeyMap};
+pub use deploy::{deserialize_verifying_key_map, generate_deployment, serialize_verifying_key_map, verify_deployment, Deployment, VerifyingKeyMap};
 
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
