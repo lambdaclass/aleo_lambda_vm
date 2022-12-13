@@ -151,7 +151,7 @@ pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
 /// to derive them deterministically like this.
 pub fn generate_universal_srs() -> Result<UniversalSRS> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    simpleworks::marlin::generate_universal_srs(rng)
+    Ok(*simpleworks::marlin::generate_universal_srs(rng)?)
 }
 
 pub fn verify_proof(
