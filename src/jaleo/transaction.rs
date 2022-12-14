@@ -80,7 +80,7 @@ impl std::fmt::Display for Transaction {
 #[cfg(test)]
 mod tests {
     use super::Transaction;
-    use crate::jaleo::{generate_deployment, generate_execution, PrivateKey, Program};
+    use crate::jaleo::{generate_deployment, PrivateKey, Program, execution};
     use anyhow::{anyhow, Result};
     use simpleworks::types::value::{Address, RecordEntriesMap, SimpleworksValueType};
     use std::str::FromStr;
@@ -129,6 +129,7 @@ mod tests {
         let path = path.to_str().ok_or_else(
             || anyhow! {"Error passing PathBuf into str when sampling an execution transaction"},
         )?;
+        let program = Program::from_str(&std::fs::read_to_string(path)?)?;
 
         let rng = &mut simpleworks::marlin::generate_rand();
 
@@ -147,7 +148,7 @@ mod tests {
         ];
 
         let private_key = PrivateKey::new(rng).map_err(|e| anyhow!{"Error creating a private key when sampling an execution transaction: {e:?}"})?;
-        let transitions = generate_execution(path, "transfer", &user_inputs, &private_key, rng)?;
+        let transitions = execution(&program, "transfer", &user_inputs, &private_key, rng)?;
         let transaction_id = "execution_transaction";
         let transaction = Transaction::Execution {
             id: transaction_id.to_owned(),

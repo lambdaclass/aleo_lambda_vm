@@ -105,7 +105,7 @@ pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -
 }
 
 pub fn credits_execution(
-    function_name: Identifier<Testnet3>,
+    function_name: &str,
     inputs: &[SimpleworksValueType],
     private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
@@ -115,19 +115,14 @@ pub fn credits_execution(
 
 pub fn execution(
     program: &Program<Testnet3>,
-    function_name: Identifier<Testnet3>,
+    function_name: &str,
     inputs: &[SimpleworksValueType],
     _private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
     ensure!(
-        !program_is_coinbase(&program.id().to_string(), &function_name.to_string()),
+        !program_is_coinbase(&program.id().to_string(), function_name),
         "Coinbase functions cannot be called"
-    );
-
-    ensure!(
-        program.contains_function(&function_name),
-        "Function '{function_name}' does not exist."
     );
 
     debug!(
@@ -136,7 +131,7 @@ pub fn execution(
     );
 
     let function = program
-        .get_function(&function_name)
+        .get_function(&Identifier::<Testnet3>::try_from(function_name)?)
         .map_err(|e| anyhow!("{}", e))?;
 
     let (inputs, outputs, proof) = crate::execute_function(&function, inputs, rng)?;
@@ -146,7 +141,7 @@ pub fn execution(
 
     let transition = Transition {
         program_id: program.id().to_string(),
-        function_name: function_name.to_string(),
+        function_name: function_name.to_owned(),
         inputs: inputs.into_values().collect_vec(),
         outputs: outputs.into_values().collect_vec(),
         proof: encoded_proof,
