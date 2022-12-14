@@ -1,6 +1,6 @@
 use super::{credits, Transition};
 use crate::{
-    jaleo::{generate_program, program_is_coinbase},
+    jaleo::program_is_coinbase,
     variable_type::VariableType,
     ProgramBuild,
 };
@@ -110,22 +110,20 @@ pub fn credits_execution(
     private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
-    execute(&credits()?, function_name, inputs, private_key, rng)
+    execution(&credits()?, function_name, inputs, private_key, rng)
 }
 
-pub fn generate_execution(
-    program_str: &str,
-    function_str: &str,
+pub fn execution(
+    program: &Program<Testnet3>,
+    function_name: Identifier<Testnet3>,
     inputs: &[SimpleworksValueType],
-    private_key: &PrivateKey<Testnet3>,
+    _private_key: &PrivateKey<Testnet3>,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
-    println!("Executing function {}...", function_str);
-
-    let program_string = std::fs::read_to_string(program_str).map_err(|e| anyhow!("{}", e))?;
-    let program = generate_program(&program_string)?;
-
-    let function_name = Identifier::try_from(function_str).map_err(|e| anyhow!("{}", e))?;
+    ensure!(
+        !program_is_coinbase(&program.id().to_string(), &function_name.to_string()),
+        "Coinbase functions cannot be called"
+    );
 
     ensure!(
         program.contains_function(&function_name),
@@ -137,16 +135,6 @@ pub fn generate_execution(
         program, function_name, inputs
     );
 
-    execute(&program, function_name, inputs, private_key, rng)
-}
-
-fn execute(
-    program: &Program<Testnet3>,
-    function_name: Identifier<Testnet3>,
-    inputs: &[SimpleworksValueType],
-    _private_key: &PrivateKey<Testnet3>,
-    rng: &mut StdRng,
-) -> Result<Vec<Transition>> {
     let function = program
         .get_function(&function_name)
         .map_err(|e| anyhow!("{}", e))?;

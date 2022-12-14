@@ -6,7 +6,7 @@ pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
 mod execute;
-pub use execute::{credits_execution, generate_execution, verify_execution};
+pub use execute::{credits_execution, execution, verify_execution};
 
 mod deploy;
 pub use deploy::{generate_deployment, verify_deployment, Deployment, VerifyingKeyMap};
