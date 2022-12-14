@@ -1,17 +1,22 @@
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
-use serde::{ser::SerializeStruct, Serialize};
+use serde::{de, ser::SerializeStruct, Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 use simpleworks::{
+    fields::deserialize_field_element,
     fields::serialize_field_element,
     gadgets::ConstraintF,
     types::value::{Address, RecordEntriesMap},
 };
+use std::fmt::Display;
 
+#[derive(Debug, Clone, Deserialize)]
 pub struct Record {
+    #[serde(deserialize_with = "deserialize_address")]
     pub owner: Address,
     pub gates: u64,
     pub entries: RecordEntriesMap,
+    #[serde(deserialize_with = "deserialize_constraint_f")]
     pub nonce: ConstraintF,
 }
 
@@ -20,6 +25,31 @@ fn sha3_hash(input: &[u8]) -> Result<String> {
     hasher.update(input);
     let bytes = hasher.finalize().to_vec();
     bytes_to_string(&bytes)
+}
+
+fn deserialize_address<'de, D>(deserializer: D) -> Result<Address, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let address_str = String::deserialize(deserializer)?;
+
+    let mut address = [0_u8; 63];
+    for (sender_address_byte, address_string_byte) in address.iter_mut().zip(address_str.as_bytes())
+    {
+        *sender_address_byte = *address_string_byte;
+    }
+
+    Ok(address)
+}
+
+fn deserialize_constraint_f<'de, D>(deserializer: D) -> Result<ConstraintF, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let encoded_nonce = String::deserialize(deserializer)?;
+    let nonce_str = hex::decode(encoded_nonce).map_err(de::Error::custom)?;
+
+    deserialize_field_element(nonce_str).map_err(de::Error::custom)
 }
 
 impl Record {
@@ -48,6 +78,12 @@ impl Record {
     // In the future the serial number will be generated using the private key.
     pub fn compute_serial_number(&self) -> Result<String> {
         sha3_hash(self.commitment()?.as_bytes())
+    }
+}
+
+impl Display for Record {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }
 

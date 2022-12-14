@@ -38,8 +38,8 @@ impl Transition {
         self.input_records()
             .iter()
             .filter_map(|r| {
-                if let VariableType::Record(_serial_number, origin, _record) = r {
-                    Some(origin.clone())
+                if let VariableType::Record(record) = r {
+                    record.commitment().ok()
                 } else {
                     None
                 }
