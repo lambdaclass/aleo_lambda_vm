@@ -18,9 +18,6 @@ mod record;
 // Rename to Record when we get rid of snarkVM's.
 pub use record::Record as JAleoRecord;
 
-mod transaction;
-pub use transaction::Transaction;
-
 mod transition;
 pub use transition::Transition;
 
