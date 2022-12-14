@@ -1,4 +1,4 @@
-use super::{credits, Transition};
+use super::{credits, Transition, Identifier, PrivateKey, Program};
 use crate::{jaleo::program_is_coinbase, variable_type::VariableType, ProgramBuild};
 use anyhow::{anyhow, ensure, Result};
 use ark_std::rand::rngs::StdRng;
@@ -7,7 +7,6 @@ use simpleworks::{
     marlin::serialization::{deserialize_proof, serialize_proof},
     types::value::SimpleworksValueType,
 };
-use snarkvm::prelude::{Identifier, Itertools, PrivateKey, Program, Testnet3};
 
 const MAX_INPUTS: usize = 8;
 const MAX_OUTPUTS: usize = 8;
@@ -102,23 +101,23 @@ pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -
 }
 
 pub fn credits_execution(
-    function_name: &str,
+    function_name: &Identifier,
     inputs: &[SimpleworksValueType],
-    private_key: &PrivateKey<Testnet3>,
+    private_key: &PrivateKey,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
     execution(&credits()?, function_name, inputs, private_key, rng)
 }
 
 pub fn execution(
-    program: &Program<Testnet3>,
-    function_name: &str,
+    program: &Program,
+    function_name: &Identifier,
     inputs: &[SimpleworksValueType],
-    _private_key: &PrivateKey<Testnet3>,
+    _private_key: &PrivateKey,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
     ensure!(
-        !program_is_coinbase(&program.id().to_string(), function_name),
+        !program_is_coinbase(&program.id().to_string(), &function_name.to_string()),
         "Coinbase functions cannot be called"
     );
 
@@ -128,7 +127,7 @@ pub fn execution(
     );
 
     let function = program
-        .get_function(&Identifier::<Testnet3>::try_from(function_name)?)
+        .get_function(function_name)
         .map_err(|e| anyhow!("{}", e))?;
 
     let (inputs, outputs, proof) = crate::execute_function(&function, inputs, rng)?;
@@ -138,9 +137,9 @@ pub fn execution(
 
     let transition = Transition {
         program_id: program.id().to_string(),
-        function_name: function_name.to_owned(),
-        inputs: inputs.into_values().collect_vec(),
-        outputs: outputs.into_values().collect_vec(),
+        function_name: function_name.to_string(),
+        inputs: inputs.into_values().collect::<Vec<VariableType>>(),
+        outputs: outputs.into_values().collect::<Vec<VariableType>>(),
         proof: encoded_proof,
         fee: 0,
     };
