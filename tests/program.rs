@@ -45,7 +45,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof, rng).unwrap())
     }
 
@@ -83,7 +83,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -119,7 +119,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -155,7 +155,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -191,7 +191,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -227,7 +227,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -263,7 +263,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -299,7 +299,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -335,7 +335,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -371,7 +371,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -407,7 +407,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -443,7 +443,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -479,7 +479,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -515,7 +515,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -551,7 +551,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -587,7 +587,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -623,7 +623,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -659,7 +659,7 @@ mod tests {
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get(function_name).unwrap();
+            program_build.map.get(function_name).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }

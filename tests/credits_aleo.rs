@@ -68,7 +68,7 @@ mod credits_functions_tests {
 
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("genesis").unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.map.get("genesis").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -120,7 +120,7 @@ mod credits_functions_tests {
 
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("mint").unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.map.get("mint").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -212,7 +212,7 @@ mod credits_functions_tests {
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get("transfer").unwrap();
+            program_build.map.get("transfer").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -267,7 +267,7 @@ mod credits_functions_tests {
 
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("combine").unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.map.get("combine").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -348,7 +348,7 @@ mod credits_functions_tests {
 
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("split").unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.map.get("split").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }
@@ -402,7 +402,7 @@ mod credits_functions_tests {
 
         let rng = &mut ark_std::test_rng();
         let (_program, program_build) = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("fee").unwrap();
+        let (_function_proving_key, function_verifying_key) = program_build.map.get("fee").unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
     }

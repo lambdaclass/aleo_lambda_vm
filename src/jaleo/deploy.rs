@@ -81,6 +81,7 @@ pub fn generate_deployment(program_string: &str) -> Result<Deployment> {
 
     let (program, program_build) = build_program(program_string)?;
     let verifying_keys: IndexMap<String, VerifyingKey> = program_build
+        .map
         .into_iter()
         .map(|(function_name, (_proving_key, verifying_key))| (function_name, verifying_key))
         .collect();

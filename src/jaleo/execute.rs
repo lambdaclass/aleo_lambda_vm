@@ -1,9 +1,5 @@
 use super::{credits, Transition};
-use crate::{
-    jaleo::program_is_coinbase,
-    variable_type::VariableType,
-    ProgramBuild,
-};
+use crate::{jaleo::program_is_coinbase, variable_type::VariableType, ProgramBuild};
 use anyhow::{anyhow, ensure, Result};
 use ark_std::rand::rngs::StdRng;
 use log::debug;
@@ -75,6 +71,7 @@ pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -
 
     // Retrieve the verifying key.
     let (_proving_key, verifying_key) = program_build
+        .map
         .get(&transition.function_name)
         .ok_or_else(|| anyhow!("missing verifying key"))?;
 

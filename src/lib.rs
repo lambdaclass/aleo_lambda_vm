@@ -61,11 +61,12 @@ pub mod jaleo;
 pub mod record;
 mod variable_type;
 pub use variable_type::VariableType;
+mod program_build;
+pub use program_build::ProgramBuild;
 
 pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
 pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
-pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
 
 /// Returns the circuit outputs and the marlin proof.
@@ -122,7 +123,9 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
 
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
-    let mut program_build: ProgramBuild = IndexMap::new();
+    let mut program_build = ProgramBuild {
+        map: IndexMap::new(),
+    };
     for (function_identifier, function) in program.functions() {
         let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
         let inputs = helpers::default_user_inputs(function)?;
@@ -144,7 +147,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
                 );
             }
         };
-        program_build.insert(
+        program_build.map.insert(
             function.name().to_string(),
             (function_proving_key, function_verifying_key),
         );
