@@ -10,7 +10,9 @@ use simpleworks::{
 };
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Deserialize)]
+use super::{PrivateKey, ViewKey};
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Record {
     #[serde(deserialize_with = "deserialize_address")]
     pub owner: Address,
@@ -76,8 +78,16 @@ impl Record {
     /// Returns the record serial number.
     // This function will return a String while we are using sha3 for hashing.
     // In the future the serial number will be generated using the private key.
-    pub fn serial_number(&self) -> Result<String> {
+    pub fn serial_number(&self, _private_key: &PrivateKey) -> Result<String> {
         sha3_hash(self.commitment()?.as_bytes())
+    }
+
+    pub fn is_owner(&self, address: &Address, _view_key: &ViewKey) -> bool {
+        self.owner == *address
+    }
+
+    pub fn decrypt(&self, _view_key: &ViewKey) -> Result<Self> {
+        Ok(self.clone())
     }
 }
 
