@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use simpleworks::{types::value::RecordEntriesMap, marlin::serialization::{deserialize_verifying_key, deserialize_proving_key}};
+use simpleworks::{
+    marlin::serialization::{deserialize_proving_key, deserialize_verifying_key},
+    types::value::RecordEntriesMap,
+};
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
@@ -58,10 +61,7 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 
 /// Generate a credits record of the given amount for the given owner,
 /// by using the given seed to deterministically generate a nonce.
-pub fn mint_credits(
-    owner_address: &Address,
-    credits: u64,
-) -> Result<(Field, JAleoRecord)> {
+pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, JAleoRecord)> {
     // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
 
     let mut address = [0_u8; 63];
@@ -76,9 +76,10 @@ pub fn mint_credits(
 }
 
 pub fn get_credits_key(function_name: &Identifier) -> Result<FunctionKeys> {
-    let (bytes_proving_key, bytes_verifying_key) = snarkvm::parameters::testnet3::TESTNET3_CREDITS_PROGRAM
-        .get(&function_name.to_string())
-        .ok_or_else(|| anyhow!("Circuit keys for credits.aleo/{function_name}' not found"))?;
+    let (bytes_proving_key, bytes_verifying_key) =
+        snarkvm::parameters::testnet3::TESTNET3_CREDITS_PROGRAM
+            .get(&function_name.to_string())
+            .ok_or_else(|| anyhow!("Circuit keys for credits.aleo/{function_name}' not found"))?;
 
     let verifying_key = deserialize_verifying_key(bytes_verifying_key.to_vec())?;
     let proving_key = deserialize_proving_key(bytes_proving_key.to_vec())?;

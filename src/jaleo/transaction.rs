@@ -80,7 +80,7 @@ impl std::fmt::Display for Transaction {
 #[cfg(test)]
 mod tests {
     use super::Transaction;
-    use crate::jaleo::{generate_deployment, PrivateKey, Program, execution};
+    use crate::jaleo::{execution, generate_deployment, PrivateKey, Program};
     use anyhow::{anyhow, Result};
     use simpleworks::types::value::{Address, RecordEntriesMap, SimpleworksValueType};
     use std::str::FromStr;

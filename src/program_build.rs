@@ -1,7 +1,14 @@
 use crate::FunctionKeys;
 use indexmap::IndexMap;
-use serde::{Serialize, ser::{self, SerializeMap, Error}, Deserialize, de};
-use simpleworks::marlin::serialization::{serialize_verifying_key, serialize_proving_key, deserialize_proving_key, deserialize_verifying_key};
+use serde::{
+    de,
+    ser::{self, Error, SerializeMap},
+    Deserialize, Serialize,
+};
+use simpleworks::marlin::serialization::{
+    deserialize_proving_key, deserialize_verifying_key, serialize_proving_key,
+    serialize_verifying_key,
+};
 use std::fmt::Debug;
 
 pub struct ProgramBuild {
@@ -58,7 +65,13 @@ impl Debug for ProgramBuild {
                 hex::encode(serialize_proving_key(pk.clone()).map_err(std::fmt::Error::custom)?);
             let serialized_verifying_key =
                 hex::encode(serialize_verifying_key(vk.clone()).map_err(std::fmt::Error::custom)?);
-            verifying_keys.insert(k.clone(), (serialized_proving_key.clone(), serialized_verifying_key.clone()));
+            verifying_keys.insert(
+                k.clone(),
+                (
+                    serialized_proving_key.clone(),
+                    serialized_verifying_key.clone(),
+                ),
+            );
         }
         IndexMap::fmt(&verifying_keys, f)
     }
