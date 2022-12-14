@@ -1,5 +1,7 @@
+use super::JAleoRecord;
 use crate::variable_type::VariableType;
 use serde::{Deserialize, Serialize};
+
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Transition {
@@ -26,11 +28,17 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn output_records(&self) -> Vec<VariableType> {
+    pub fn output_records(&self) -> Vec<JAleoRecord> {
         self.outputs
             .clone()
             .into_iter()
-            .filter(|o| matches!(o, VariableType::Record(..)))
+            .filter_map(|o| {
+                if let VariableType::Record(r) = o {
+                    Some(r)
+                } else {
+                    None
+                }
+            })
             .collect()
     }
 
@@ -47,11 +55,24 @@ impl Transition {
             .collect()
     }
 
-    fn input_records(&self) -> Vec<VariableType> {
+    pub fn input_records(&self) -> Vec<VariableType> {
         self.inputs
             .clone()
             .into_iter()
             .filter(|o| matches!(o, VariableType::Record(..)))
+            .collect()
+    }
+
+    pub fn serial_numbers(&self) -> Vec<String> {
+        self.inputs
+            .iter()
+            .filter_map(|transition| {
+                if let VariableType::Record(record) = transition {
+                    record.serial_number().ok()
+                } else {
+                    None
+                }
+            })
             .collect()
     }
 }
