@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
+use simpleworks::types::value::RecordEntriesMap;
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
@@ -29,7 +30,8 @@ pub type Record = snarkvm::prelude::Record<Testnet3, snarkvm::prelude::Plaintext
 pub type EncryptedRecord = snarkvm::prelude::Record<Testnet3, Ciphertext>;
 pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
-pub type Field = snarkvm::prelude::Field<Testnet3>;
+// This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
+pub type Field = String;
 pub type Origin = snarkvm::prelude::Origin<Testnet3>;
 pub type Output = snarkvm::prelude::Output<Testnet3>;
 pub type ProgramID = snarkvm::prelude::ProgramID<Testnet3>;
@@ -50,4 +52,23 @@ pub fn credits() -> Result<Program> {
 pub fn generate_program(program_string: &str) -> Result<Program> {
     // Verify program is valid by parsing it and returning it
     Program::from_str(program_string)
+}
+
+/// Generate a credits record of the given amount for the given owner,
+/// by using the given seed to deterministically generate a nonce.
+pub fn mint_credits(
+    owner_address: &Address,
+    credits: u64,
+) -> Result<(Field, JAleoRecord)> {
+    // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
+
+    let mut address = [0_u8; 63];
+    let owner_address = owner_address.to_string();
+    for (address_byte, owner_address_byte) in address.iter_mut().zip(owner_address.as_bytes()) {
+        *address_byte = *owner_address_byte;
+    }
+
+    let non_encrypted_record = JAleoRecord::new(address, credits, RecordEntriesMap::default());
+
+    Ok((non_encrypted_record.commitment()?, non_encrypted_record))
 }
