@@ -63,6 +63,7 @@ mod variable_type;
 pub use variable_type::VariableType;
 mod program_build;
 pub use program_build::ProgramBuild;
+pub use simpleworks::marlin::generate_rand;
 
 pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
 pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
