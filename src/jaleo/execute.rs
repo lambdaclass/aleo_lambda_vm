@@ -156,15 +156,10 @@ fn execute(
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
 
-    let public_inputs = inputs
-        .into_values()
-        .filter(|i| matches!(i, VariableType::Public(..)))
-        .collect_vec();
-
     let transition = Transition {
         program_id: program.id().to_string(),
         function_name: function_name.to_string(),
-        inputs: public_inputs,
+        inputs: inputs.into_values().collect_vec(),
         outputs: outputs.into_values().collect_vec(),
         proof: encoded_proof,
         fee: 0,
