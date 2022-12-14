@@ -1,17 +1,32 @@
-use super::{credits, Transition, Identifier, PrivateKey, Program};
-use crate::{jaleo::program_is_coinbase, variable_type::VariableType, ProgramBuild};
-use anyhow::{anyhow, ensure, Result};
+use super::{credits, Identifier, PrivateKey, Program, Transition, VerifyingKeyMap};
+use crate::{
+    jaleo::{program_is_coinbase, JAleoRecord},
+    variable_type::VariableType,
+    CircuitInputType, CircuitOutputType, SimpleFunctionVariables,
+};
+use anyhow::{anyhow, bail, ensure, Result};
+use ark_r1cs_std::R1CSVar;
 use ark_std::rand::rngs::StdRng;
+use indexmap::IndexMap;
 use log::debug;
 use simpleworks::{
     marlin::serialization::{deserialize_proof, serialize_proof},
     types::value::SimpleworksValueType,
 };
 
+use crate::CircuitIOType::{
+    SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
+
+type Function = snarkvm::prelude::Function<snarkvm::prelude::Testnet3>;
+
 const MAX_INPUTS: usize = 8;
 const MAX_OUTPUTS: usize = 8;
 
-pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -> Result<()> {
+pub fn verify_execution(
+    transition: &Transition,
+    verifying_key_map: &VerifyingKeyMap,
+) -> Result<()> {
     // Verify each transition.
     log::debug!(
         "Verifying transition for {}/{}...",
@@ -69,7 +84,7 @@ pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -
     // }
 
     // Retrieve the verifying key.
-    let (_proving_key, verifying_key) = program_build
+    let verifying_key = verifying_key_map
         .map
         .get(&transition.function_name)
         .ok_or_else(|| anyhow!("missing verifying key"))?;
@@ -82,7 +97,7 @@ pub fn verify_execution(transition: &Transition, program_build: &ProgramBuild) -
         .inputs
         .iter()
         .filter_map(|i| match i {
-            VariableType::Public(_, value) => Some(value.clone()),
+            VariableType::Public(value) => Some(value.clone()),
             _ => None,
         })
         .collect();
@@ -113,7 +128,7 @@ pub fn execution(
     program: &Program,
     function_name: &Identifier,
     inputs: &[SimpleworksValueType],
-    _private_key: &PrivateKey,
+    private_key: &PrivateKey,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
     ensure!(
@@ -130,7 +145,10 @@ pub fn execution(
         .get_function(function_name)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (inputs, outputs, proof) = crate::execute_function(&function, inputs, rng)?;
+    let (compiled_function_variables, proof) = crate::execute_function(&function, inputs, rng)?;
+
+    let inputs = process_circuit_inputs(&function, &compiled_function_variables, private_key)?;
+    let outputs = process_circuit_outputs(&function, &compiled_function_variables)?;
 
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
@@ -145,4 +163,155 @@ pub fn execution(
     };
 
     Ok(vec![transition])
+}
+
+/// Returns a hash map with the circuit inputs of a given function and its variables.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - `IndexMap` of the Circuit Output.
+///
+pub(crate) fn process_circuit_inputs(
+    function: &Function,
+    program_variables: &SimpleFunctionVariables,
+    private_key: &PrivateKey,
+) -> Result<CircuitInputType> {
+    let mut circuit_inputs = IndexMap::new();
+    function.inputs().iter().try_for_each(|o| {
+        let register = o.register().to_string();
+        let program_variable = program_variables
+            .get(&register)
+            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .and_then(|r| {
+                r.clone()
+                    .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+            })?;
+
+        circuit_inputs.insert(register, {
+            if program_variable.is_witness()? {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleRecord(r) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        let record = JAleoRecord::new(primitive_bytes, r.gates.value()?, r.entries);
+                        VariableType::Record(Some(record.serial_number(private_key)?), record)
+                    }
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                    }
+                }
+            } else {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Public(SimpleworksValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Public(SimpleworksValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Public(SimpleworksValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Public(SimpleworksValueType::U64(v.value()?)),
+                    SimpleRecord(_) => bail!("Records cannot be public"),
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Public(SimpleworksValueType::Address(primitive_bytes))
+                    }
+                }
+            }
+        });
+        Ok::<_, anyhow::Error>(())
+    })?;
+    Ok(circuit_inputs)
+}
+
+/// Returns a hash map with the circuit outputs of a given function and its variables.
+///
+/// # Parameters
+/// - `function` - function to be analyzed.
+/// - `program_variables` - variables of the function.
+///  
+/// # Returns
+/// - `IndexMap` of the Circuit Output.
+///
+pub(crate) fn process_circuit_outputs(
+    function: &Function,
+    program_variables: &SimpleFunctionVariables,
+) -> Result<CircuitOutputType> {
+    let mut circuit_outputs = IndexMap::new();
+    function.outputs().iter().try_for_each(|o| {
+        let register = o.register().to_string();
+        let program_variable = program_variables
+            .get(&register)
+            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .and_then(|r| {
+                r.clone()
+                    .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+            })?;
+
+        circuit_outputs.insert(register, {
+            if program_variable.is_witness()? {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleRecord(r) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        let record = JAleoRecord::new(primitive_bytes, r.gates.value()?, r.entries);
+                        VariableType::Record(None, record)
+                    }
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                    }
+                }
+            } else {
+                match program_variable {
+                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleRecord(_) => bail!("Records cannot be public"),
+                    SimpleAddress(a) => {
+                        let mut primitive_bytes = [0_u8; 63];
+                        for (primitive_byte, byte) in
+                            primitive_bytes.iter_mut().zip(a.value()?.as_bytes())
+                        {
+                            *primitive_byte = *byte;
+                        }
+                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                    }
+                }
+            }
+        });
+        Ok::<_, anyhow::Error>(())
+    })?;
+    Ok(circuit_outputs)
 }
