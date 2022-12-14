@@ -1,6 +1,6 @@
-use crate::{build_program, helpers};
+use super::Program;
+use crate::build_program;
 use anyhow::{bail, ensure, Result};
-use ark_std::rand::rngs::StdRng;
 use indexmap::IndexMap;
 use serde::{
     de,
@@ -11,7 +11,7 @@ use simpleworks::{
     marlin::serialization::{deserialize_verifying_key, serialize_verifying_key},
     marlin::VerifyingKey,
 };
-use snarkvm::prelude::{Itertools, Program, Testnet3};
+use snarkvm::prelude::Itertools;
 use std::fmt::Debug;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ pub struct VerifyingKeyMap {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Deployment {
-    pub program: Program<Testnet3>,
+    pub program: Program,
     pub verifying_keys: VerifyingKeyMap,
 }
 
@@ -93,39 +93,14 @@ pub fn generate_deployment(program_string: &str) -> Result<Deployment> {
     })
 }
 
-/// Checks each function in the program on the given verifying key and certificate.
-pub fn verify_deployment(deployment: &Deployment, rng: &mut StdRng) -> Result<()> {
-    // Retrieve the program.
-    let program = &deployment.program;
-    // Retrieve the program ID.
-    let program_id = program.id();
-    // Retrieve the verifying keys.
-    let verifying_keys = &deployment.verifying_keys;
-
-    // Sanity Checks //
-
-    // Ensure the program matches.
-    ensure!(
-        program == &deployment.program,
-        "The stack program does not match the deployment program"
-    );
-    // Ensure the program network-level domain (NLD) is correct.
-    ensure!(
-        program_id.is_aleo(),
-        "Program '{program_id}' has an incorrect network-level domain (NLD)"
-    );
-    // Ensure the program contains functions.
-    ensure!(
-        !program.functions().is_empty(),
-        "No functions present in the deployment for program '{program_id}'"
-    );
+/// Basic deployment validations
+pub fn verify_deployment(program: &Program, verifying_keys: VerifyingKeyMap) -> Result<()> {
     // Ensure the deployment contains verifying keys.
+    let program_id = program.id();
     ensure!(
         !verifying_keys.map.is_empty(),
         "No verifying keys present in the deployment for program '{program_id}'"
     );
-
-    // Check Verifying Keys //
 
     // Ensure the number of verifying keys matches the number of program functions.
     if verifying_keys.map.len() != program.functions().len() {
@@ -150,13 +125,6 @@ pub fn verify_deployment(deployment: &Deployment, rng: &mut StdRng) -> Result<()
                 function.name()
             )
         }
-    }
-
-    // Iterate through the program functions.
-    for function in program.functions().values() {
-        // Sample the inputs.
-        let inputs = helpers::default_user_inputs(function)?;
-        let _result = crate::execute_function(function, &inputs, rng)?;
     }
     Ok(())
 }
