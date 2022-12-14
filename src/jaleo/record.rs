@@ -43,7 +43,12 @@ impl Record {
         sha3_hash(&record_bytes)
     }
 
-    // pub fn compute_serial_number(&self, )
+    /// Returns the record serial number.
+    // This function will return a String while we are using sha3 for hashing.
+    // In the future the serial number will be generated using the private key.
+    pub fn compute_serial_number(&self) -> Result<String> {
+        sha3_hash(self.commitment()?.as_bytes())
+    }
 }
 
 impl Serialize for Record {
