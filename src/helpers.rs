@@ -1,3 +1,4 @@
+use crate::jaleo::JAleoRecord;
 use crate::{
     circuit_io_type::{
         SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
@@ -218,15 +219,11 @@ pub(crate) fn circuit_inputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Record(
-                            "serial_number".to_owned(),
-                            "commitment".to_owned(),
-                            SimpleworksValueType::Record {
-                                owner: primitive_bytes,
-                                gates: r.gates.value()?,
-                                entries: r.entries,
-                            },
-                        )
+                        VariableType::Record(JAleoRecord::new(
+                            primitive_bytes,
+                            r.gates.value()?,
+                            r.entries,
+                        ))
                     }
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
@@ -330,15 +327,11 @@ pub(crate) fn circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Record(
-                            "serial_number".to_owned(),
-                            "commitment".to_owned(),
-                            SimpleworksValueType::Record {
-                                owner: primitive_bytes,
-                                gates: r.gates.value()?,
-                                entries: r.entries,
-                            },
-                        )
+                        VariableType::Record(JAleoRecord::new(
+                            primitive_bytes,
+                            r.gates.value()?,
+                            r.entries,
+                        ))
                     }
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
