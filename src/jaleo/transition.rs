@@ -2,7 +2,6 @@ use super::JAleoRecord;
 use crate::variable_type::VariableType;
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Transition {
     // /// The transition ID.
@@ -33,8 +32,8 @@ impl Transition {
             .clone()
             .into_iter()
             .filter_map(|o| {
-                if let VariableType::Record(r) = o {
-                    Some(r)
+                if let VariableType::Record(_serial_number, record) = o {
+                    Some(record)
                 } else {
                     None
                 }
@@ -46,7 +45,7 @@ impl Transition {
         self.input_records()
             .iter()
             .filter_map(|r| {
-                if let VariableType::Record(record) = r {
+                if let VariableType::Record(_serial_number, record) = r {
                     record.commitment().ok()
                 } else {
                     None
@@ -67,8 +66,8 @@ impl Transition {
         self.inputs
             .iter()
             .filter_map(|transition| {
-                if let VariableType::Record(record) = transition {
-                    record.serial_number().ok()
+                if let VariableType::Record(serial_number, _record) = transition {
+                    serial_number.clone()
                 } else {
                     None
                 }
