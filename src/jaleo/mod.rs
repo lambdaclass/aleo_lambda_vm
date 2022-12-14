@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use simpleworks::types::value::RecordEntriesMap;
+use simpleworks::{types::value::RecordEntriesMap, marlin::serialization::{deserialize_verifying_key, deserialize_proving_key}};
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
@@ -21,6 +21,8 @@ pub use transaction::Transaction;
 mod transition;
 pub use transition::Transition;
 
+use crate::FunctionKeys;
+
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Value = snarkvm::prelude::Value<Testnet3>;
@@ -35,7 +37,7 @@ pub type Field = String;
 pub type Origin = snarkvm::prelude::Origin<Testnet3>;
 pub type Output = snarkvm::prelude::Output<Testnet3>;
 pub type ProgramID = snarkvm::prelude::ProgramID<Testnet3>;
-pub type VerifyingKey = snarkvm::prelude::VerifyingKey<Testnet3>;
+pub type VerifyingKey = simpleworks::marlin::VerifyingKey;
 
 pub fn program_is_coinbase(program_id: &str, function_name: &str) -> bool {
     (function_name == "mint" || function_name == "genesis") && program_id == "credits.aleo"
@@ -71,4 +73,15 @@ pub fn mint_credits(
     let non_encrypted_record = JAleoRecord::new(address, credits, RecordEntriesMap::default());
 
     Ok((non_encrypted_record.commitment()?, non_encrypted_record))
+}
+
+pub fn get_credits_key(function_name: &Identifier) -> Result<FunctionKeys> {
+    let (bytes_proving_key, bytes_verifying_key) = snarkvm::parameters::testnet3::TESTNET3_CREDITS_PROGRAM
+        .get(&function_name.to_string())
+        .ok_or_else(|| anyhow!("Circuit keys for credits.aleo/{function_name}' not found"))?;
+
+    let verifying_key = deserialize_verifying_key(bytes_verifying_key.to_vec())?;
+    let proving_key = deserialize_proving_key(bytes_proving_key.to_vec())?;
+
+    Ok((proving_key, verifying_key))
 }
