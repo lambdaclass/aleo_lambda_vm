@@ -114,15 +114,15 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (_inputs, outputs, proof) = vmtropy::execute_function(
+    let (_compiled_function_variables, proof) = vmtropy::execute_function(
         &function,
         user_inputs,
         &mut simpleworks::marlin::generate_rand(),
     )?;
 
-    for (register, value) in outputs {
-        println!("Output register {} has value {}", register, value.value()?);
-    }
+    // for (register, value) in outputs {
+    //     println!("Output register {} has value {}", register, value.value()?);
+    // }
 
     let mut bytes_proof = Vec::new();
     match proof.serialize(&mut bytes_proof) {
