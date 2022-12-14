@@ -3,14 +3,18 @@ use std::str::FromStr;
 use crate::variable_type::VariableType;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use snarkvm::prelude::Testnet3;
 pub use snarkvm::prelude::Itertools;
+use snarkvm::prelude::Testnet3;
 
 mod execute;
 pub use execute::{credits_execution, generate_execution, verify_execution};
 
 mod deploy;
 pub use deploy::{deserialize_verifying_key_map, generate_deployment, serialize_verifying_key_map, verify_deployment, Deployment, VerifyingKeyMap};
+
+mod record;
+// Rename to Record when we get rid of snarkVM's.
+pub use record::Record as JAleoRecord;
 
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
