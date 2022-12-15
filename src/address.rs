@@ -1,8 +1,8 @@
-use ark_ec::models::twisted_edwards_extended::GroupAffine;
 pub type Field = ark_ed_on_bls12_381::Fq;
 use anyhow::Result;
-use ark_ec::models::bls12::Bls12Parameters;
-use ark_std::rand::{rngs::StdRng, thread_rng, CryptoRng, Rng};
+use ark_std::rand::{thread_rng, CryptoRng, Rng};
+
+use crate::field::new_domain_separator;
 
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
@@ -26,12 +26,12 @@ impl PrivateKey {
 
     pub fn try_from(seed: Field) -> Result<Self> {
         // Construct the sk_sig domain separator.
-        let sk_sig_domain = Field::new_domain_separator(ACCOUNT_SK_SIG_DOMAIN);
+        let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN);
 
         // Construct the r_sig domain separator.
         let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0);
-        let r_sig_domain = Field::new_domain_separator(&r_sig_input);
-
+        let r_sig_domain = new_domain_separator(&r_sig_input);
+        
         Ok(Self {
             seed,
             sk_sig: N::hash_to_scalar_psd2(&[sk_sig_domain, seed])?,

@@ -75,3 +75,8 @@ fn from_bytes_le_mod_order(bytes: &[u8]) -> Field {
     from_bytes_be_mod_order(&bytes_copy)
 }
 // ******************************
+
+/// Initializes a new field as a domain separator.
+pub fn new_domain_separator(domain: &str) -> Field {
+    Field::new(from_bytes_le_mod_order(domain.as_bytes()).into())
+}
