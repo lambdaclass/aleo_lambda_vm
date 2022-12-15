@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
-use serde::{de, ser::SerializeStruct, Deserialize, Serialize};
+use serde::{de, ser::{SerializeStruct, Error}, Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 use simpleworks::{
     fields::deserialize_field_element,
@@ -23,11 +23,11 @@ pub struct Record {
     pub nonce: ConstraintF,
 }
 
-fn sha3_hash(input: &[u8]) -> Result<String> {
+fn sha3_hash(input: &[u8]) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(input);
     let bytes = hasher.finalize().to_vec();
-    bytes_to_string(&bytes)
+    hex::encode(&bytes)
 }
 
 fn deserialize_address<'de, D>(deserializer: D) -> Result<Address, D::Error>
@@ -82,14 +82,14 @@ impl Record {
         let record_string = serde_json::to_string(self)?;
         let mut record_bytes = serialize_field_element(self.nonce)?;
         record_bytes.extend_from_slice(record_string.as_bytes());
-        sha3_hash(&record_bytes)
+        Ok(sha3_hash(&record_bytes))
     }
 
     /// Returns the record serial number.
     // This function will return a String while we are using sha3 for hashing.
     // In the future the serial number will be generated using the private key.
     pub fn serial_number(&self, _private_key: &PrivateKey) -> Result<String> {
-        sha3_hash(self.commitment()?.as_bytes())
+        Ok(sha3_hash(&hex::decode(self.commitment()?).map_err(|e| anyhow!("{e:?}"))?))
     }
 
     pub fn is_owner(&self, address: &Address, _view_key: &ViewKey) -> bool {
@@ -103,7 +103,8 @@ impl Record {
 
 impl Display for Record {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self)
+        let record = serde_json::to_string_pretty(self).map_err(std::fmt::Error::custom)?;
+        write!(f, "{}", record)
     }
 }
 
