@@ -2153,7 +2153,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+https://github.com/Entropy1729/simpleworks.git#635970af1092b23db432f42b9621517dc8e4ac30"
+source = "git+https://github.com/Entropy1729/simpleworks.git#b76809c345c76f8e2e5a2158db76551977ed197e"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
