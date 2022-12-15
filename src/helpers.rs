@@ -4,7 +4,7 @@ use crate::{
     },
     instructions,
     record::Record,
-    FunctionKeys, SimpleFunctionVariables,
+    SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
@@ -12,7 +12,6 @@ use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
-    marlin::UniversalSRS,
     types::value::{RecordEntriesMap, SimpleworksValueType},
 };
 use snarkvm::prelude::{
@@ -27,24 +26,6 @@ pub fn to_address(primitive_address: String) -> [u8; 63] {
         *address_byte = *primitive_address_byte;
     }
     address
-}
-
-/// Builds a function, which means generating its proving and verifying keys.
-pub(crate) fn build_function(
-    function: &Function<Testnet3>,
-    user_inputs: &[SimpleworksValueType],
-    constraint_system: ConstraintSystemRef<ConstraintF>,
-    universal_srs: &UniversalSRS,
-    function_variables: &mut SimpleFunctionVariables,
-) -> Result<FunctionKeys> {
-    process_inputs(
-        function,
-        &constraint_system,
-        user_inputs,
-        function_variables,
-    )?;
-    process_outputs(function, function_variables)?;
-    simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 
 // We are using this function to build a program because in order to do that
@@ -127,7 +108,7 @@ pub(crate) fn default_user_inputs(
 /// # Returns
 /// - `IndexMap` with the program variables and its `CircuitIOType` values.
 ///
-pub(crate) fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
+pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
     let mut registers: SimpleFunctionVariables = IndexMap::new();
 
     let function_inputs: Vec<String> = function
