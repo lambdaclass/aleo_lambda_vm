@@ -90,7 +90,7 @@ pub fn execute_function(
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
     let mut function_variables = helpers::function_variables(function);
-    let (function_proving_key, _function_verifying_key) = helpers::build_function(
+    let (function_proving_key, _function_verifying_key) = build_function(
         function,
         user_inputs,
         constraint_system.clone(),
@@ -127,7 +127,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
     for (function_identifier, function) in program.functions() {
         let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
         let inputs = helpers::default_user_inputs(function)?;
-        let (function_proving_key, function_verifying_key) = match helpers::build_function(
+        let (function_proving_key, function_verifying_key) = match build_function(
             function,
             &inputs,
             constraint_system.clone(),
@@ -152,6 +152,24 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
     }
 
     Ok((program, program_build))
+}
+
+/// Builds a function, which means generating its proving and verifying keys.
+pub fn build_function(
+    function: &Function<Testnet3>,
+    user_inputs: &[SimpleworksValueType],
+    constraint_system: ConstraintSystemRef<ConstraintF>,
+    universal_srs: &UniversalSRS,
+    function_variables: &mut SimpleFunctionVariables,
+) -> Result<FunctionKeys> {
+    helpers::process_inputs(
+        function,
+        &constraint_system,
+        user_inputs,
+        function_variables,
+    )?;
+    helpers::process_outputs(function, function_variables)?;
+    simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 
 /// Note: this function will always generate the same universal parameters because
