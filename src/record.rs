@@ -2,7 +2,7 @@ use super::{AddressGadget, UInt64Gadget};
 use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use simpleworks::types::value::SimpleworksValueType;
+use simpleworks::{gadgets::ConstraintF, types::value::SimpleworksValueType};
 
 pub type RecordEntriesMap = indexmap::IndexMap<String, SimpleworksValueType>;
 
@@ -27,6 +27,7 @@ pub struct Record {
     pub gates: UInt64Gadget,
     // custom fields
     pub entries: RecordEntriesMap,
+    pub nonce: ConstraintF,
 }
 
 impl Serialize for Record {
@@ -34,20 +35,21 @@ impl Serialize for Record {
     where
         S: Serializer,
     {
-        let mut state = serializer.serialize_struct("Record", 3)?;
+        let mut state = serializer.serialize_struct("Record", 4)?;
         state.serialize_field("owner", &self.owner)?;
         state.serialize_field(
             "gates",
-            &self
-                .gates
-                .value()
-                .map_err(|_e| serde::ser::Error::custom("gates error"))?,
+            &self.gates.value().map_err(|e| {
+                serde::ser::Error::custom("Error serializing VM Record gates: {e:?}")
+            })?,
         )?;
         state.serialize_field(
             "entries",
-            &hashmap_to_string(&self.entries)
-                .map_err(|_e| serde::ser::Error::custom("hashmap to string"))?,
+            &hashmap_to_string(&self.entries).map_err(|_e| {
+                serde::ser::Error::custom("Error serializing VM Record entries: {e:?}")
+            })?,
         )?;
+        state.serialize_field("nonce", &self.nonce.to_string())?;
         state.end()
     }
 }
@@ -56,8 +58,11 @@ impl Serialize for Record {
 mod tests {
     use super::super::{AddressGadget, UInt64Gadget};
     use super::{Record, RecordEntriesMap};
+    use ark_ff::UniformRand;
     use ark_r1cs_std::alloc::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
+    use ark_std::rand::thread_rng;
+    use simpleworks::gadgets::ConstraintF;
     use simpleworks::types::value::SimpleworksValueType;
 
     #[test]
@@ -75,6 +80,7 @@ mod tests {
             owner,
             gates,
             entries,
+            nonce: ConstraintF::rand(&mut thread_rng()),
         };
 
         let serialized = serde_json::to_string(&record).unwrap();

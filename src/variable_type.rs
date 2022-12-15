@@ -32,12 +32,13 @@ impl VariableType {
                     owner,
                     gates,
                     entries,
-                    nonce: _,
+                    nonce,
                 },
             ) => Ok(SimpleworksValueType::Record {
                 owner: *owner,
                 gates: *gates,
                 entries: entries.clone(),
+                nonce: nonce.clone(),
             }),
             // XXX::ExternalRecord(value) => Ok(value.to_string()),
         }

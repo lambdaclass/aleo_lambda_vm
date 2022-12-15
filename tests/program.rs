@@ -1,9 +1,12 @@
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use simpleworks::types::value::{
-        RecordEntriesMap,
-        SimpleworksValueType::{Record, U16, U32, U64},
+    use simpleworks::{
+        gadgets::ConstraintF,
+        types::value::{
+            RecordEntriesMap,
+            SimpleworksValueType::{Record, U16, U32, U64},
+        },
     };
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
     use vmtropy::{build_program, verify_proof};
@@ -685,6 +688,7 @@ mod tests {
                 owner: address,
                 gates: 0,
                 entries: RecordEntriesMap::default(),
+                nonce: ConstraintF::default(),
             },
             U64(1),
         ];
@@ -723,6 +727,7 @@ mod tests {
                 owner: address,
                 gates: 1,
                 entries: RecordEntriesMap::default(),
+                nonce: ConstraintF::default(),
             },
             U64(1),
         ];

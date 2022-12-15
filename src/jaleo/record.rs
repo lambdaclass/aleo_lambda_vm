@@ -1,7 +1,11 @@
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
-use serde::{de, ser::{SerializeStruct, Error}, Deserialize, Serialize};
+use serde::{
+    de,
+    ser::{Error, SerializeStruct},
+    Deserialize, Serialize,
+};
 use sha3::{Digest, Sha3_256};
 use simpleworks::{
     fields::deserialize_field_element,
@@ -90,7 +94,9 @@ impl Record {
     // This function will return a String while we are using sha3 for hashing.
     // In the future the serial number will be generated using the private key.
     pub fn serial_number(&self, _private_key: &PrivateKey) -> Result<String> {
-        Ok(sha3_hash(&hex::decode(self.commitment()?).map_err(|e| anyhow!("{e:?}"))?))
+        Ok(sha3_hash(
+            &hex::decode(self.commitment()?).map_err(|e| anyhow!("{e:?}"))?,
+        ))
     }
 
     pub fn is_owner(&self, address: &Address, _view_key: &ViewKey) -> bool {
@@ -184,8 +190,8 @@ mod tests {
         assert_eq!(
             record_string,
             format!(
-                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"nonce\":{:?}}}",
-                hex::encode(bytes_to_string(&nonce).unwrap()),
+                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"entries\":{{}},\"nonce\":\"{}\"}}",
+                hex::encode(nonce),
             )
         );
     }

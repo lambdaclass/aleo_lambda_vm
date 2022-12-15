@@ -143,6 +143,7 @@ mod credits_functions_tests {
                 owner: sender_address_bytes,
                 gates: amount_to_transfer,
                 entries: RecordEntriesMap::default(),
+                nonce: ConstraintF::default(),
             },
             SimpleworksValueType::Address(receiver_address_bytes),
             SimpleworksValueType::U64(amount_to_transfer),
