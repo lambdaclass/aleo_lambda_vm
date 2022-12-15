@@ -149,7 +149,6 @@ fn bytes_to_string(bytes: &[u8]) -> Result<String> {
 #[cfg(test)]
 mod tests {
     use super::Record;
-    use crate::jaleo::record::bytes_to_string;
     use simpleworks::{
         fields::serialize_field_element,
         types::value::{Address, RecordEntriesMap},

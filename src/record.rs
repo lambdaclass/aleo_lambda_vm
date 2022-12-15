@@ -2,7 +2,9 @@ use super::{AddressGadget, UInt64Gadget};
 use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use simpleworks::{gadgets::ConstraintF, types::value::SimpleworksValueType};
+use simpleworks::{
+    fields::serialize_field_element, gadgets::ConstraintF, types::value::SimpleworksValueType,
+};
 
 pub type RecordEntriesMap = indexmap::IndexMap<String, SimpleworksValueType>;
 
@@ -40,16 +42,21 @@ impl Serialize for Record {
         state.serialize_field(
             "gates",
             &self.gates.value().map_err(|e| {
-                serde::ser::Error::custom("Error serializing VM Record gates: {e:?}")
+                serde::ser::Error::custom(format!("Error serializing VM Record gates: {e:?}"))
             })?,
         )?;
         state.serialize_field(
             "entries",
-            &hashmap_to_string(&self.entries).map_err(|_e| {
-                serde::ser::Error::custom("Error serializing VM Record entries: {e:?}")
+            &hashmap_to_string(&self.entries).map_err(|e| {
+                serde::ser::Error::custom(format!("Error serializing VM Record entries: {e:?}"))
             })?,
         )?;
-        state.serialize_field("nonce", &self.nonce.to_string())?;
+        state.serialize_field(
+            "nonce",
+            &hex::encode(serialize_field_element(self.nonce).map_err(|e| {
+                serde::ser::Error::custom(format!("Error serializing VM Record nonce: {e:?}"))
+            })?),
+        )?;
         state.end()
     }
 }
