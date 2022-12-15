@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
+use ark_std::rand::thread_rng;
 use serde::{de, ser::{SerializeStruct, Error}, Deserialize, Serialize};
 use sha3::{Digest, Sha3_256};
 use simpleworks::{
@@ -70,7 +71,7 @@ impl Record {
             owner,
             gates,
             entries,
-            nonce: ConstraintF::rand(&mut simpleworks::marlin::generate_rand()),
+            nonce: ConstraintF::rand(&mut thread_rng()),
         }
     }
 
@@ -187,5 +188,14 @@ mod tests {
                 hex::encode(bytes_to_string(&nonce).unwrap()),
             )
         );
+    }
+
+    #[test]
+    fn test_record_uniqueness() {
+        let (_owner_str, owner) = address(0);
+        let record1 = Record::new(owner, 0, RecordEntriesMap::default());
+        let record2 = Record::new(owner, 0, RecordEntriesMap::default());
+
+        assert_ne!(record1.commitment().unwrap(), record2.commitment().unwrap());
     }
 }
