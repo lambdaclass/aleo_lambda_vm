@@ -16,6 +16,7 @@ use super::{PrivateKey, ViewKey};
 pub struct Record {
     #[serde(deserialize_with = "deserialize_address")]
     pub owner: Address,
+    #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
     pub entries: RecordEntriesMap,
     #[serde(deserialize_with = "deserialize_constraint_f")]
@@ -42,6 +43,15 @@ where
     }
 
     Ok(address)
+}
+
+fn deserialize_gates<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let gates_str = String::deserialize(deserializer)?;
+    let gates_value = gates_str.trim_end_matches("u64");
+    str::parse::<u64>(gates_value).map_err(de::Error::custom)
 }
 
 fn deserialize_constraint_f<'de, D>(deserializer: D) -> Result<ConstraintF, D::Error>
@@ -93,7 +103,7 @@ impl Record {
 
 impl Display for Record {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        write!(f, "{}", self)
     }
 }
 
@@ -112,14 +122,10 @@ impl Serialize for Record {
             &bytes_to_string(&self.owner).map_err(serde::ser::Error::custom)?,
         )?;
         state.serialize_field("gates", &format!("{}u64", self.gates))?;
-        if !self.entries.is_empty() {
-            state.serialize_field("entries", &self.entries)?;
-        }
+        state.serialize_field("entries", &self.entries)?;
+
         let nonce = serialize_field_element(self.nonce).map_err(serde::ser::Error::custom)?;
-        state.serialize_field(
-            "nonce",
-            &hex::encode(bytes_to_string(&nonce).map_err(serde::ser::Error::custom)?),
-        )?;
+        state.serialize_field("nonce", &hex::encode(nonce))?;
         state.end()
     }
 }
