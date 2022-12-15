@@ -1,12 +1,15 @@
 pub type Field = ark_ed_on_bls12_381::Fq;
 use core::cmp::min;
 
+use ark_serialize::CanonicalDeserialize;
+
 const MODULUS_BITS: u32 = 381;
 const REPR_SHAVE_BITS: u32 = 5;
 
 fn from_random_bytes_with_flags(
     bytes: &[u8],
-) -> Option<(Self, F)> {
+) -> Option<(Field, Field)> {
+
 
     {
         let mut result_bytes = [0u8; 4 * 8 + 1];
@@ -37,13 +40,20 @@ fn from_random_bytes_with_flags(
             }
             *b &= m;
         }
-        Self::deserialize_uncompressed(&result_bytes[..(4 * 8)])
+        Field::deserialize_uncompressed(&result_bytes[..(4 * 8)])
             .ok()
-            .and_then(|f| F::from_u8(flags).map(|flag| (f, flag)))
-    }.flatten()
+            .and_then(|f| Some(Field::from(flags)).map(|flag| (f, flag)))
+    }
 
         
 }
+
+
+#[inline]
+fn from_random_bytes(bytes: &[u8]) -> Option<Field> {
+    from_random_bytes_with_flags(bytes).map(|f| f.0)
+}
+
 
 // ******************************
     /// Reads bytes in big-endian, and converts them to a field element.
@@ -59,7 +69,7 @@ fn from_random_bytes_with_flags(
         let mut bytes_to_directly_convert = leading_bytes.to_vec();
         bytes_to_directly_convert.reverse();
         // Guaranteed to not be None, as the input is less than the modulus size.
-        let mut res = Self::from_random_bytes(&bytes_to_directly_convert).unwrap();
+        let mut res = from_random_bytes(&bytes_to_directly_convert).unwrap();
 
         // Update the result, byte by byte.
         // We go through existing field arithmetic, which handles the reduction.

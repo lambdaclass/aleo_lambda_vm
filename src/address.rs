@@ -65,5 +65,5 @@ pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
     let address = console::Address::try_from(&compute_key)?;
 
     // Return the private key and compute key components.
-    Ok((private_key, compute_key, view_key, address))
+    Ok((private_key, view_key, address))
 }
