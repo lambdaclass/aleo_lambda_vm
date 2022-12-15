@@ -7,7 +7,7 @@ use crate::{
     FunctionKeys, SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
-use ark_r1cs_std::{prelude::AllocVar};
+use ark_r1cs_std::prelude::AllocVar;
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
 use simpleworks::{
