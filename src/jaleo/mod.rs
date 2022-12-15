@@ -69,7 +69,8 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, JAl
         *address_byte = *owner_address_byte;
     }
 
-    let non_encrypted_record = JAleoRecord::new(address, credits, RecordEntriesMap::default());
+    let non_encrypted_record =
+        JAleoRecord::new(address, credits, RecordEntriesMap::default(), None);
 
     Ok((non_encrypted_record.commitment()?, non_encrypted_record))
 }

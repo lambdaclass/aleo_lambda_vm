@@ -204,7 +204,12 @@ pub(crate) fn process_circuit_inputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        let record = JAleoRecord::new(primitive_bytes, r.gates.value()?, r.entries);
+                        let record = JAleoRecord::new(
+                            primitive_bytes,
+                            r.gates.value()?,
+                            r.entries,
+                            Some(r.nonce),
+                        );
                         VariableType::Record(Some(record.serial_number(private_key)?), record)
                     }
                     SimpleAddress(a) => {
@@ -279,7 +284,12 @@ pub(crate) fn process_circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        let record = JAleoRecord::new(primitive_bytes, r.gates.value()?, r.entries);
+                        let record = JAleoRecord::new(
+                            primitive_bytes,
+                            r.gates.value()?,
+                            r.entries,
+                            Some(r.nonce),
+                        );
                         VariableType::Record(None, record)
                     }
                     SimpleAddress(a) => {

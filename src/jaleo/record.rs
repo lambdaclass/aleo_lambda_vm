@@ -70,12 +70,23 @@ where
 }
 
 impl Record {
-    pub fn new(owner: Address, gates: u64, entries: RecordEntriesMap) -> Self {
+    pub fn new(
+        owner: Address,
+        gates: u64,
+        entries: RecordEntriesMap,
+        nonce: Option<ConstraintF>,
+    ) -> Self {
+        let nonce_value = if let Some(value) = nonce {
+            value
+        } else {
+            ConstraintF::rand(&mut thread_rng())
+        };
+
         Self {
             owner,
             gates,
             entries,
-            nonce: ConstraintF::rand(&mut thread_rng()),
+            nonce: nonce_value,
         }
     }
 
@@ -171,7 +182,7 @@ mod tests {
         let (_address_string, address) = address(0);
         let gates = 0_u64;
         let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries);
+        let record = Record::new(address, gates, entries, None);
 
         assert!(record.commitment().is_ok());
     }
@@ -181,7 +192,7 @@ mod tests {
         let (address_string, address) = address(0);
         let gates = 0_u64;
         let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries);
+        let record = Record::new(address, gates, entries, None);
         let nonce = serialize_field_element(record.nonce).unwrap();
 
         let record_string = serde_json::to_string(&record).unwrap();
@@ -198,8 +209,8 @@ mod tests {
     #[test]
     fn test_record_uniqueness() {
         let (_owner_str, owner) = address(0);
-        let record1 = Record::new(owner, 0, RecordEntriesMap::default());
-        let record2 = Record::new(owner, 0, RecordEntriesMap::default());
+        let record1 = Record::new(owner, 0, RecordEntriesMap::default(), None);
+        let record2 = Record::new(owner, 0, RecordEntriesMap::default(), None);
 
         assert_ne!(record1.commitment().unwrap(), record2.commitment().unwrap());
     }
