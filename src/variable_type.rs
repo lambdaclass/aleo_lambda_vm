@@ -38,7 +38,7 @@ impl VariableType {
                 owner: *owner,
                 gates: *gates,
                 entries: entries.clone(),
-                nonce: nonce.clone(),
+                nonce: *nonce,
             }),
             // XXX::ExternalRecord(value) => Ok(value.to_string()),
         }

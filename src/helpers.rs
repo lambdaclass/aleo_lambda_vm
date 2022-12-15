@@ -7,10 +7,8 @@ use crate::{
     SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
-use ark_ff::UniformRand;
 use ark_r1cs_std::prelude::AllocVar;
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
-use ark_std::rand::thread_rng;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
@@ -288,7 +286,7 @@ pub(crate) fn process_inputs(
                 })?,
                 gates: UInt64Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(gates))?,
                 entries: entries.clone(),
-                nonce: nonce.clone(),
+                nonce: *nonce,
             }),
             (ValueType::Record(_), _) => {
                 bail!("Mismatched function input type with user input type")
