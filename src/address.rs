@@ -6,10 +6,6 @@ use ark_ec::models::bls12::Bls12Parameters;
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
 
-
-
-
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrivateKey {
     /// The account seed that derives the full private key.
@@ -21,6 +17,13 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
+
+    #[inline]
+    pub fn new<R: Rng + CryptoRng>(rng: &mut R) -> Result<Self> {
+        // Sample a random account seed.
+        Self::try_from(Uniform::rand(rng))
+    }
+
     pub fn try_from(seed: Field) -> Result<Self> {
         // Construct the sk_sig domain separator.
         let sk_sig_domain = Field::new_domain_separator(ACCOUNT_SK_SIG_DOMAIN);
