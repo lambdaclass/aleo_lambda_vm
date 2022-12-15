@@ -1,10 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use simpleworks::{
-    marlin::serialization::{deserialize_proving_key, deserialize_verifying_key},
-    types::value::RecordEntriesMap,
-};
+use simpleworks::{gadgets::ConstraintF, marlin::generate_rand, types::value::RecordEntriesMap};
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
@@ -21,7 +18,11 @@ pub use record::Record as JAleoRecord;
 mod transition;
 pub use transition::Transition;
 
-use crate::FunctionKeys;
+use crate::{
+    build_function,
+    helpers::{self, default_user_inputs},
+    FunctionKeys,
+};
 
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
@@ -72,14 +73,14 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, JAl
     Ok((non_encrypted_record.commitment()?, non_encrypted_record))
 }
 
-pub fn get_credits_key(function_name: &Identifier) -> Result<FunctionKeys> {
-    let (bytes_proving_key, bytes_verifying_key) =
-        snarkvm::parameters::testnet3::TESTNET3_CREDITS_PROGRAM
-            .get(&function_name.to_string())
-            .ok_or_else(|| anyhow!("Circuit keys for credits.aleo/{function_name}' not found"))?;
-
-    let verifying_key = deserialize_verifying_key(bytes_verifying_key.to_vec())?;
-    let proving_key = deserialize_proving_key(bytes_proving_key.to_vec())?;
-
-    Ok((proving_key, verifying_key))
+pub fn get_credits_key(function: &Function) -> Result<FunctionKeys> {
+    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut generate_rand())?;
+    let constraint_system = ark_relations::r1cs::ConstraintSystem::<ConstraintF>::new_ref();
+    build_function(
+        function,
+        &default_user_inputs(function)?,
+        constraint_system,
+        &universal_srs,
+        &mut helpers::function_variables(function),
+    )
 }
