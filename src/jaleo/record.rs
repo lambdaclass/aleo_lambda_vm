@@ -112,10 +112,7 @@ impl Serialize for Record {
     where
         S: serde::Serializer,
     {
-        let mut fields = 3;
-        if !self.entries.is_empty() {
-            fields = 2;
-        }
+        let fields = 4;
         let mut state = serializer.serialize_struct("Record", fields)?;
         state.serialize_field(
             "owner",
