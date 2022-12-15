@@ -49,9 +49,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 pub use variable_type::VariableType;
 
-pub mod field;
 pub mod address;
 pub mod circuit_io_type;
+pub mod field;
 mod helpers;
 pub mod instructions;
 pub mod record;

@@ -2,6 +2,7 @@ use ark_ec::models::twisted_edwards_extended::GroupAffine;
 pub type Field = ark_ed_on_bls12_381::Fq;
 use anyhow::Result;
 use ark_ec::models::bls12::Bls12Parameters;
+use ark_std::rand::{rngs::StdRng, thread_rng, CryptoRng, Rng};
 
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
@@ -17,11 +18,10 @@ pub struct PrivateKey {
 }
 
 impl PrivateKey {
-
     #[inline]
     pub fn new<R: Rng + CryptoRng>(rng: &mut R) -> Result<Self> {
         // Sample a random account seed.
-        Self::try_from(Uniform::rand(rng))
+        Self::try_from(thread_rng().gen())
     }
 
     pub fn try_from(seed: Field) -> Result<Self> {
