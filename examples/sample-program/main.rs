@@ -1,6 +1,6 @@
 use ark_serialize::CanonicalSerialize;
-use simpleworks::types::value::SimpleworksValueType::U32;
 use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+use vmtropy::jaleo::UserInputValueType::U32;
 
 fn main() {
     let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));

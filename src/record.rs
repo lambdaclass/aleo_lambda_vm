@@ -1,12 +1,10 @@
+use crate::jaleo::RecordEntriesMap;
+
 use super::{AddressGadget, UInt64Gadget};
 use anyhow::Result;
 use ark_r1cs_std::R1CSVar;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
-use simpleworks::{
-    fields::serialize_field_element, gadgets::ConstraintF, types::value::SimpleworksValueType,
-};
-
-pub type RecordEntriesMap = indexmap::IndexMap<String, SimpleworksValueType>;
+use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 
 fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
     let mut ret = String::new();
@@ -63,14 +61,13 @@ impl Serialize for Record {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{AddressGadget, UInt64Gadget};
-    use super::{Record, RecordEntriesMap};
+    use super::{AddressGadget, Record, RecordEntriesMap, UInt64Gadget};
+    use crate::jaleo::UserInputValueType;
     use ark_ff::UniformRand;
     use ark_r1cs_std::alloc::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
     use ark_std::rand::thread_rng;
     use simpleworks::gadgets::ConstraintF;
-    use simpleworks::types::value::SimpleworksValueType;
 
     #[test]
     fn test_serialization() {
@@ -81,7 +78,7 @@ mod tests {
         .unwrap();
         let gates = UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(1)).unwrap();
         let mut entries = RecordEntriesMap::new();
-        entries.insert("age".to_owned(), SimpleworksValueType::U8(35));
+        entries.insert("age".to_owned(), UserInputValueType::U8(35));
 
         let record = Record {
             owner,

@@ -3,16 +3,16 @@ use crate::{
         SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
     },
     instructions,
-    record::Record,
+    jaleo::{Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
+    record::Record as VMRecord,
     SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::AllocVar;
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
-use simpleworks::{
-    gadgets::{AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
-    types::value::{RecordEntriesMap, SimpleworksValueType},
+use simpleworks::gadgets::{
+    AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use snarkvm::prelude::{
     Function, Instruction, LiteralType, Operand, PlaintextType, Register, Testnet3, ValueType,
@@ -28,52 +28,63 @@ pub fn to_address(primitive_address: String) -> [u8; 63] {
     address
 }
 
+pub fn bytes_to_string(bytes: &[u8]) -> Result<String> {
+    let mut o = String::with_capacity(63);
+    for byte in bytes {
+        let c = char::from_u32(<u8 as std::convert::Into<u32>>::into(*byte))
+            .ok_or("Error converting u8 into u32")
+            .map_err(|e| anyhow!("{e}"))?;
+        o.push(c);
+    }
+    Ok(o)
+}
+
 // We are using this function to build a program because in order to do that
 // we need inputs.
 /// Defaults the inputs for a given function.
 pub(crate) fn default_user_inputs(
     function: &Function<Testnet3>,
-) -> Result<Vec<SimpleworksValueType>> {
-    let mut default_user_inputs: Vec<SimpleworksValueType> = Vec::new();
+) -> Result<Vec<UserInputValueType>> {
+    let mut default_user_inputs: Vec<UserInputValueType> = Vec::new();
     for function_input in function.inputs() {
         let default_user_input = match function_input.value_type() {
             // UInt
             ValueType::Public(PlaintextType::Literal(LiteralType::U8))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U8)) => {
-                SimpleworksValueType::U8(u8::default())
+                UserInputValueType::U8(u8::default())
             }
             ValueType::Public(PlaintextType::Literal(LiteralType::U16))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U16)) => {
-                SimpleworksValueType::U16(u16::default())
+                UserInputValueType::U16(u16::default())
             }
             ValueType::Public(PlaintextType::Literal(LiteralType::U32))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U32)) => {
-                SimpleworksValueType::U32(u32::default())
+                UserInputValueType::U32(u32::default())
             }
             ValueType::Public(PlaintextType::Literal(LiteralType::U64))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U64)) => {
-                SimpleworksValueType::U64(u64::default())
+                UserInputValueType::U64(u64::default())
             }
             ValueType::Public(PlaintextType::Literal(LiteralType::U128))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
-                SimpleworksValueType::U128(u128::default())
+                UserInputValueType::U128(u128::default())
             }
             // Address
             ValueType::Public(PlaintextType::Literal(LiteralType::Address))
             | ValueType::Private(PlaintextType::Literal(LiteralType::Address)) => {
-                SimpleworksValueType::Address(
+                UserInputValueType::Address(
                     *b"aleo11111111111111111111111111111111111111111111111111111111111",
                 )
             }
             // Unsupported Cases
             ValueType::Public(_) | ValueType::Private(_) => bail!("Unsupported type"),
             // Records
-            ValueType::Record(_) => SimpleworksValueType::Record {
+            ValueType::Record(_) => UserInputValueType::Record(JAleoRecord {
                 owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
                 gates: u64::default(),
                 entries: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
-            },
+            }),
             // Constant Types
             ValueType::Constant(_) => bail!("Constant types are not supported"),
             // External Records
@@ -169,7 +180,7 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
 pub(crate) fn process_inputs(
     function: &Function<Testnet3>,
     cs: &ConstraintSystemRef<ConstraintF>,
-    user_inputs: &[SimpleworksValueType],
+    user_inputs: &[UserInputValueType],
     program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
     for (function_input, user_input) in function.inputs().iter().zip(user_inputs) {
@@ -178,28 +189,28 @@ pub(crate) fn process_inputs(
             // Public UInt
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::U8)),
-                SimpleworksValueType::U8(v),
+                UserInputValueType::U8(v),
             ) => SimpleUInt8(UInt8Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::U16)),
-                SimpleworksValueType::U16(v),
+                UserInputValueType::U16(v),
             ) => SimpleUInt16(UInt16Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::U32)),
-                SimpleworksValueType::U32(v),
+                UserInputValueType::U32(v),
             ) => SimpleUInt32(UInt32Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::U64)),
-                SimpleworksValueType::U64(v),
+                UserInputValueType::U64(v),
             ) => SimpleUInt64(UInt64Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
@@ -207,7 +218,7 @@ pub(crate) fn process_inputs(
             // Public Address
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::Address)),
-                SimpleworksValueType::Address(a),
+                UserInputValueType::Address(a),
             ) => SimpleAddress(AddressGadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(a),
@@ -215,28 +226,28 @@ pub(crate) fn process_inputs(
             // Private UInt
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::U8)),
-                SimpleworksValueType::U8(v),
+                UserInputValueType::U8(v),
             ) => SimpleUInt8(UInt8Gadget::new_witness(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::U16)),
-                SimpleworksValueType::U16(v),
+                UserInputValueType::U16(v),
             ) => SimpleUInt16(UInt16Gadget::new_witness(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::U32)),
-                SimpleworksValueType::U32(v),
+                UserInputValueType::U32(v),
             ) => SimpleUInt32(UInt32Gadget::new_witness(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::U64)),
-                SimpleworksValueType::U64(v),
+                UserInputValueType::U64(v),
             ) => SimpleUInt64(UInt64Gadget::new_witness(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
@@ -244,7 +255,7 @@ pub(crate) fn process_inputs(
             // Private Address
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::Address)),
-                SimpleworksValueType::Address(a),
+                UserInputValueType::Address(a),
             ) => SimpleAddress(AddressGadget::new_witness(
                 Namespace::new(cs.clone(), None),
                 || Ok(a),
@@ -274,13 +285,13 @@ pub(crate) fn process_inputs(
             // Records
             (
                 ValueType::Record(_),
-                SimpleworksValueType::Record {
+                UserInputValueType::Record(JAleoRecord {
                     owner: address,
                     gates,
                     entries,
                     nonce,
-                },
-            ) => SimpleRecord(Record {
+                }),
+            ) => SimpleRecord(VMRecord {
                 owner: AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
                     Ok(address)
                 })?,

@@ -1,6 +1,6 @@
-use super::{credits, Identifier, PrivateKey, Program, Transition, VerifyingKeyMap};
+use super::{credits, Function, Identifier, PrivateKey, Program, Transition, VerifyingKeyMap};
 use crate::{
-    jaleo::{program_is_coinbase, JAleoRecord},
+    jaleo::{program_is_coinbase, Record, UserInputValueType},
     variable_type::VariableType,
     CircuitInputType, CircuitOutputType, SimpleFunctionVariables,
 };
@@ -9,16 +9,11 @@ use ark_r1cs_std::R1CSVar;
 use ark_std::rand::rngs::StdRng;
 use indexmap::IndexMap;
 use log::debug;
-use simpleworks::{
-    marlin::serialization::{deserialize_proof, serialize_proof},
-    types::value::SimpleworksValueType,
-};
+use simpleworks::marlin::serialization::{deserialize_proof, serialize_proof};
 
 use crate::CircuitIOType::{
     SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
-
-type Function = snarkvm::prelude::Function<snarkvm::prelude::Testnet3>;
 
 const MAX_INPUTS: usize = 8;
 const MAX_OUTPUTS: usize = 8;
@@ -93,7 +88,7 @@ pub fn verify_execution(
     let proof_bytes = hex::decode(&transition.proof)?;
     let proof = deserialize_proof(proof_bytes)?;
 
-    let inputs: Vec<SimpleworksValueType> = transition
+    let inputs: Vec<UserInputValueType> = transition
         .inputs
         .iter()
         .filter_map(|i| match i {
@@ -117,7 +112,7 @@ pub fn verify_execution(
 
 pub fn credits_execution(
     function_name: &Identifier,
-    inputs: &[SimpleworksValueType],
+    inputs: &[UserInputValueType],
     private_key: &PrivateKey,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
@@ -127,7 +122,7 @@ pub fn credits_execution(
 pub fn execution(
     program: &Program,
     function_name: &Identifier,
-    inputs: &[SimpleworksValueType],
+    inputs: &[UserInputValueType],
     private_key: &PrivateKey,
     rng: &mut StdRng,
 ) -> Result<Vec<Transition>> {
@@ -193,10 +188,10 @@ pub(crate) fn process_circuit_inputs(
         circuit_inputs.insert(register, {
             if program_variable.is_witness()? {
                 match program_variable {
-                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
-                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
-                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
-                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(r) => {
                         let mut primitive_bytes = [0_u8; 63];
                         for (primitive_byte, byte) in
@@ -204,7 +199,7 @@ pub(crate) fn process_circuit_inputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        let record = JAleoRecord::new(
+                        let record = Record::new(
                             primitive_bytes,
                             r.gates.value()?,
                             r.entries,
@@ -219,15 +214,15 @@ pub(crate) fn process_circuit_inputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                        VariableType::Private(UserInputValueType::Address(primitive_bytes))
                     }
                 }
             } else {
                 match program_variable {
-                    SimpleUInt8(v) => VariableType::Public(SimpleworksValueType::U8(v.value()?)),
-                    SimpleUInt16(v) => VariableType::Public(SimpleworksValueType::U16(v.value()?)),
-                    SimpleUInt32(v) => VariableType::Public(SimpleworksValueType::U32(v.value()?)),
-                    SimpleUInt64(v) => VariableType::Public(SimpleworksValueType::U64(v.value()?)),
+                    SimpleUInt8(v) => VariableType::Public(UserInputValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Public(UserInputValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Public(UserInputValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Public(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(_) => bail!("Records cannot be public"),
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
@@ -236,7 +231,7 @@ pub(crate) fn process_circuit_inputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Public(SimpleworksValueType::Address(primitive_bytes))
+                        VariableType::Public(UserInputValueType::Address(primitive_bytes))
                     }
                 }
             }
@@ -273,10 +268,10 @@ pub(crate) fn process_circuit_outputs(
         circuit_outputs.insert(register, {
             if program_variable.is_witness()? {
                 match program_variable {
-                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
-                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
-                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
-                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(r) => {
                         let mut primitive_bytes = [0_u8; 63];
                         for (primitive_byte, byte) in
@@ -284,7 +279,7 @@ pub(crate) fn process_circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        let record = JAleoRecord::new(
+                        let record = Record::new(
                             primitive_bytes,
                             r.gates.value()?,
                             r.entries,
@@ -299,15 +294,15 @@ pub(crate) fn process_circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                        VariableType::Private(UserInputValueType::Address(primitive_bytes))
                     }
                 }
             } else {
                 match program_variable {
-                    SimpleUInt8(v) => VariableType::Private(SimpleworksValueType::U8(v.value()?)),
-                    SimpleUInt16(v) => VariableType::Private(SimpleworksValueType::U16(v.value()?)),
-                    SimpleUInt32(v) => VariableType::Private(SimpleworksValueType::U32(v.value()?)),
-                    SimpleUInt64(v) => VariableType::Private(SimpleworksValueType::U64(v.value()?)),
+                    SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
+                    SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
+                    SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(_) => bail!("Records cannot be public"),
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
@@ -316,7 +311,7 @@ pub(crate) fn process_circuit_outputs(
                         {
                             *primitive_byte = *byte;
                         }
-                        VariableType::Private(SimpleworksValueType::Address(primitive_bytes))
+                        VariableType::Private(UserInputValueType::Address(primitive_bytes))
                     }
                 }
             }

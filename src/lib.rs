@@ -37,16 +37,14 @@ use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use ark_std::rand::rngs::StdRng;
 use circuit_io_type::CircuitIOType;
 use indexmap::IndexMap;
+use jaleo::UserInputValueType;
+pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
 use simpleworks::{
     gadgets::{
         traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
         UInt64Gadget,
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
-};
-pub use simpleworks::{
-    marlin::serialization::{deserialize_verifying_key, serialize_verifying_key},
-    types::value::SimpleworksValueType,
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
@@ -83,7 +81,7 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 ///
 pub fn execute_function(
     function: &Function<Testnet3>,
-    user_inputs: &[SimpleworksValueType],
+    user_inputs: &[UserInputValueType],
     rng: &mut StdRng,
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let universal_srs = simpleworks::marlin::generate_universal_srs(rng)?;
@@ -157,7 +155,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
 /// Builds a function, which means generating its proving and verifying keys.
 pub fn build_function(
     function: &Function<Testnet3>,
-    user_inputs: &[SimpleworksValueType],
+    user_inputs: &[UserInputValueType],
     constraint_system: ConstraintSystemRef<ConstraintF>,
     universal_srs: &UniversalSRS,
     function_variables: &mut SimpleFunctionVariables,
@@ -183,7 +181,7 @@ pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
 
 pub fn verify_proof(
     verifying_key: VerifyingKey,
-    public_inputs: &[SimpleworksValueType],
+    public_inputs: &[UserInputValueType],
     proof: &MarlinProof,
     rng: &mut StdRng,
 ) -> Result<bool> {

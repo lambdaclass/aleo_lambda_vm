@@ -1,13 +1,12 @@
 #[cfg(test)]
 mod credits_functions_tests {
-    use ark_r1cs_std::{prelude::AllocVar, R1CSVar};
-    use ark_relations::r1cs::ConstraintSystem;
-    use simpleworks::{
-        gadgets::{AddressGadget, ConstraintF},
-        types::value::{RecordEntriesMap, SimpleworksValueType},
-    };
+    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, jaleo::JAleoRecord, verify_proof, VariableType};
+    use vmtropy::{
+        build_program,
+        jaleo::{Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
+        verify_proof,
+    };
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
@@ -34,8 +33,8 @@ mod credits_functions_tests {
     //         let (address_string, address_bytes) = address(0);
 
     //         let user_inputs = vec![
-    //             SimpleworksValueType::Address(address_bytes),
-    //             SimpleworksValueType::U64(1),
+    //             UserInputValueType::Address(address_bytes),
+    //             UserInputValueType::U64(1),
     //         ];
 
     //         let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
@@ -53,7 +52,7 @@ mod credits_functions_tests {
     //             VariableType::Record(
     //                 _serial_number,
     //                 _commitment,
-    //                 SimpleworksValueType::Record {
+    //                 UserInputValueType::Record {
     //                     owner: a,
     //                     gates,
     //                     entries: _,
@@ -87,8 +86,8 @@ mod credits_functions_tests {
     //         let (address_string, address_bytes) = address(0);
 
     //         let user_inputs = vec![
-    //             SimpleworksValueType::Address(address_bytes),
-    //             SimpleworksValueType::U64(1),
+    //             UserInputValueType::Address(address_bytes),
+    //             UserInputValueType::U64(1),
     //         ];
 
     //         let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
@@ -103,7 +102,7 @@ mod credits_functions_tests {
     //         assert!(circuit_outputs.len() == 1);
     //         if let (
     //             output_register_locator,
-    //             VariableType::Record(JAleoRecord {
+    //             VariableType::Record(Record {
     //                 owner,
     //                 gates,
     //                 entries,
@@ -134,19 +133,19 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("transfer").unwrap())
             .unwrap();
 
-        let (sender_address_string, sender_address_bytes) = address(0);
+        let (_sender_address_string, sender_address_bytes) = address(0);
         let amount_to_transfer = 1_u64;
-        let (receiver_address_string, receiver_address_bytes) = address(0);
+        let (_receiver_address_string, receiver_address_bytes) = address(0);
 
         let user_inputs = vec![
-            SimpleworksValueType::Record {
+            UserInputValueType::Record(JAleoRecord {
                 owner: sender_address_bytes,
                 gates: amount_to_transfer,
                 entries: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
-            },
-            SimpleworksValueType::Address(receiver_address_bytes),
-            SimpleworksValueType::U64(amount_to_transfer),
+            }),
+            UserInputValueType::Address(receiver_address_bytes),
+            UserInputValueType::U64(amount_to_transfer),
         ];
 
         let (_compiled_circuit_io, proof) = vmtropy::execute_function(
@@ -166,7 +165,7 @@ mod credits_functions_tests {
         // // The first output is the resulting record of the receiver.
         // if let Some((
         //     output_register_locator,
-        //     VariableType::Record(JAleoRecord { owner, gates, entries, nonce }),
+        //     VariableType::Record(Record { owner, gates, entries, nonce }),
         // )) = circuit_outputs.next()
         // {
         //     assert_eq!(output_register_locator, receiver_record_output_register);
@@ -181,7 +180,7 @@ mod credits_functions_tests {
         // // The second output is the resulting record of the sender.
         // if let Some((
         //     output_register_locator,
-        //     VariableType::Record(JAleoRecord { owner, gates, entries, nonce }),
+        //     VariableType::Record(Record { owner, gates, entries, nonce }),
         // )) = circuit_outputs.next()
         // {
         //     assert_eq!(output_register_locator, sender_record_output_register);
@@ -214,7 +213,7 @@ mod credits_functions_tests {
     //         let (address_string, address_bytes) = address(0);
     //         let amount = 1_u64;
 
-    //         let record = SimpleworksValueType::Record {
+    //         let record = UserInputValueType::Record {
     //             owner: address_bytes,
     //             gates: amount,
     //             entries: RecordEntriesMap::default(),
@@ -233,7 +232,7 @@ mod credits_functions_tests {
     //         assert_eq!(circuit_outputs.len(), 1);
     //         if let (
     //             output_register_locator,
-    //             VariableType::Record(JAleoRecord {
+    //             VariableType::Record(Record {
     //                 owner,
     //                 gates,
     //                 entries,
@@ -269,12 +268,12 @@ mod credits_functions_tests {
     //         let gates_for_new_record = 1_u64;
 
     //         let user_inputs = vec![
-    //             SimpleworksValueType::Record {
+    //             UserInputValueType::Record {
     //                 owner: address_bytes,
     //                 gates: gates_of_existing_record,
     //                 entries: RecordEntriesMap::default(),
     //             },
-    //             SimpleworksValueType::U64(gates_for_new_record),
+    //             UserInputValueType::U64(gates_for_new_record),
     //         ];
 
     //         let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
@@ -291,7 +290,7 @@ mod credits_functions_tests {
     //         // The first output is new record.
     //         if let Some((
     //             _output_register_locator,
-    //             VariableType::Record(JAleoRecord {
+    //             VariableType::Record(Record {
     //                 owner,
     //                 gates,
     //                 entries,
@@ -306,7 +305,7 @@ mod credits_functions_tests {
     //         // The second output is the splitted record.
     //         if let Some((
     //             _output_register_locator,
-    //             VariableType::Record(JAleoRecord {
+    //             VariableType::Record(Record {
     //                 owner,
     //                 gates,
     //                 entries,
@@ -344,12 +343,12 @@ mod credits_functions_tests {
     //         let amount = 1_u64;
     //         let fee = 1_u64;
 
-    //         let record = SimpleworksValueType::Record {
+    //         let record = UserInputValueType::Record {
     //             owner: address_bytes,
     //             gates: amount,
     //             entries: RecordEntriesMap::default(),
     //         };
-    //         let user_inputs = vec![record, SimpleworksValueType::U64(fee)];
+    //         let user_inputs = vec![record, UserInputValueType::U64(fee)];
 
     //         let (_circuit_inputs, circuit_outputs, proof) = vmtropy::execute_function(
     //             &function,
@@ -362,7 +361,7 @@ mod credits_functions_tests {
 
     //         if let Some((
     //             _output_register_locator,
-    //             VariableType::Record(JAleoRecord {
+    //             VariableType::Record(Record {
     //                 owner,
     //                 gates,
     //                 entries,

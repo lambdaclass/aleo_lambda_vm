@@ -1,8 +1,8 @@
-use crate::{circuit_io_type::CircuitIOType, record::Record};
+use crate::{circuit_io_type::CircuitIOType, jaleo::RecordEntriesMap, record::Record};
 use anyhow::{bail, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
-use simpleworks::{gadgets::ConstraintF, types::value::RecordEntriesMap};
+use simpleworks::gadgets::ConstraintF;
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
 pub fn cast(operands: &[CircuitIOType]) -> Result<CircuitIOType> {

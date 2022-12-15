@@ -1,15 +1,16 @@
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use simpleworks::{
-        gadgets::ConstraintF,
-        types::value::{
-            RecordEntriesMap,
-            SimpleworksValueType::{Record, U16, U32, U64},
-        },
-    };
+    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, verify_proof};
+    use vmtropy::{
+        build_program,
+        jaleo::{
+            Record as JAleoRecord, RecordEntriesMap,
+            UserInputValueType::{Record, U16, U32, U64},
+        },
+        verify_proof,
+    };
 
     fn read_add_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -684,12 +685,12 @@ mod tests {
         }
 
         let user_inputs = vec![
-            Record {
+            Record(JAleoRecord {
                 owner: address,
                 gates: 0,
                 entries: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
-            },
+            }),
             U64(1),
         ];
 
@@ -723,12 +724,12 @@ mod tests {
         }
 
         let user_inputs = vec![
-            Record {
+            Record(JAleoRecord {
                 owner: address,
                 gates: 1,
                 entries: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
-            },
+            }),
             U64(1),
         ];
 

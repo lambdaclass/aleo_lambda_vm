@@ -1,11 +1,11 @@
 use anyhow::{anyhow, bail, Result};
 use ark_serialize::{CanonicalSerialize, Write};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
-use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Identifier, Parser as AleoParser, Program, Testnet3};
 use std::fs;
 use std::path::PathBuf;
 use vmtropy::generate_universal_srs;
+use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -59,9 +59,9 @@ fn main() -> Result<()> {
                 _ => bail!("Unsupported command."),
             };
 
-            let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
+            let mut vec_user_inputs = Vec::<UserInputValueType>::new();
             for input_value in inputs.iter().rev() {
-                let v = SimpleworksValueType::try_from(input_value.clone())?;
+                let v = UserInputValueType::try_from(input_value.clone())?;
                 vec_user_inputs.push(v);
             }
 
@@ -102,7 +102,7 @@ fn main() -> Result<()> {
 fn execute(
     function_name: &str,
     program_string: &str,
-    user_inputs: &[SimpleworksValueType],
+    user_inputs: &[UserInputValueType],
 ) -> Result<()> {
     println!("Executing function {}...", function_name);
 

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use simpleworks::{gadgets::ConstraintF, marlin::generate_rand, types::value::RecordEntriesMap};
+use simpleworks::{gadgets::ConstraintF, marlin::generate_rand};
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
@@ -11,9 +11,12 @@ pub use execute::{credits_execution, execution, verify_execution};
 mod deploy;
 pub use deploy::{generate_deployment, verify_deployment, Deployment, VerifyingKeyMap};
 
+mod types;
+pub use types::{Address as AddressBytes, RecordEntriesMap, UserInputValueType};
+
 mod record;
 // Rename to Record when we get rid of snarkVM's.
-pub use record::Record as JAleoRecord;
+pub use record::Record;
 
 mod transition;
 pub use transition::Transition;
@@ -29,7 +32,6 @@ pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Value = snarkvm::prelude::Value<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
 pub type Ciphertext = snarkvm::prelude::Ciphertext<Testnet3>;
-pub type Record = snarkvm::prelude::Record<Testnet3, snarkvm::prelude::Plaintext<Testnet3>>;
 pub type EncryptedRecord = snarkvm::prelude::Record<Testnet3, Ciphertext>;
 pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
@@ -60,7 +62,7 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 
 /// Generate a credits record of the given amount for the given owner,
 /// by using the given seed to deterministically generate a nonce.
-pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, JAleoRecord)> {
+pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, Record)> {
     // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
 
     let mut address = [0_u8; 63];
@@ -69,8 +71,7 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, JAl
         *address_byte = *owner_address_byte;
     }
 
-    let non_encrypted_record =
-        JAleoRecord::new(address, credits, RecordEntriesMap::default(), None);
+    let non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
 
     Ok((non_encrypted_record.commitment()?, non_encrypted_record))
 }

@@ -1,3 +1,4 @@
+use super::{AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
@@ -8,19 +9,14 @@ use serde::{
 };
 use sha3::{Digest, Sha3_256};
 use simpleworks::{
-    fields::deserialize_field_element,
-    fields::serialize_field_element,
-    gadgets::ConstraintF,
-    types::value::{Address, RecordEntriesMap},
+    fields::deserialize_field_element, fields::serialize_field_element, gadgets::ConstraintF,
 };
 use std::fmt::Display;
-
-use super::{PrivateKey, ViewKey};
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Record {
     #[serde(deserialize_with = "deserialize_address")]
-    pub owner: Address,
+    pub owner: AddressBytes,
     #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
     pub entries: RecordEntriesMap,
@@ -35,7 +31,7 @@ fn sha3_hash(input: &[u8]) -> String {
     hex::encode(&bytes)
 }
 
-fn deserialize_address<'de, D>(deserializer: D) -> Result<Address, D::Error>
+fn deserialize_address<'de, D>(deserializer: D) -> Result<AddressBytes, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
@@ -71,7 +67,7 @@ where
 
 impl Record {
     pub fn new(
-        owner: Address,
+        owner: AddressBytes,
         gates: u64,
         entries: RecordEntriesMap,
         nonce: Option<ConstraintF>,
@@ -110,7 +106,7 @@ impl Record {
         ))
     }
 
-    pub fn is_owner(&self, address: &Address, _view_key: &ViewKey) -> bool {
+    pub fn is_owner(&self, address: &AddressBytes, _view_key: &ViewKey) -> bool {
         self.owner == *address
     }
 
@@ -159,13 +155,12 @@ fn bytes_to_string(bytes: &[u8]) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::Record;
-    use simpleworks::{
-        fields::serialize_field_element,
-        types::value::{Address, RecordEntriesMap},
-    };
+    use crate::jaleo::{AddressBytes, RecordEntriesMap};
 
-    fn address(n: u64) -> (String, Address) {
+    use super::Record;
+    use simpleworks::fields::serialize_field_element;
+
+    fn address(n: u64) -> (String, AddressBytes) {
         let mut address_bytes = [0_u8; 63];
         let address_string =
             format!("aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z{n}");
