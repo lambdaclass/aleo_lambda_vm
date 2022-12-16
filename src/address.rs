@@ -30,7 +30,7 @@ impl PrivateKey {
         let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN).ok_or_else(|| anyhow!("Error in new_domain_separator of sk_sig_domain"))?;
 
         // Construct the r_sig domain separator.
-        let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0);
+        let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0_i32);
         let r_sig_domain = new_domain_separator(&r_sig_input).ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
         
         Ok(Self {

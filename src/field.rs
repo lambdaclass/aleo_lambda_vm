@@ -3,7 +3,7 @@ use core::cmp::min;
 
 use ark_serialize::CanonicalDeserialize;
 
-const MODULUS_BITS: u32 = 381;
+const MODULUS_BITS: u16 = 381;
 const REPR_SHAVE_BITS: u32 = 5;
 
 fn from_random_bytes_with_flags(bytes: &[u8]) -> Option<(Field, Field)> {
@@ -45,7 +45,7 @@ fn from_random_bytes(bytes: &[u8]) -> Option<Field> {
 /// Reads bytes in big-endian, and converts them to a field element.
 /// If the bytes are larger than the modulus, it will reduce them.
 fn from_bytes_be_mod_order(bytes: &[u8]) -> Option<Field> {
-    let num_modulus_bytes = ((MODULUS_BITS + 7) / 8) as usize;
+    let num_modulus_bytes = usize::from((MODULUS_BITS + 7) / 8);
     let num_bytes_to_directly_convert = min(num_modulus_bytes - 1, bytes.len());
     let (leading_bytes, remaining_bytes) = bytes.split_at(num_bytes_to_directly_convert);
     // Copy the leading big-endian bytes directly into a field element.
@@ -59,7 +59,7 @@ fn from_bytes_be_mod_order(bytes: &[u8]) -> Option<Field> {
 
     // Update the result, byte by byte.
     // We go through existing field arithmetic, which handles the reduction.
-    let window_size = Field::from(256u64);
+    let window_size = Field::from(256_u64);
     for byte in remaining_bytes {
         res *= window_size;
         res += Field::from(*byte);
