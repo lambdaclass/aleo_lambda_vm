@@ -35,8 +35,8 @@ pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 pub type Field = String;
 pub type ProgramID = String;
 pub type VerifyingKey = simpleworks::marlin::VerifyingKey;
+pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
 
-type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
 type Function = snarkvm::prelude::Function<Testnet3>;
 
 pub fn program_is_coinbase(program_id: &str, function_name: &str) -> bool {
