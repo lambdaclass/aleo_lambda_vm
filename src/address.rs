@@ -1,5 +1,5 @@
 pub type Field = ark_ed_on_bls12_381::Fq;
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use ark_std::rand::{thread_rng, CryptoRng, Rng};
 use snarkvm::prelude::TestRng;
 
@@ -28,17 +28,20 @@ impl PrivateKey {
 
     pub fn try_from(seed: Field) -> Result<Self> {
         // Construct the sk_sig domain separator.
-        let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN).ok_or_else(|| anyhow!("Error in new_domain_separator of sk_sig_domain"))?;
+        let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN)
+            .ok_or_else(|| anyhow!("Error in new_domain_separator of sk_sig_domain"))?;
 
         // Construct the r_sig domain separator.
         let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0_i32);
-        let r_sig_domain = new_domain_separator(&r_sig_input).ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
-        
+        let r_sig_domain = new_domain_separator(&r_sig_input)
+            .ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
+
         Ok(Self {
             seed,
-            sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed).vartime_compress_to_field(),
-            r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed).vartime_compress_to_field()
-
+            sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed)
+                .vartime_compress_to_field(),
+            r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed)
+                .vartime_compress_to_field(),
         })
     }
 
@@ -65,12 +68,12 @@ pub struct Address {
 pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
     // Sample a random private key.
     let private_key = PrivateKey::new(&mut TestRng::default())?;
-    
+
     // Derive the compute key, view key, and address.
     //let compute_key = console::ComputeKey::try_from(&private_key)?;
     //let view_key = console::ViewKey::try_from(&private_key)?;
     //let address = console::Address::try_from(&compute_key)?;
-    
+
     // Return the private key and compute key components.
     Ok((private_keyß, view_key, address))
 }
