@@ -1,5 +1,5 @@
 pub type Field = ark_ed_on_bls12_381::Fq;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use ark_std::rand::{thread_rng, CryptoRng, Rng};
 use snarkvm::prelude::TestRng;
 
@@ -27,11 +27,11 @@ impl PrivateKey {
 
     pub fn try_from(seed: Field) -> Result<Self> {
         // Construct the sk_sig domain separator.
-        let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN);
+        let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN).ok_or_else(|| anyhow!("Error in new_domain_separator of sk_sig_domain"))?;
 
         // Construct the r_sig domain separator.
         let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0);
-        let r_sig_domain = new_domain_separator(&r_sig_input);
+        let r_sig_domain = new_domain_separator(&r_sig_input).ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
         
         Ok(Self {
             seed,

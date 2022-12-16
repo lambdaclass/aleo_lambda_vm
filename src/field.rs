@@ -44,7 +44,7 @@ fn from_random_bytes(bytes: &[u8]) -> Option<Field> {
 // ******************************
 /// Reads bytes in big-endian, and converts them to a field element.
 /// If the bytes are larger than the modulus, it will reduce them.
-fn from_bytes_be_mod_order(bytes: &[u8]) -> Field {
+fn from_bytes_be_mod_order(bytes: &[u8]) -> Option<Field> {
     let num_modulus_bytes = ((MODULUS_BITS + 7) / 8) as usize;
     let num_bytes_to_directly_convert = min(num_modulus_bytes - 1, bytes.len());
     let (leading_bytes, remaining_bytes) = bytes.split_at(num_bytes_to_directly_convert);
@@ -55,7 +55,7 @@ fn from_bytes_be_mod_order(bytes: &[u8]) -> Field {
     let mut bytes_to_directly_convert = leading_bytes.to_vec();
     bytes_to_directly_convert.reverse();
     // Guaranteed to not be None, as the input is less than the modulus size.
-    let mut res = from_random_bytes(&bytes_to_directly_convert).unwrap();
+    let mut res = from_random_bytes(&bytes_to_directly_convert)?;
 
     // Update the result, byte by byte.
     // We go through existing field arithmetic, which handles the reduction.
@@ -64,12 +64,12 @@ fn from_bytes_be_mod_order(bytes: &[u8]) -> Field {
         res *= window_size;
         res += Field::from(*byte);
     }
-    res
+    Some(res)
 }
 
 /// Reads bytes in little-endian, and converts them to a field element.
 /// If the bytes are larger than the modulus, it will reduce them.
-fn from_bytes_le_mod_order(bytes: &[u8]) -> Field {
+fn from_bytes_le_mod_order(bytes: &[u8]) -> Option<Field> {
     let mut bytes_copy = bytes.to_vec();
     bytes_copy.reverse();
     from_bytes_be_mod_order(&bytes_copy)
@@ -77,6 +77,6 @@ fn from_bytes_le_mod_order(bytes: &[u8]) -> Field {
 // ******************************
 
 /// Initializes a new field as a domain separator.
-pub fn new_domain_separator(domain: &str) -> Field {
-    Field::new(from_bytes_le_mod_order(domain.as_bytes()).into())
+pub fn new_domain_separator(domain: &str) -> Option<Field> {
+    Some(Field::new(from_bytes_le_mod_order(domain.as_bytes())?.into()))
 }
