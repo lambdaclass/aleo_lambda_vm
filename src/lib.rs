@@ -178,7 +178,7 @@ pub fn build_function(
 /// to derive them deterministically like this.
 pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    Ok(*simpleworks::marlin::generate_universal_srs(rng)?)
+    simpleworks::marlin::generate_universal_srs(rng)
 }
 
 pub fn verify_proof(

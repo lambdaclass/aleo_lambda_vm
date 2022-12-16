@@ -1,6 +1,7 @@
 pub type Field = ark_ed_on_bls12_381::Fq;
 use anyhow::Result;
 use ark_std::rand::{thread_rng, CryptoRng, Rng};
+use snarkvm::prelude::TestRng;
 
 use crate::field::new_domain_separator;
 
@@ -34,8 +35,9 @@ impl PrivateKey {
         
         Ok(Self {
             seed,
-            sk_sig: N::hash_to_scalar_psd2(&[sk_sig_domain, seed])?,
-            r_sig: N::hash_to_scalar_psd2(&[r_sig_domain, seed])?,
+            sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed).vartime_compress_to_field(),
+            r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed).vartime_compress_to_field()
+
         })
     }
 
@@ -58,15 +60,15 @@ pub struct Address {
     address: u8, // TODO! GroupAffine<Field>,
 }
 
-pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
+pub fn generate_account() -> Result<(PrivateKey/*, ViewKey, Address*/)> {
     // Sample a random private key.
-    let private_key = console::PrivateKey::<CurrentNetwork>::new(&mut TestRng::default())?;
-
+    let private_key = PrivateKey::new(&mut TestRng::default())?;
+    /*
     // Derive the compute key, view key, and address.
     let compute_key = console::ComputeKey::try_from(&private_key)?;
     let view_key = console::ViewKey::try_from(&private_key)?;
     let address = console::Address::try_from(&compute_key)?;
-
+    */
     // Return the private key and compute key components.
-    Ok((private_key, view_key, address))
+    Ok((private_key/*, view_key, address*/))
 }
