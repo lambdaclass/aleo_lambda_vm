@@ -20,9 +20,10 @@ pub struct PrivateKey {
 
 impl PrivateKey {
     #[inline]
-    pub fn new<R: Rng + CryptoRng>(rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng + CryptoRng>(_rng: &mut R) -> Result<Self> {
         // Sample a random account seed.
-        Self::try_from(thread_rng().gen())
+        let seed = thread_rng().gen();
+        Self::try_from(seed)
     }
 
     pub fn try_from(seed: Field) -> Result<Self> {
@@ -60,15 +61,21 @@ pub struct Address {
     address: u8, // TODO! GroupAffine<Field>,
 }
 
-pub fn generate_account() -> Result<(PrivateKey/*, ViewKey, Address*/)> {
+/*
+pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
     // Sample a random private key.
     let private_key = PrivateKey::new(&mut TestRng::default())?;
-    /*
+    
     // Derive the compute key, view key, and address.
-    let compute_key = console::ComputeKey::try_from(&private_key)?;
-    let view_key = console::ViewKey::try_from(&private_key)?;
-    let address = console::Address::try_from(&compute_key)?;
-    */
+    //let compute_key = console::ComputeKey::try_from(&private_key)?;
+    //let view_key = console::ViewKey::try_from(&private_key)?;
+    //let address = console::Address::try_from(&compute_key)?;
+    
     // Return the private key and compute key components.
-    Ok((private_key/*, view_key, address*/))
+    Ok((private_keyß, view_key, address))
+}
+*/
+
+pub fn generate_private_key() -> Result<PrivateKey> {
+    PrivateKey::new(&mut TestRng::default())
 }

@@ -8,7 +8,7 @@ const REPR_SHAVE_BITS: u32 = 5;
 
 fn from_random_bytes_with_flags(bytes: &[u8]) -> Option<(Field, Field)> {
     {
-        let mut result_bytes = [0u8; 4 * 8 + 1];
+        let mut result_bytes = [0_u8; 4 * 8 + 1];
         result_bytes
             .iter_mut()
             .zip(bytes)
@@ -16,9 +16,9 @@ fn from_random_bytes_with_flags(bytes: &[u8]) -> Option<(Field, Field)> {
                 *result = *input;
             });
         let last_limb_mask = (u64::MAX >> REPR_SHAVE_BITS).to_le_bytes();
-        let mut last_bytes_mask = [0u8; 9];
+        let mut last_bytes_mask = [0_u8; 9];
         last_bytes_mask[..8].copy_from_slice(&last_limb_mask);
-        let output_byte_size = ((MODULUS_BITS + 7) / 8) as usize;
+        let output_byte_size = usize::from((MODULUS_BITS + 7) / 8);
         let flag_location = output_byte_size - 1;
         let flag_location_in_last_limb = flag_location - (8 * (4 - 1));
         let last_bytes = &mut result_bytes[8 * (4 - 1)..];
