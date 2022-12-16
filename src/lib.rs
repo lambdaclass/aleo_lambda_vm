@@ -52,8 +52,10 @@ use std::rc::Rc;
 
 pub use snarkvm;
 
+pub mod address;
 pub mod circuit_io_type;
-pub mod helpers;
+pub mod field;
+mod helpers;
 pub mod instructions;
 pub mod jaleo;
 pub mod record;
@@ -176,7 +178,7 @@ pub fn build_function(
 /// to derive them deterministically like this.
 pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    simpleworks::marlin::generate_universal_srs(rng)
+    Ok(*simpleworks::marlin::generate_universal_srs(rng)?)
 }
 
 pub fn verify_proof(
