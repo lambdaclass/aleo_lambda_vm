@@ -13,6 +13,8 @@ use simpleworks::{
 };
 use std::fmt::Display;
 
+pub type EncryptedRecord = Record;
+
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Record {
     #[serde(deserialize_with = "deserialize_address")]
@@ -111,6 +113,10 @@ impl Record {
     }
 
     pub fn decrypt(&self, _view_key: &ViewKey) -> Result<Self> {
+        Ok(self.clone())
+    }
+
+    pub fn encrypt(&self, _view_key: &ViewKey) -> Result<EncryptedRecord> {
         Ok(self.clone())
     }
 }

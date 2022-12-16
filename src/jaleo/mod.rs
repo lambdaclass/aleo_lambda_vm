@@ -16,7 +16,7 @@ pub use types::{Address as AddressBytes, RecordEntriesMap, UserInputValueType};
 
 mod record;
 // Rename to Record when we get rid of snarkVM's.
-pub use record::Record;
+pub use record::{EncryptedRecord, Record};
 
 mod transition;
 pub use transition::Transition;
@@ -32,7 +32,6 @@ pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Value = snarkvm::prelude::Value<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
 pub type Ciphertext = snarkvm::prelude::Ciphertext<Testnet3>;
-pub type EncryptedRecord = snarkvm::prelude::Record<Testnet3, Ciphertext>;
 pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
 // This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
@@ -62,7 +61,7 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 
 /// Generate a credits record of the given amount for the given owner,
 /// by using the given seed to deterministically generate a nonce.
-pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, Record)> {
+pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, EncryptedRecord)> {
     // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
 
     let mut address = [0_u8; 63];
