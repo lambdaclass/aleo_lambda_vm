@@ -1,4 +1,4 @@
-pub type Field = ark_ed_on_bls12_381::Fq;
+pub type Field = ark_ed_on_bls12_377::Fq;
 use anyhow::{anyhow, Result};
 use ark_std::rand::{thread_rng, CryptoRng, Rng};
 use snarkvm::prelude::TestRng;

@@ -1,4 +1,4 @@
-pub type Field = ark_ed_on_bls12_381::Fq;
+pub type Field = ark_ed_on_bls12_377::Fq;
 use core::cmp::min;
 
 use ark_serialize::CanonicalDeserialize;

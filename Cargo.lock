@@ -116,10 +116,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
 
 [[package]]
-name = "ark-bls12-381"
+name = "ark-bls12-377"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65be532f9dd1e98ad0150b037276cde464c6f371059e6dd02c0222395761f6aa"
+checksum = "dc41c02c0d18a226947ee9ee023b1d957bdb6a68fc22ac296722935a9fef423c"
 dependencies = [
  "ark-ec",
  "ark-ff",
@@ -162,12 +162,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ark-ed-on-bls12-381"
+name = "ark-ed-on-bls12-377"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43b7ada17db3854f5994e74e60b18e10e818594935ee7e1d329800c117b32970"
+checksum = "143ee71ec22aaca67a094bb678b398589fb4589cc4883d8ecfc4536f0e62cc28"
 dependencies = [
- "ark-bls12-381",
+ "ark-bls12-377",
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
@@ -814,12 +814,12 @@ dependencies = [
 [[package]]
 name = "decaf377"
 version = "0.1.0"
-source = "git+https://github.com/Entropy1729/decaf377.git?branch=decaf381#6e78c0175fe29d2c1b2c81c3e5e54c53b8ab3192"
+source = "git+https://github.com/Entropy1729/decaf377.git#fee0623e31c7ec3b5fc2fe898bc2efd498f9fd63"
 dependencies = [
  "anyhow",
- "ark-bls12-381",
+ "ark-bls12-377",
  "ark-ec",
- "ark-ed-on-bls12-381",
+ "ark-ed-on-bls12-377",
  "ark-ff",
  "ark-relations",
  "ark-serialize",
@@ -2174,13 +2174,13 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+https://github.com/Entropy1729/simpleworks.git#0c5cd16e7e387a3fad9f1cfce5206998630d76f4"
+source = "git+https://github.com/Entropy1729/simpleworks.git?branch=bls12-377#21c0a334dc946f7395f386c9e23d79e3668901a2"
 dependencies = [
  "anyhow",
- "ark-bls12-381",
+ "ark-bls12-377",
  "ark-crypto-primitives",
  "ark-ec",
- "ark-ed-on-bls12-381",
+ "ark-ed-on-bls12-377",
  "ark-ff",
  "ark-marlin 0.3.0 (git+https://github.com/Entropy1729/marlin.git?branch=use-constraint-system-directly)",
  "ark-poly",
@@ -3209,10 +3209,10 @@ name = "vmtropy"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ark-bls12-381",
+ "ark-bls12-377",
  "ark-crypto-primitives",
  "ark-ec",
- "ark-ed-on-bls12-381",
+ "ark-ed-on-bls12-377",
  "ark-ff",
  "ark-marlin 0.3.0 (git+https://github.com/Entropy1729/marlin.git?branch=impl_debug_for_vk)",
  "ark-poly",

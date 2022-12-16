@@ -12,8 +12,8 @@ debug-assertions = true
 [dependencies]
 ark-ff = { version = "^0.3.0", default-features = false }
 ark-ec = { version = "^0.3.0", default-features = false }
-ark-ed-on-bls12-381 = { version = "^0.3.0", features = ["r1cs"] }
-ark-bls12-381 = { version = "^0.3.0", default-features = false, features = ["curve"] }
+ark-ed-on-bls12-377 = { version = "^0.3.0", features = ["r1cs"] }
+ark-bls12-377 = { version = "^0.3.0", default-features = false, features = ["curve"] }
 ark-std = { version = "^0.3.0", default-features = false }
 ark-relations = { version = "^0.3.0", default-features = false  }
 ark-poly = { version = "^0.3.0", default-features = false  }
@@ -26,7 +26,7 @@ ark-snark = { version = "^0.3.0", default-features = false }
 ark-serialize = { version = "^0.3.0", default-features = false }
 
 ark-crypto-primitives = { version = "^0.3.0", default-features = true, features = [ "r1cs" ] }
-decaf377 = { git = "https://github.com/Entropy1729/decaf377.git", branch = "decaf381" }
+decaf377 = { git = "https://github.com/Entropy1729/decaf377.git" }
 
 tracing = { version = "0.1", default-features = false, features = [ "attributes" ] }
 tracing-subscriber = { version = "0.2" }
@@ -38,7 +38,7 @@ derivative = { version = "2.0", features = ["use_core"] }
 digest = "0.9"
 
 snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
-simpleworks = { git = "https://github.com/Entropy1729/simpleworks.git" }
+simpleworks = { git = "https://github.com/Entropy1729/simpleworks.git", branch = "bls12-377" }
 anyhow = "1"
 hex = "0.4.3"
 
