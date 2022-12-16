@@ -82,3 +82,16 @@ pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
 pub fn generate_private_key() -> Result<PrivateKey> {
     PrivateKey::new(&mut TestRng::default())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::generate_private_key;
+
+    #[test]
+    fn test_generate_private_key() {
+        let ret = generate_private_key().unwrap();
+
+        println!("{:?}", ret);
+    }
+
+}
