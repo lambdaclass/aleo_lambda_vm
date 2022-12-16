@@ -29,17 +29,14 @@ use crate::{
 
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
-pub type Value = snarkvm::prelude::Value<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
-pub type Ciphertext = snarkvm::prelude::Ciphertext<Testnet3>;
 pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
-pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
 // This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
 pub type Field = String;
-pub type Origin = snarkvm::prelude::Origin<Testnet3>;
-pub type Output = snarkvm::prelude::Output<Testnet3>;
 pub type ProgramID = String;
 pub type VerifyingKey = simpleworks::marlin::VerifyingKey;
+
+type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
 type Function = snarkvm::prelude::Function<Testnet3>;
 
 pub fn program_is_coinbase(program_id: &str, function_name: &str) -> bool {
