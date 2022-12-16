@@ -76,8 +76,11 @@ impl TryFrom<String> for UserInputValueType {
                 *sender_address_byte = *address_string_byte;
             }
             return Ok(UserInputValueType::Address(address));
+        } else {
+            // This is the Record case, we expect it to be json
+            let record = serde_json::from_str::<JAleoRecord>(&value)?;
+            return Ok(UserInputValueType::Record(record));
         }
-        bail!("Unknown type")
     }
 }
 
