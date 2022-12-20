@@ -52,6 +52,7 @@ use std::rc::Rc;
 
 pub use snarkvm;
 
+pub mod address;
 pub mod circuit_io_type;
 pub mod field;
 mod helpers;

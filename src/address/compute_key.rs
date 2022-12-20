@@ -1,3 +1,7 @@
+use crate::jaleo::Field;
+
+use super::private_key::PrivateKey;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComputeKey {
     /// The signature public key `pk_sig` := G^sk_sig.
@@ -16,11 +20,15 @@ impl TryFrom<&PrivateKey> for ComputeKey {
         // Compute pk_sig := G^sk_sig.
         let pk_sig = g_scalar_multiply(private_key.sk_sig);
         // Compute pr_sig := G^r_sig.
-        let pr_sig = g_scalar_multiply(private_key.r_sig);        
+        let pr_sig = g_scalar_multiply(private_key.r_sig);
         // Compute sk_prf := HashToScalar(pk_sig || pr_sig).
         let sk_prf = hash_to_scalar_psd4(&[pk_sig.to_x_coordinate(), pr_sig.to_x_coordinate()])?;
         // Output the compute key.
-        Ok(Self { pk_sig, pr_sig, sk_prf })
+        Ok(Self {
+            pk_sig,
+            pr_sig,
+            sk_prf,
+        })
     }
 }
 

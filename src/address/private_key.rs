@@ -1,3 +1,10 @@
+use ark_std::rand::{thread_rng, CryptoRng, Rng};
+
+use crate::{field::new_domain_separator, jaleo::Field};
+
+static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
+static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrivateKey {
     /// The account seed that derives the full private key.
