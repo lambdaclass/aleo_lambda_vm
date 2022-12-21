@@ -1,6 +1,8 @@
 use simpleworks::gadgets::ConstraintF;
 
-use super::private_key::PrivateKey;
+use crate::g_scalar_multiply;
+
+use super::{private_key::PrivateKey, address::Address};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComputeKey {
@@ -32,28 +34,12 @@ impl TryFrom<&PrivateKey> for ComputeKey {
     }
 }
 
-fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
-    let generator_g = new_bases("AleoAccountEncryptionAndSignatureScheme0");
-    generator_g
-        .iter()
-        .zip_eq(&scalar.to_bits_le())
-        .filter_map(|(base, bit)| match bit {
-            true => Some(base),
-            false => None,
-        })
-        .sum()
-}
-
-fn new_bases(message: &str) -> Vec<ConstraintF> {
-    // Hash the given message to a point on the curve, to initialize the starting base.
-    let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
-
-    // Compute the bases up to the size of the scalar field (in bits).
-    let mut g = ConstraintF::new(base);
-    let mut g_bases = Vec::with_capacity(ConstraintF::size_in_bits());
-    for _ in 0..ConstraintF::size_in_bits() {
-        g_bases.push(g);
-        g = g.double();
+impl ComputeKey {
+    /// Returns the address corresponding to the compute key.
+    pub fn to_address(&self) -> Address {
+        // Compute pk_prf := G^sk_prf.
+        let pk_prf = g_scalar_multiply(&self.sk_prf);
+        // Compute the address := pk_sig + pr_sig + pk_prf.
+        Address::new(self.pk_sig + self.pr_sig + pk_prf)
     }
-    g_bases
 }

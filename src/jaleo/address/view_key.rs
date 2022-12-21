@@ -1,6 +1,8 @@
 use simpleworks::gadgets::ConstraintF;
 
-use super::{compute_key::ComputeKey, private_key::PrivateKey};
+use crate::g_scalar_multiply;
+
+use super::{compute_key::ComputeKey, private_key::PrivateKey, address::Address};
 
 /// The account view key used to decrypt records and ciphertext.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -18,5 +20,12 @@ impl TryFrom<&PrivateKey> for ViewKey {
         Ok(Self(
             private_key.sk_sig + &private_key.r_sig + &compute_key.sk_prf,
         ))
+    }
+}
+
+impl ViewKey {
+    /// Returns the address corresponding to the view key.
+    pub fn to_address(&self) -> Address {
+        Address::new(g_scalar_multiply(&self.0))?
     }
 }

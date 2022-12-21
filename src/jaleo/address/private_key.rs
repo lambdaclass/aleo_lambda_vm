@@ -27,7 +27,6 @@ impl PrivateKey {
     }
 
     pub fn try_from(seed: ConstraintF) -> Result<Self> {
-
         let seed_field = deserialize_field_element(hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?)
         .map_err(|_| anyhow!("Error converting element"))?;
 
@@ -43,11 +42,9 @@ impl PrivateKey {
         Ok(Self {
             seed,
             sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed_field)
-                .vartime_compress_to_field()
-                .to_string(),
+                .vartime_compress_to_field(),
             r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed_field)
-                .vartime_compress_to_field()
-                .to_string(),
+                .vartime_compress_to_field(),
         })
     }
 

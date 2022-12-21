@@ -192,3 +192,29 @@ pub fn verify_proof(
     }
     simpleworks::marlin::verify_proof(verifying_key, &inputs, proof, rng)
 }
+
+pub fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
+    let generator_g = new_bases("AleoAccountEncryptionAndSignatureScheme0");
+    generator_g
+        .iter()
+        .zip_eq(&scalar.to_bits_le())
+        .filter_map(|(base, bit)| match bit {
+            true => Some(base),
+            false => None,
+        })
+        .sum()
+}
+
+fn new_bases(message: &str) -> Vec<ConstraintF> {
+    // Hash the given message to a point on the curve, to initialize the starting base.
+    let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
+
+    // Compute the bases up to the size of the scalar field (in bits).
+    let mut g = ConstraintF::new(base);
+    let mut g_bases = Vec::with_capacity(ConstraintF::size_in_bits());
+    for _ in 0..ConstraintF::size_in_bits() {
+        g_bases.push(g);
+        g = g.double();
+    }
+    g_bases
+}

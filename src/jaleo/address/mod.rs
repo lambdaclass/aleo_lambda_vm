@@ -1,5 +1,5 @@
 mod address;
-pub use address::{generate_account, generate_private_key};
+pub use address::Address;
 
 mod compute_key;
 mod private_key;
