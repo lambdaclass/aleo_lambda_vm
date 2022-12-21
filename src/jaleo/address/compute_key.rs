@@ -2,14 +2,14 @@ use crate::jaleo::Field;
 
 use super::private_key::PrivateKey;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComputeKey {
     /// The signature public key `pk_sig` := G^sk_sig.
-    pk_sig: Field,
+    pub pk_sig: Field,
     /// The signature public randomizer `pr_sig` := G^r_sig.
-    pr_sig: Field,
+    pub pr_sig: Field,
     /// The PRF secret key `sk_prf` := HashToScalar(pk_sig || pr_sig).
-    sk_prf: Field,
+    pub sk_prf: Field,
 }
 
 impl TryFrom<&PrivateKey> for ComputeKey {
@@ -18,9 +18,9 @@ impl TryFrom<&PrivateKey> for ComputeKey {
     /// Derives the account compute key from an account private key.
     fn try_from(private_key: &PrivateKey) -> Result<Self, Self::Error> {
         // Compute pk_sig := G^sk_sig.
-        let pk_sig = g_scalar_multiply(private_key.sk_sig);
+        let pk_sig = g_scalar_multiply(&private_key.sk_sig);
         // Compute pr_sig := G^r_sig.
-        let pr_sig = g_scalar_multiply(private_key.r_sig);
+        let pr_sig = g_scalar_multiply(&private_key.r_sig);
         // Compute sk_prf := HashToScalar(pk_sig || pr_sig).
         let sk_prf = hash_to_scalar_psd4(&[pk_sig.to_x_coordinate(), pr_sig.to_x_coordinate()])?;
         // Output the compute key.
@@ -32,7 +32,7 @@ impl TryFrom<&PrivateKey> for ComputeKey {
     }
 }
 
-fn g_scalar_multiply(scalar: &Scalar<Self>) -> Group<Self> {
+fn g_scalar_multiply(scalar: &Field) -> Group<Self> {
     let generator_g = new_bases("AleoAccountEncryptionAndSignatureScheme0");
     generator_g
         .iter()

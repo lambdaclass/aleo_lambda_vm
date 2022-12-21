@@ -1,25 +1,27 @@
-use ark_std::rand::{thread_rng, CryptoRng, Rng};
+use anyhow::{anyhow, Result};
+use ark_ff::Fp256;
+use ark_std::rand::{CryptoRng, Rng};
 
 use crate::{field::new_domain_separator, jaleo::Field};
 
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrivateKey {
     /// The account seed that derives the full private key.
-    seed: Field,
+    pub seed: Field,
     /// The derived signature secret key.
-    sk_sig: Field,
+    pub sk_sig: Field,
     /// The derived signature randomizer.
-    r_sig: Field,
+    pub r_sig: Field,
 }
 
 impl PrivateKey {
     #[inline]
-    pub fn new<R: Rng + CryptoRng>(_rng: &mut R) -> Result<Self> {
+    pub fn new<R: Rng + CryptoRng>(rng: &mut R) -> Result<Self> {
         // Sample a random account seed.
-        let seed = thread_rng().gen();
+        let seed = simpleworks::marlin::generate_rand().gen();
         Self::try_from(seed)
     }
 
@@ -32,13 +34,15 @@ impl PrivateKey {
         let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0_i32);
         let r_sig_domain = new_domain_separator(&r_sig_input)
             .ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
-
+        Fp256::try_from(seed);
         Ok(Self {
             seed,
             sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed)
-                .vartime_compress_to_field(),
+                .vartime_compress_to_field()
+                .to_string(),
             r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed)
-                .vartime_compress_to_field(),
+                .vartime_compress_to_field()
+                .to_string(),
         })
     }
 
