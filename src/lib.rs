@@ -35,7 +35,6 @@
 use anyhow::{anyhow, bail, Result};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use ark_std::rand::rngs::StdRng;
-use circuit_io_type::CircuitIOType;
 use indexmap::IndexMap;
 use jaleo::UserInputValueType;
 pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
@@ -52,11 +51,13 @@ use std::rc::Rc;
 
 pub use snarkvm;
 
-pub mod circuit_io_type;
+mod circuit_io_type;
+pub use circuit_io_type::CircuitIOType;
 pub mod helpers;
 pub mod instructions;
 pub mod jaleo;
-pub mod record;
+mod record;
+pub use record::Record;
 mod variable_type;
 pub use variable_type::VariableType;
 mod program_build;

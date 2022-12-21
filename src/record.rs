@@ -30,6 +30,22 @@ pub struct Record {
     pub nonce: ConstraintF,
 }
 
+impl Record {
+    pub fn new(
+        owner: AddressGadget,
+        gates: UInt64Gadget,
+        entries: RecordEntriesMap,
+        nonce: ConstraintF,
+    ) -> Self {
+        Self {
+            owner,
+            gates,
+            entries,
+            nonce,
+        }
+    }
+}
+
 impl Serialize for Record {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
