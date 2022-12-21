@@ -1,5 +1,7 @@
 use std::str::FromStr;
 
+pub mod address;
+
 use anyhow::{anyhow, Result};
 use simpleworks::{gadgets::ConstraintF, marlin::generate_rand};
 pub use snarkvm::prelude::Itertools;
