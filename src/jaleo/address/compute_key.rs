@@ -1,15 +1,15 @@
-use crate::jaleo::Field;
+use simpleworks::gadgets::ConstraintF;
 
 use super::private_key::PrivateKey;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComputeKey {
     /// The signature public key `pk_sig` := G^sk_sig.
-    pub pk_sig: Field,
+    pub pk_sig: ConstraintF,
     /// The signature public randomizer `pr_sig` := G^r_sig.
-    pub pr_sig: Field,
+    pub pr_sig: ConstraintF,
     /// The PRF secret key `sk_prf` := HashToScalar(pk_sig || pr_sig).
-    pub sk_prf: Field,
+    pub sk_prf: ConstraintF,
 }
 
 impl TryFrom<&PrivateKey> for ComputeKey {
@@ -32,7 +32,7 @@ impl TryFrom<&PrivateKey> for ComputeKey {
     }
 }
 
-fn g_scalar_multiply(scalar: &Field) -> Group<Self> {
+fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
     let generator_g = new_bases("AleoAccountEncryptionAndSignatureScheme0");
     generator_g
         .iter()
@@ -44,14 +44,14 @@ fn g_scalar_multiply(scalar: &Field) -> Group<Self> {
         .sum()
 }
 
-fn new_bases(message: &str) -> Vec<Group<Self>> {
+fn new_bases(message: &str) -> Vec<ConstraintF> {
     // Hash the given message to a point on the curve, to initialize the starting base.
     let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
 
     // Compute the bases up to the size of the scalar field (in bits).
-    let mut g = Group::<Self>::new(base);
-    let mut g_bases = Vec::with_capacity(Scalar::<Self>::size_in_bits());
-    for _ in 0..Scalar::<Self>::size_in_bits() {
+    let mut g = ConstraintF::new(base);
+    let mut g_bases = Vec::with_capacity(ConstraintF::size_in_bits());
+    for _ in 0..ConstraintF::size_in_bits() {
         g_bases.push(g);
         g = g.double();
     }

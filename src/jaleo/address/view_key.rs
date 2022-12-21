@@ -1,10 +1,10 @@
-use crate::jaleo::Field;
+use simpleworks::gadgets::ConstraintF;
 
 use super::{compute_key::ComputeKey, private_key::PrivateKey};
 
 /// The account view key used to decrypt records and ciphertext.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct ViewKey(Field);
+pub struct ViewKey(ConstraintF);
 
 //#[cfg(feature = "private_key")]
 impl TryFrom<&PrivateKey> for ViewKey {

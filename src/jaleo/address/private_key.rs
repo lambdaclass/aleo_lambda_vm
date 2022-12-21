@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use ark_ff::Fp256;
 use ark_std::rand::{CryptoRng, Rng};
-use simpleworks::fields::deserialize_field_element;
+use simpleworks::{fields::deserialize_field_element, gadgets::ConstraintF};
 
-use crate::{field::new_domain_separator, jaleo::Field};
+use crate::{field::new_domain_separator};
 
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
@@ -11,11 +11,11 @@ static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PrivateKey {
     /// The account seed that derives the full private key.
-    pub seed: Field,
+    pub seed: ConstraintF,
     /// The derived signature secret key.
-    pub sk_sig: Field,
+    pub sk_sig: ConstraintF,
     /// The derived signature randomizer.
-    pub r_sig: Field,
+    pub r_sig: ConstraintF,
 }
 
 impl PrivateKey {
@@ -26,7 +26,7 @@ impl PrivateKey {
         Self::try_from(seed)
     }
 
-    pub fn try_from(seed: Field) -> Result<Self> {
+    pub fn try_from(seed: ConstraintF) -> Result<Self> {
 
         let seed_field = deserialize_field_element(hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?)
         .map_err(|_| anyhow!("Error converting element"))?;
