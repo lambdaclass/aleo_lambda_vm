@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use ark_ff::Fp256;
 use ark_std::rand::{CryptoRng, Rng};
+use simpleworks::fields::deserialize_field_element;
 
 use crate::{field::new_domain_separator, jaleo::Field};
 
@@ -26,21 +27,25 @@ impl PrivateKey {
     }
 
     pub fn try_from(seed: Field) -> Result<Self> {
+
+        let seed_field = deserialize_field_element(hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?)
+        .map_err(|_| anyhow!("Error converting element"))?;
+
+
         // Construct the sk_sig domain separator.
         let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN)
             .ok_or_else(|| anyhow!("Error in new_domain_separator of sk_sig_domain"))?;
 
         // Construct the r_sig domain separator.
-        let r_sig_input = format!("{}.{}", ACCOUNT_R_SIG_DOMAIN, 0_i32);
+        let r_sig_input = format!("{}.0", ACCOUNT_R_SIG_DOMAIN);
         let r_sig_domain = new_domain_separator(&r_sig_input)
             .ok_or_else(|| anyhow!("Error in new_domain_separator of r_sig_domain"))?;
-        Fp256::try_from(seed);
         Ok(Self {
             seed,
-            sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed)
+            sk_sig: decaf377::Element::hash_to_curve(&sk_sig_domain, &seed_field)
                 .vartime_compress_to_field()
                 .to_string(),
-            r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed)
+            r_sig: decaf377::Element::hash_to_curve(&r_sig_domain, &seed_field)
                 .vartime_compress_to_field()
                 .to_string(),
         })
