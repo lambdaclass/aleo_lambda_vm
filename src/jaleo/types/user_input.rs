@@ -3,7 +3,6 @@ use crate::jaleo::Record as JAleoRecord;
 use anyhow::{anyhow, bail, Result};
 use indexmap::IndexMap;
 use serde::ser::Error;
-use serde::Deserialize;
 use simpleworks::gadgets::traits::ToFieldElements;
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 use std::{convert::TryFrom, fmt};
@@ -11,8 +10,7 @@ use std::{convert::TryFrom, fmt};
 pub type Address = [u8; 63];
 pub type RecordEntriesMap = IndexMap<String, UserInputValueType>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(try_from = "String")]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum UserInputValueType {
     U8(u8),
     U16(u16),
