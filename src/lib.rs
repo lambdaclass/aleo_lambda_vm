@@ -33,7 +33,7 @@
 )]
 
 use anyhow::{anyhow, bail, Result};
-use ark_ff::{Field, PrimeField};
+use ark_ff::{Field, PrimeField, Fp256};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use ark_std::rand::rngs::StdRng;
 use circuit_io_type::CircuitIOType;
@@ -47,7 +47,7 @@ use simpleworks::{
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
-use snarkvm::prelude::{Function, Parser, Program, Testnet3};
+use snarkvm::prelude::{Function, Parser, Program, Testnet3, Itertools};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -208,8 +208,9 @@ pub fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
 
 fn new_bases(message: &str) -> Vec<ConstraintF> {
     // Hash the given message to a point on the curve, to initialize the starting base.
-    let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
+    // let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
 
+    let base = decaf377::Element::encode_to_curve();
     // Compute the bases up to the size of the scalar field (in bits).
     let mut g = ConstraintF::new(base);
     let mut g_bases = Vec::with_capacity(ConstraintF::size_in_bits());

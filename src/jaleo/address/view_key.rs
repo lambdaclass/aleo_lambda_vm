@@ -26,6 +26,6 @@ impl TryFrom<&PrivateKey> for ViewKey {
 impl ViewKey {
     /// Returns the address corresponding to the view key.
     pub fn to_address(&self) -> Address {
-        Address::new(g_scalar_multiply(&self.0))?
+        Address::new(g_scalar_multiply(&self.0))
     }
 }

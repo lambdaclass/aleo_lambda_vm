@@ -27,7 +27,7 @@ impl PrivateKey {
 
     pub fn try_from(seed: ConstraintF) -> Result<Self> {
         let seed_field = deserialize_field_element(
-            hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?,
+            hex::decode(seed.to_string().as_bytes()).map_err(|_| anyhow!("Error converting element"))?,
         )
         .map_err(|_| anyhow!("Error converting element"))?;
 
