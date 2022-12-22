@@ -15,6 +15,7 @@ ark-ec = { version = "^0.3.0", default-features = false }
 ark-ed-on-bls12-377 = { version = "^0.3.0", features = ["r1cs"] }
 ark-bls12-377 = { version = "^0.3.0", default-features = false, features = ["curve"] }
 ark-std = { version = "^0.3.0", default-features = false }
+ark-sponge = { version = "^0.3.0", default-features = false }
 ark-relations = { version = "^0.3.0", default-features = false  }
 ark-poly = { version = "^0.3.0", default-features = false  }
 ark-poly-commit = { version = "^0.3.0", default-features = false  }

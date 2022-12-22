@@ -8,6 +8,8 @@ static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
 
 use ark_ec::models::bls12::g1::G1Affine;
+
+// TODO: move to a general place
 type GroupAffine = G1Affine<ark_bls12_377::Parameters>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
