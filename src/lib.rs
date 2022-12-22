@@ -33,6 +33,7 @@
 )]
 
 use anyhow::{anyhow, bail, Result};
+use ark_ff::{PrimeField, Field};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use ark_std::rand::rngs::StdRng;
 use circuit_io_type::CircuitIOType;

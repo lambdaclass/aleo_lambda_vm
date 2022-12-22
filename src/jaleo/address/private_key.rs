@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use ark_ff::Fp256;
 use ark_std::rand::{CryptoRng, Rng};
 use simpleworks::{fields::deserialize_field_element, gadgets::ConstraintF};
 
