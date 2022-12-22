@@ -33,6 +33,7 @@
 )]
 
 use anyhow::{anyhow, bail, Result};
+use ark_ec::models::bls12::g1::G1Affine;
 use ark_ff::{Field, PrimeField, Fp256};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use ark_std::rand::rngs::StdRng;
@@ -69,6 +70,8 @@ pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
 pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
+
+type GroupAffine = G1Affine<ark_bls12_377::Parameters>;
 
 /// Returns the circuit outputs and the marlin proof.
 ///
@@ -194,7 +197,7 @@ pub fn verify_proof(
     simpleworks::marlin::verify_proof(verifying_key, &inputs, proof, rng)
 }
 
-pub fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
+pub fn g_scalar_multiply(scalar: &ConstraintF) -> GroupAffine {
     let generator_g = new_bases("AleoAccountEncryptionAndSignatureScheme0");
     generator_g
         .iter()
@@ -206,7 +209,7 @@ pub fn g_scalar_multiply(scalar: &ConstraintF) -> ConstraintF {
         .sum()
 }
 
-fn new_bases(message: &str) -> Vec<ConstraintF> {
+fn new_bases(message: &str) -> Vec<GroupAffine> {
     // Hash the given message to a point on the curve, to initialize the starting base.
     // let (base, _, _) = Blake2Xs::hash_to_curve::<<Self as Environment>::Affine>(message);
 
