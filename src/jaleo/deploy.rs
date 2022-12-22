@@ -1,6 +1,6 @@
 use super::Program;
 use crate::build_program;
-use anyhow::{bail, ensure, Result};
+use anyhow::Result;
 use indexmap::IndexMap;
 use serde::{
     de,
@@ -11,7 +11,6 @@ use simpleworks::{
     marlin::serialization::{deserialize_verifying_key, serialize_verifying_key},
     marlin::VerifyingKey,
 };
-use snarkvm::prelude::Itertools;
 use std::fmt::Debug;
 
 #[derive(Clone)]
@@ -92,40 +91,4 @@ pub fn generate_deployment(program_string: &str) -> Result<Deployment> {
             map: verifying_keys,
         },
     })
-}
-
-/// Basic deployment validations
-pub fn verify_deployment(program: &Program, verifying_keys: VerifyingKeyMap) -> Result<()> {
-    // Ensure the deployment contains verifying keys.
-    let program_id = program.id();
-    ensure!(
-        !verifying_keys.map.is_empty(),
-        "No verifying keys present in the deployment for program '{program_id}'"
-    );
-
-    // Ensure the number of verifying keys matches the number of program functions.
-    if verifying_keys.map.len() != program.functions().len() {
-        bail!("The number of verifying keys does not match the number of program functions");
-    }
-
-    // Ensure the program functions are in the same order as the verifying keys.
-    for ((function_name, function), candidate_name) in
-        program.functions().iter().zip_eq(verifying_keys.map.keys())
-    {
-        // Ensure the function name is correct.
-        if function_name != function.name() {
-            bail!(
-                "The function key is '{function_name}', but the function name is '{}'",
-                function.name()
-            )
-        }
-        // Ensure the function name with the verifying key is correct.
-        if candidate_name != &function.name().to_string() {
-            bail!(
-                "The verifier key is '{candidate_name}', but the function name is '{}'",
-                function.name()
-            )
-        }
-    }
-    Ok(())
 }

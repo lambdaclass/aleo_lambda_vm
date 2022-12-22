@@ -1,15 +1,18 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use simpleworks::{gadgets::ConstraintF, marlin::generate_rand};
+use simpleworks::{
+    gadgets::ConstraintF,
+    marlin::{generate_rand, MarlinProof},
+};
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
 mod execute;
-pub use execute::{credits_execution, execution, verify_execution};
+pub use execute::{credits_execution, execution, process_circuit_inputs, process_circuit_outputs};
 
 mod deploy;
-pub use deploy::{generate_deployment, verify_deployment, Deployment, VerifyingKeyMap};
+pub use deploy::{generate_deployment, Deployment, VerifyingKeyMap};
 
 mod types;
 pub use types::{Address as AddressBytes, RecordEntriesMap, UserInputValueType};
@@ -27,6 +30,8 @@ use crate::{
     FunctionKeys,
 };
 
+pub use simpleworks::marlin::serialization::{deserialize_proof, serialize_proof};
+
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
@@ -34,8 +39,10 @@ pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 // This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
 pub type Field = String;
 pub type ProgramID = String;
+pub type ProvingKey = simpleworks::marlin::ProvingKey;
 pub type VerifyingKey = simpleworks::marlin::VerifyingKey;
 pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;
+pub type Proof = MarlinProof;
 
 type Function = snarkvm::prelude::Function<Testnet3>;
 

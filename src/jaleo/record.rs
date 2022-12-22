@@ -28,7 +28,7 @@ fn sha3_hash(input: &[u8]) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(input);
     let bytes = hasher.finalize().to_vec();
-    hex::encode(&bytes)
+    hex::encode(bytes)
 }
 
 impl<'de> Deserialize<'de> for Record {

@@ -49,7 +49,7 @@ impl TryFrom<String> for UserInputValueType {
         if value.ends_with("u8") {
             let v = value.trim_end_matches("u8");
             let value_int = v.parse::<u8>().map_err(|e| anyhow!("{}", e))?;
-            return Ok(UserInputValueType::U8(value_int));
+            Ok(UserInputValueType::U8(value_int))
         } else if value.ends_with("u16") {
             let v = value.trim_end_matches("u16");
             let value_int = v.parse::<u16>().map_err(|e| anyhow!("{}", e))?;
@@ -77,7 +77,7 @@ impl TryFrom<String> for UserInputValueType {
         } else {
             // This is the Record case, we expect it to be json
             let record = serde_json::from_str::<JAleoRecord>(&value)?;
-            return Ok(UserInputValueType::Record(record));
+            Ok(UserInputValueType::Record(record))
         }
     }
 }

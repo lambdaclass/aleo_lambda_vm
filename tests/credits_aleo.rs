@@ -26,12 +26,8 @@ mod credits_functions_tests {
             jaleo::UserInputValueType::U64(genesis_credits),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -60,14 +56,12 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get("genesis").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -89,12 +83,8 @@ mod credits_functions_tests {
             jaleo::UserInputValueType::U64(credits_to_mint),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -123,14 +113,12 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get("mint").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -160,12 +148,8 @@ mod credits_functions_tests {
             jaleo::UserInputValueType::U64(amount_to_transfer),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r2", "r0.gates", "r3", "r0.owner", "r4", "r5"];
@@ -236,14 +220,12 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get("transfer").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -278,12 +260,8 @@ mod credits_functions_tests {
             ),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r1.gates", "r2", "r0.owner", "r3"];
@@ -350,14 +328,12 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, second_record_nonce);
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get("combine").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -386,12 +362,8 @@ mod credits_functions_tests {
             jaleo::UserInputValueType::U64(gates_for_new_record),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r2", "r0.owner", "r3", "r4"];
@@ -455,14 +427,12 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, nonce);
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get("split").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -491,12 +461,8 @@ mod credits_functions_tests {
             jaleo::UserInputValueType::U64(fee),
         ];
 
-        let (function_variables, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&function, &user_inputs).unwrap();
 
         // Input record.
         let r0 = function_variables["r0"].as_ref().unwrap();
@@ -528,13 +494,11 @@ mod credits_functions_tests {
             assert_ne!(record.nonce, nonce);
         }
 
-        let rng = &mut ark_std::test_rng();
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build.map.get("fee").unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng)
-                .unwrap()
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 }
