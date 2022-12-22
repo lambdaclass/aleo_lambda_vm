@@ -2,11 +2,11 @@ mod helpers;
 
 #[cfg(test)]
 mod credits_functions_tests {
-    use crate::helpers::test_helpers;
+    use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
     use ark_r1cs_std::R1CSVar;
     use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::jaleo;
+    use vmtropy::{jaleo, VMRecordEntriesMap};
 
     #[test]
     fn test_genesis() {
@@ -52,7 +52,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), genesis_credits);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
@@ -109,7 +112,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), credits_to_mint);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
@@ -165,7 +171,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), sender_address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_eq!(record.nonce, ConstraintF::default());
         }
 
@@ -203,7 +212,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r4 {
             assert_eq!(record.owner.value().unwrap(), receiver_address_string);
             assert_eq!(record.gates.value().unwrap(), amount_to_transfer);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
@@ -216,7 +228,10 @@ mod credits_functions_tests {
                 record.gates.value().unwrap(),
                 initial_balance - amount_to_transfer
             );
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, ConstraintF::default());
         }
 
@@ -277,7 +292,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_eq!(record.nonce, first_record_nonce);
         }
 
@@ -287,7 +305,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r1 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_eq!(record.nonce, second_record_nonce);
         }
 
@@ -323,7 +344,10 @@ mod credits_functions_tests {
                 record.gates.value().unwrap(),
                 initial_balance + initial_balance
             );
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, first_record_nonce);
             assert_ne!(record.nonce, second_record_nonce);
         }
@@ -379,7 +403,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), gates_of_existing_record);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_eq!(record.nonce, nonce);
         }
 
@@ -410,7 +437,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), gates_for_new_record);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, nonce);
         }
 
@@ -423,7 +453,10 @@ mod credits_functions_tests {
                 record.gates.value().unwrap(),
                 gates_of_existing_record - gates_for_new_record
             );
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, nonce);
         }
 
@@ -470,7 +503,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_eq!(record.nonce, nonce);
         }
 
@@ -490,7 +526,10 @@ mod credits_functions_tests {
         if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance - fee);
-            assert_eq!(record.entries, jaleo::RecordEntriesMap::default());
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
             assert_ne!(record.nonce, nonce);
         }
 

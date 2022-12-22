@@ -53,19 +53,19 @@ impl TryFrom<String> for UserInputValueType {
         } else if value.ends_with("u16") {
             let v = value.trim_end_matches("u16");
             let value_int = v.parse::<u16>().map_err(|e| anyhow!("{}", e))?;
-            return Ok(UserInputValueType::U16(value_int));
+            Ok(UserInputValueType::U16(value_int))
         } else if value.ends_with("u32") {
             let v = value.trim_end_matches("u32");
             let value_int = v.parse::<u32>().map_err(|e| anyhow!("{}", e))?;
-            return Ok(UserInputValueType::U32(value_int));
+            Ok(UserInputValueType::U32(value_int))
         } else if value.ends_with("u64") {
             let v = value.trim_end_matches("u64");
             let value_int = v.parse::<u64>().map_err(|e| anyhow!("{}", e))?;
-            return Ok(UserInputValueType::U64(value_int));
+            Ok(UserInputValueType::U64(value_int))
         } else if value.ends_with("u128") {
             let v = value.trim_end_matches("u128");
             let value_int = v.parse::<u128>().map_err(|e| anyhow!("{}", e))?;
-            return Ok(UserInputValueType::U128(value_int));
+            Ok(UserInputValueType::U128(value_int))
         } else if value.starts_with("aleo1") {
             let mut address = [0_u8; 63];
             for (sender_address_byte, address_string_byte) in
@@ -73,7 +73,7 @@ impl TryFrom<String> for UserInputValueType {
             {
                 *sender_address_byte = *address_string_byte;
             }
-            return Ok(UserInputValueType::Address(address));
+            Ok(UserInputValueType::Address(address))
         } else {
             // This is the Record case, we expect it to be json
             let record = serde_json::from_str::<JAleoRecord>(&value)?;

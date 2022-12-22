@@ -5,6 +5,7 @@ use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 
 use anyhow::{bail, ensure, Result};
 
+use indexmap::IndexMap;
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the subtraction of two numbers and not for UInt8.
@@ -14,8 +15,12 @@ pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 // module - (minuend + module - subtrahend) = difference
 // not(minuend + not(subtrahend)) = difference
 // where module = 2^size and module - n could be done negating bit by bit in binary so there are no subtractions.
-pub fn sub(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
-    match operands {
+pub fn sub(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+    match operands
+        .values()
+        .collect::<Vec<&CircuitIOType>>()
+        .as_slice()
+    {
         [SimpleUInt16(minuend), SimpleUInt16(subtrahend)] => {
             ensure!(
                 minuend.value()? >= subtrahend.value()?,
@@ -106,6 +111,7 @@ fn negate(bits: Vec<Boolean<ConstraintF>>) -> Vec<Boolean<ConstraintF>> {
 mod subtract_tests {
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
+    use indexmap::IndexMap;
 
     use crate::{
         CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64},
@@ -130,7 +136,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -154,7 +163,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -175,7 +187,10 @@ mod subtract_tests {
             UInt16Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]);
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -202,7 +217,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -226,7 +244,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -247,7 +268,10 @@ mod subtract_tests {
             UInt32Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]);
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -274,7 +298,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -298,7 +325,10 @@ mod subtract_tests {
             })
             .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -319,7 +349,10 @@ mod subtract_tests {
             UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
         );
-        let result_var = super::sub(&[minuend_var, subtrahend_var]);
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");

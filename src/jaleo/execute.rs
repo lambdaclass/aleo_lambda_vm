@@ -1,5 +1,6 @@
 use super::{credits, Function, Identifier, PrivateKey, Program, Transition};
 use crate::{
+    helpers::to_address,
     jaleo::{program_is_coinbase, Record, UserInputValueType},
     variable_type::VariableType,
     CircuitInputType, CircuitOutputType, SimpleFunctionVariables,
@@ -95,16 +96,25 @@ pub fn process_circuit_inputs(
                     SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(r) => {
-                        let mut primitive_bytes = [0_u8; 63];
-                        for (primitive_byte, byte) in
-                            primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
-                        {
-                            *primitive_byte = *byte;
+                        // VMRecord to JAleoRecord
+                        let mut primitive_entries = IndexMap::new();
+                        for (k, v) in r.entries {
+                            let primitive_value = match v {
+                                SimpleUInt8(v) => UserInputValueType::U8(v.value()?),
+                                SimpleUInt16(v) => UserInputValueType::U16(v.value()?),
+                                SimpleUInt32(v) => UserInputValueType::U32(v.value()?),
+                                SimpleUInt64(v) => UserInputValueType::U64(v.value()?),
+                                SimpleRecord(_) => bail!("Nested records are not supported"),
+                                SimpleAddress(v) => {
+                                    UserInputValueType::Address(to_address(v.value()?))
+                                }
+                            };
+                            primitive_entries.insert(k, primitive_value);
                         }
                         let record = Record::new(
-                            primitive_bytes,
+                            to_address(r.owner.value()?),
                             r.gates.value()?,
-                            r.entries,
+                            primitive_entries,
                             Some(r.nonce),
                         );
                         VariableType::Record(Some(record.serial_number(private_key)?), record)
@@ -175,16 +185,25 @@ pub fn process_circuit_outputs(
                     SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
                     SimpleRecord(r) => {
-                        let mut primitive_bytes = [0_u8; 63];
-                        for (primitive_byte, byte) in
-                            primitive_bytes.iter_mut().zip(r.owner.value()?.as_bytes())
-                        {
-                            *primitive_byte = *byte;
+                        // VMRecord to JAleoRecord
+                        let mut primitive_entries = IndexMap::new();
+                        for (k, v) in r.entries {
+                            let primitive_value = match v {
+                                SimpleUInt8(v) => UserInputValueType::U8(v.value()?),
+                                SimpleUInt16(v) => UserInputValueType::U16(v.value()?),
+                                SimpleUInt32(v) => UserInputValueType::U32(v.value()?),
+                                SimpleUInt64(v) => UserInputValueType::U64(v.value()?),
+                                SimpleRecord(_) => bail!("Nested records are not supported"),
+                                SimpleAddress(v) => {
+                                    UserInputValueType::Address(to_address(v.value()?))
+                                }
+                            };
+                            primitive_entries.insert(k, primitive_value);
                         }
                         let record = Record::new(
-                            primitive_bytes,
+                            to_address(r.owner.value()?),
                             r.gates.value()?,
-                            r.entries,
+                            primitive_entries,
                             Some(r.nonce),
                         );
                         VariableType::Record(None, record)

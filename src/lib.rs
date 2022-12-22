@@ -56,7 +56,7 @@ pub mod helpers;
 pub mod instructions;
 pub mod jaleo;
 mod record;
-pub use record::Record;
+pub use record::{Record, VMRecordEntriesMap};
 mod variable_type;
 pub use variable_type::VariableType;
 mod program_build;
@@ -122,13 +122,13 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
     let mut program_build = ProgramBuild {
         map: IndexMap::new(),
     };
-    for (function_identifier, function) in program.functions() {
+    for (function_name, function) in program.functions() {
         let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
-        let inputs = helpers::default_user_inputs(function)?;
+        let inputs = helpers::default_user_inputs(&program, function_name)?;
         let (function_proving_key, function_verifying_key) = match build_function(
             function,
             &inputs,
-            constraint_system.clone(),
+            constraint_system,
             &universal_srs,
             &mut helpers::function_variables(function),
         ) {
@@ -138,7 +138,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
             Err(e) => {
                 bail!(
                     "Couldn't build function \"{}\": {}",
-                    function_identifier.to_string(),
+                    function_name.to_string(),
                     e
                 );
             }

@@ -48,4 +48,18 @@ impl CircuitIOType {
             SimpleAddress(v) => v.is_witness(),
         }
     }
+
+    pub fn is_constant(&self) -> bool {
+        match self {
+            // UInt8 gadget does not implement ToBytesGadget which is needed
+            // by IsWitness implementors but [UInt8] does so we are making a
+            // special case for it.
+            SimpleUInt8(v) => [v.clone()].is_constant(),
+            SimpleUInt16(v) => v.is_constant(),
+            SimpleUInt32(v) => v.is_constant(),
+            SimpleUInt64(v) => v.is_constant(),
+            SimpleRecord(_) => true,
+            SimpleAddress(v) => v.is_constant(),
+        }
+    }
 }

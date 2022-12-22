@@ -1,32 +1,18 @@
-use crate::jaleo::RecordEntriesMap;
+use crate::CircuitIOType;
 
 use super::{AddressGadget, UInt64Gadget};
-use anyhow::Result;
-use ark_r1cs_std::R1CSVar;
-use serde::ser::{Serialize, SerializeStruct, Serializer};
-use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
+use indexmap::IndexMap;
+use simpleworks::gadgets::ConstraintF;
 
-fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
-    let mut ret = String::new();
-    ret.push('{');
-
-    for (i, (k, v)) in hashmap.iter().enumerate() {
-        ret.push_str(&format!("\"{}\":\"{}\"", k, v));
-        if i > 0 {
-            ret.push(',');
-        }
-    }
-
-    ret.push('}');
-    Ok(ret)
-}
+pub type VMRecordEntriesMap = IndexMap<String, CircuitIOType>;
 
 #[derive(Clone, Debug)]
 pub struct Record {
     pub owner: AddressGadget,
     pub gates: UInt64Gadget,
     // custom fields
-    pub entries: RecordEntriesMap,
+    pub entries: VMRecordEntriesMap,
     pub nonce: ConstraintF,
 }
 
@@ -34,7 +20,7 @@ impl Record {
     pub fn new(
         owner: AddressGadget,
         gates: UInt64Gadget,
-        entries: RecordEntriesMap,
+        entries: VMRecordEntriesMap,
         nonce: ConstraintF,
     ) -> Self {
         Self {
@@ -46,65 +32,57 @@ impl Record {
     }
 }
 
-impl Serialize for Record {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut state = serializer.serialize_struct("Record", 4)?;
-        state.serialize_field("owner", &self.owner)?;
-        state.serialize_field(
-            "gates",
-            &self.gates.value().map_err(|e| {
-                serde::ser::Error::custom(format!("Error serializing VM Record gates: {e:?}"))
-            })?,
-        )?;
-        state.serialize_field(
-            "entries",
-            &hashmap_to_string(&self.entries).map_err(|e| {
-                serde::ser::Error::custom(format!("Error serializing VM Record entries: {e:?}"))
-            })?,
-        )?;
-        state.serialize_field(
-            "nonce",
-            &hex::encode(serialize_field_element(self.nonce).map_err(|e| {
-                serde::ser::Error::custom(format!("Error serializing VM Record nonce: {e:?}"))
-            })?),
-        )?;
-        state.end()
+impl PartialEq for Record {
+    fn eq(&self, other: &Self) -> bool {
+        let mut entries_are_equal = true;
+        for ((self_k, self_v), (other_k, other_v)) in self.entries.iter().zip(&other.entries) {
+            entries_are_equal &= {
+                let values_are_equal = match (self_v, other_v) {
+                    (CircuitIOType::SimpleUInt8(self_v), CircuitIOType::SimpleUInt8(other_v)) => {
+                        match self_v.is_eq(other_v) {
+                            Ok(v) => v.value().unwrap_or(false),
+                            Err(_) => false,
+                        }
+                    }
+                    (CircuitIOType::SimpleUInt16(self_v), CircuitIOType::SimpleUInt16(other_v)) => {
+                        match self_v.is_eq(other_v) {
+                            Ok(v) => v.value().unwrap_or(false),
+                            Err(_) => false,
+                        }
+                    }
+                    (CircuitIOType::SimpleUInt32(self_v), CircuitIOType::SimpleUInt32(other_v)) => {
+                        match self_v.is_eq(other_v) {
+                            Ok(v) => v.value().unwrap_or(false),
+                            Err(_) => false,
+                        }
+                    }
+                    (CircuitIOType::SimpleUInt64(self_v), CircuitIOType::SimpleUInt64(other_v)) => {
+                        match self_v.is_eq(other_v) {
+                            Ok(v) => v.value().unwrap_or(false),
+                            Err(_) => false,
+                        }
+                    }
+                    (CircuitIOType::SimpleRecord(self_v), CircuitIOType::SimpleRecord(other_v)) => {
+                        Record::eq(self_v, other_v)
+                    }
+                    (
+                        CircuitIOType::SimpleAddress(self_v),
+                        CircuitIOType::SimpleAddress(other_v),
+                    ) => match self_v.is_eq(other_v) {
+                        Ok(v) => v.value().unwrap_or(false),
+                        Err(_) => false,
+                    },
+                    (_, _) => false,
+                };
+                let keys_are_equal = *self_k == *other_k;
+                values_are_equal && keys_are_equal
+            }
+        }
+        self.owner.value() == other.owner.value()
+            && self.gates.value() == other.gates.value()
+            && self.nonce == other.nonce
+            && entries_are_equal
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{AddressGadget, Record, RecordEntriesMap, UInt64Gadget};
-    use crate::jaleo::UserInputValueType;
-    use ark_ff::UniformRand;
-    use ark_r1cs_std::alloc::AllocVar;
-    use ark_relations::r1cs::{ConstraintSystem, Namespace};
-    use ark_std::rand::thread_rng;
-    use simpleworks::gadgets::ConstraintF;
-
-    #[test]
-    fn test_serialization() {
-        let cs = ConstraintSystem::<ark_ed_on_bls12_381::Fq>::new_ref();
-        let owner = AddressGadget::new_witness(Namespace::new(cs.clone(), None), || {
-            Ok(b"aleo11111111111111111111111111111111111111111111111111111111111")
-        })
-        .unwrap();
-        let gates = UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(1)).unwrap();
-        let mut entries = RecordEntriesMap::new();
-        entries.insert("age".to_owned(), UserInputValueType::U8(35));
-
-        let record = Record {
-            owner,
-            gates,
-            entries,
-            nonce: ConstraintF::rand(&mut thread_rng()),
-        };
-
-        let serialized = serde_json::to_string(&record).unwrap();
-
-        println!("s: {}", serialized);
-    }
-}
+impl Eq for Record {}

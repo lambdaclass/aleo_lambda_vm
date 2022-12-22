@@ -1,19 +1,30 @@
-use crate::{circuit_io_type::CircuitIOType, jaleo::RecordEntriesMap, record::Record};
+use crate::{circuit_io_type::CircuitIOType, record::Record, VMRecordEntriesMap};
 use anyhow::{bail, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
+use indexmap::IndexMap;
 use simpleworks::gadgets::ConstraintF;
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
-pub fn cast(operands: &[CircuitIOType]) -> Result<CircuitIOType> {
-    match operands {
-        [SimpleAddress(address), SimpleUInt64(gates)] => Ok(SimpleRecord(Record {
-            owner: address.clone(),
-            gates: gates.clone(),
-            entries: RecordEntriesMap::default(),
-            nonce: ConstraintF::rand(&mut thread_rng()),
-        })),
-        [SimpleUInt64(_gates), SimpleAddress(_address)] => {
+pub fn cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+    match operands
+        .into_iter()
+        .collect::<Vec<(String, CircuitIOType)>>()
+        .as_slice()
+    {
+        [(_, SimpleAddress(address)), (_, SimpleUInt64(gates)), entries @ ..] => {
+            let mut entries_map = VMRecordEntriesMap::new();
+            for (key, value) in entries {
+                entries_map.insert(key.to_owned(), value.clone());
+            }
+            Ok(SimpleRecord(Record {
+                owner: address.clone(),
+                gates: gates.clone(),
+                entries: entries_map,
+                nonce: ConstraintF::rand(&mut thread_rng()),
+            }))
+        }
+        [(_, SimpleUInt64(_gates)), (_, SimpleAddress(_address)), ..] => {
             bail!("The order of the operands when casting into a record is reversed")
         }
         [_, _] => bail!("Cast is not supported for the given types"),
@@ -30,6 +41,7 @@ mod cast_tests {
     };
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
+    use indexmap::IndexMap;
     use simpleworks::gadgets::{AddressGadget, UInt64Gadget};
 
     fn address<'address>() -> (&'address str, [u8; 63]) {
@@ -56,7 +68,10 @@ mod cast_tests {
         let gates =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_gates)).unwrap());
 
-        let record = cast(&[owner_address, gates]).unwrap();
+        let mut operands = IndexMap::new();
+        operands.insert("owner".to_owned(), owner_address);
+        operands.insert("gates".to_owned(), gates);
+        let record = cast(operands).unwrap();
 
         assert_eq!(
             record.value().unwrap(),
@@ -77,7 +92,10 @@ mod cast_tests {
         );
         let gates = SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_gates)).unwrap());
 
-        let cast_result = cast(&[gates, owner_address]);
+        let mut operands = IndexMap::new();
+        operands.insert("owner".to_owned(), gates);
+        operands.insert("gates".to_owned(), owner_address);
+        let cast_result = cast(operands);
 
         assert!(cast_result.is_err());
         assert_eq!(
@@ -93,7 +111,10 @@ mod cast_tests {
         let primitive_gates = 1_u64;
         let gates = SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_gates)).unwrap());
 
-        let cast_result = cast(&[gates.clone(), gates]);
+        let mut operands = IndexMap::new();
+        operands.insert("owner".to_owned(), gates.clone());
+        operands.insert("gates".to_owned(), gates);
+        let cast_result = cast(operands);
 
         assert!(cast_result.is_err());
         assert_eq!(
@@ -102,19 +123,5 @@ mod cast_tests {
         );
     }
 
-    #[test]
-    fn test_cast_is_a_binary_operation() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-
-        let primitive_gates = 1_u64;
-        let gates = SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_gates)).unwrap());
-
-        let cast_result = cast(&[gates.clone(), gates.clone(), gates]);
-
-        assert!(cast_result.is_err());
-        assert_eq!(
-            cast_result.err().unwrap().to_string(),
-            "Cast is a binary operation"
-        );
-    }
+    // TODO: Add tests for non binary casts
 }
