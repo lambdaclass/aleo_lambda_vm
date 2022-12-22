@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use ark_std::rand::{CryptoRng, Rng};
 use simpleworks::{fields::deserialize_field_element, gadgets::ConstraintF};
 
-use crate::{field::new_domain_separator};
+use crate::field::new_domain_separator;
 
 static ACCOUNT_SK_SIG_DOMAIN: &str = "AleoAccountSignatureSecretKey0";
 static ACCOUNT_R_SIG_DOMAIN: &str = "AleoAccountSignatureRandomizer0";
@@ -26,9 +26,10 @@ impl PrivateKey {
     }
 
     pub fn try_from(seed: ConstraintF) -> Result<Self> {
-        let seed_field = deserialize_field_element(hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?)
+        let seed_field = deserialize_field_element(
+            hex::decode(seed.as_bytes()).map_err(|_| anyhow!("Error converting element"))?,
+        )
         .map_err(|_| anyhow!("Error converting element"))?;
-
 
         // Construct the sk_sig domain separator.
         let sk_sig_domain = new_domain_separator(ACCOUNT_SK_SIG_DOMAIN)

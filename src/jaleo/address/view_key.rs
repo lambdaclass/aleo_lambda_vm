@@ -2,7 +2,7 @@ use simpleworks::gadgets::ConstraintF;
 
 use crate::g_scalar_multiply;
 
-use super::{compute_key::ComputeKey, private_key::PrivateKey, address::Address};
+use super::{address::Address, compute_key::ComputeKey, private_key::PrivateKey};
 
 /// The account view key used to decrypt records and ciphertext.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]

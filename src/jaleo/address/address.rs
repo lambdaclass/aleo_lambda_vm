@@ -1,6 +1,6 @@
 pub type Field = ark_ed_on_bls12_377::Fq;
 use anyhow::Result;
-use snarkvm::{prelude::TestRng};
+use snarkvm::prelude::TestRng;
 
 use super::{compute_key::ComputeKey, private_key::PrivateKey, view_key::ViewKey};
 
@@ -73,7 +73,7 @@ impl TryFrom<&ViewKey> for Address {
 impl Address {
     pub fn new(group: GroupAffine) -> Self {
         Self { address: group }
-    }    
+    }
 }
 
 pub fn generate_account() -> Result<(PrivateKey, ViewKey, Address)> {
@@ -93,15 +93,14 @@ pub fn generate_private_key() -> Result<PrivateKey> {
     PrivateKey::new(&mut TestRng::default())
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::jaleo::{address::address::{generate_private_key, generate_account}};
+    use crate::jaleo::address::address::{generate_account, generate_private_key};
 
     #[test]
     fn test_generate_private_key() {
         let ret = generate_private_key().unwrap();
-        
+
         println!("{:?}", ret);
     }
 

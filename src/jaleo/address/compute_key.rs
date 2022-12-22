@@ -2,7 +2,7 @@ use simpleworks::gadgets::ConstraintF;
 
 use crate::g_scalar_multiply;
 
-use super::{private_key::PrivateKey, address::Address};
+use super::{address::Address, private_key::PrivateKey};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ComputeKey {
