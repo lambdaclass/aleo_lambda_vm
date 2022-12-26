@@ -470,8 +470,8 @@ pub(crate) fn process_outputs(
                                 let entry_operand = record
                                     .entries
                                     .get(entry)
-                                    .ok_or("Unsupported record member")
-                                    .map_err(|e| anyhow!("{}", e))?
+                                    .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
+                                    .map_err(|e| anyhow!("{e}"))?
                                     .clone();
                                 program_variables
                                     .insert(variable_name.to_string(), Some(entry_operand.clone()));

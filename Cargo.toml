@@ -49,5 +49,7 @@ log = "0.4"
 
 sha3 = "0.10"
 
+bincode = "1"
+
 [[example]]
 name = "sample-program"

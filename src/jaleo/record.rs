@@ -9,19 +9,47 @@ use serde::{
     Deserialize, Serialize,
 };
 use sha3::{Digest, Sha3_256};
-use simpleworks::{
-    fields::deserialize_field_element, fields::serialize_field_element, gadgets::ConstraintF,
-};
+use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 use std::fmt::Display;
 
 pub type EncryptedRecord = Record;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Record {
+    #[serde(deserialize_with = "deserialize_address")]
     pub owner: AddressBytes,
+    #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
     pub entries: RecordEntriesMap,
+    #[serde(deserialize_with = "deserialize_field_element")]
     pub nonce: ConstraintF,
+}
+
+fn deserialize_address<'de, D>(deserializer: D) -> Result<AddressBytes, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let primitive_address = String::deserialize(deserializer)?;
+    Ok(helpers::to_address(primitive_address))
+}
+
+fn deserialize_gates<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let gates_str = String::deserialize(deserializer)?;
+    let gates_value = gates_str.trim_end_matches("u64");
+    str::parse::<u64>(gates_value).map_err(de::Error::custom)
+}
+
+fn deserialize_field_element<'de, D>(deserializer: D) -> Result<ConstraintF, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let encoded_nonce = String::deserialize(deserializer)?;
+    let nonce_str = hex::decode(encoded_nonce).map_err(de::Error::custom)?;
+
+    simpleworks::fields::deserialize_field_element(nonce_str).map_err(de::Error::custom)
 }
 
 fn sha3_hash(input: &[u8]) -> String {
@@ -29,63 +57,6 @@ fn sha3_hash(input: &[u8]) -> String {
     hasher.update(input);
     let bytes = hasher.finalize().to_vec();
     hex::encode(bytes)
-}
-
-impl<'de> Deserialize<'de> for Record {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let request = serde_json::Value::deserialize(deserializer)?;
-        let owner_value: String = serde_json::from_value(
-            request
-                .get("owner")
-                .ok_or_else(|| {
-                    de::Error::custom("Error getting 'owner' when deserializing record")
-                })?
-                .clone(),
-        )
-        .map_err(de::Error::custom)?;
-        let owner = helpers::to_address(owner_value);
-        let gates_value: String = serde_json::from_value(
-            request
-                .get("gates")
-                .ok_or_else(|| {
-                    de::Error::custom("Error getting 'gates' when deserializing record")
-                })?
-                .clone(),
-        )
-        .map_err(de::Error::custom)?;
-        let gates_str = gates_value.strip_suffix("u64").ok_or_else(|| {
-            de::Error::custom(format!(
-                "Error stripping 'gates' suffix when deserializing record: gates was {gates_value}"
-            ))
-        })?;
-        let gates = gates_str.parse::<u64>().map_err(|e| {
-            de::Error::custom(format!("Error parsing trimmed 'gates' into u64: {e:?}"))
-        })?;
-        let entries: RecordEntriesMap = serde_json::from_value(
-            request
-                .get("entries")
-                .ok_or_else(|| {
-                    de::Error::custom("Error getting 'entries' when deserializing record")
-                })?
-                .clone(),
-        )
-        .map_err(de::Error::custom)?;
-        let nonce_value: String = serde_json::from_value(
-            request
-                .get("nonce")
-                .ok_or_else(|| {
-                    de::Error::custom("Error getting 'nonce' when deserializing record")
-                })?
-                .clone(),
-        )
-        .map_err(de::Error::custom)?;
-        let nonce = deserialize_field_element(hex::decode(nonce_value).map_err(de::Error::custom)?)
-            .map_err(de::Error::custom)?;
-        Ok(Self::new(owner, gates, entries, Some(nonce)))
-    }
 }
 
 impl Record {
@@ -158,7 +129,7 @@ impl Serialize for Record {
         let mut state = serializer.serialize_struct("Record", fields)?;
         state.serialize_field(
             "owner",
-            &bytes_to_string(&self.owner).map_err(serde::ser::Error::custom)?,
+            std::str::from_utf8(&self.owner).map_err(serde::ser::Error::custom)?,
         )?;
         state.serialize_field("gates", &format!("{}u64", self.gates))?;
         state.serialize_field("entries", &self.entries)?;
@@ -167,17 +138,6 @@ impl Serialize for Record {
         state.serialize_field("nonce", &hex::encode(nonce))?;
         state.end()
     }
-}
-
-fn bytes_to_string(bytes: &[u8]) -> Result<String> {
-    let mut o = String::with_capacity(63);
-    for byte in bytes {
-        let c = char::from_u32(<u8 as std::convert::Into<u32>>::into(*byte))
-            .ok_or("Error converting u8 into u32")
-            .map_err(|e| anyhow!("{e}"))?;
-        o.push(c);
-    }
-    Ok(o)
 }
 
 #[cfg(test)]
@@ -245,6 +205,27 @@ mod tests {
         assert_eq!(record.gates, 0);
         assert_eq!(record.entries, RecordEntriesMap::default());
         assert_eq!(record.nonce, nonce);
+    }
+
+    #[test]
+    fn test_bincode_serialization() {
+        let (_address_string, address) = address(0);
+        let gates = 0_u64;
+        let entries = RecordEntriesMap::default();
+        let record = Record::new(address, gates, entries, None);
+
+        assert!(bincode::serialize(&record).is_ok());
+    }
+
+    #[test]
+    fn test_bincode_deserialization() {
+        let (_address_string, address) = address(0);
+        let gates = 0_u64;
+        let entries = RecordEntriesMap::default();
+        let record = Record::new(address, gates, entries, None);
+        let serialized_record = bincode::serialize(&record).unwrap();
+
+        assert!(bincode::deserialize::<Record>(&serialized_record).is_ok());
     }
 
     #[test]

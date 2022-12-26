@@ -3,6 +3,7 @@ use crate::jaleo::Record as JAleoRecord;
 use anyhow::{anyhow, bail, Result};
 use indexmap::IndexMap;
 use serde::ser::Error;
+use serde::Deserialize;
 use simpleworks::gadgets::traits::ToFieldElements;
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 use std::{convert::TryFrom, fmt};
@@ -10,7 +11,8 @@ use std::{convert::TryFrom, fmt};
 pub type Address = [u8; 63];
 pub type RecordEntriesMap = IndexMap<String, UserInputValueType>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(try_from = "String")]
 pub enum UserInputValueType {
     U8(u8),
     U16(u16),
@@ -274,7 +276,7 @@ mod tests {
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("\"\\\"{address_str}\\\"\""));
+        assert_eq!(v, format!(r#""{address_str}""#));
     }
 
     #[test]
@@ -366,5 +368,56 @@ mod tests {
         let v = serde_json::to_string(&data).unwrap();
 
         assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"entries\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+    }
+
+    #[test]
+    fn test_bincode_serialization() {
+        let unsigned_int_8 = UserInputValueType::U8(0);
+        let unsigned_int_16 = UserInputValueType::U16(0);
+        let unsigned_int_32 = UserInputValueType::U32(0);
+        let unsigned_int_64 = UserInputValueType::U64(0);
+        let unsigned_int_128 = UserInputValueType::U128(0);
+
+        assert!(bincode::serialize(&unsigned_int_8).is_ok());
+        assert!(bincode::serialize(&unsigned_int_16).is_ok());
+        assert!(bincode::serialize(&unsigned_int_32).is_ok());
+        assert!(bincode::serialize(&unsigned_int_64).is_ok());
+        assert!(bincode::serialize(&unsigned_int_128).is_ok());
+    }
+
+    #[test]
+    fn test_bincode_deserialization() {
+        let unsigned_int_8 = UserInputValueType::U8(0);
+        let unsigned_int_16 = UserInputValueType::U16(0);
+        let unsigned_int_32 = UserInputValueType::U32(0);
+        let unsigned_int_64 = UserInputValueType::U64(0);
+        let unsigned_int_128 = UserInputValueType::U128(0);
+
+        let serialized_unsigned_int_8 = bincode::serialize(&unsigned_int_8).unwrap();
+        let serialized_unsigned_int_16 = bincode::serialize(&unsigned_int_16).unwrap();
+        let serialized_unsigned_int_32 = bincode::serialize(&unsigned_int_32).unwrap();
+        let serialized_unsigned_int_64 = bincode::serialize(&unsigned_int_64).unwrap();
+        let serialized_unsigned_int_128 = bincode::serialize(&unsigned_int_128).unwrap();
+
+        assert_eq!(
+            unsigned_int_8,
+            bincode::deserialize(&serialized_unsigned_int_8).unwrap()
+        );
+        assert_eq!(
+            unsigned_int_16,
+            bincode::deserialize(&serialized_unsigned_int_16).unwrap()
+        );
+        assert_eq!(
+            unsigned_int_32,
+            bincode::deserialize(&serialized_unsigned_int_32).unwrap()
+        );
+        assert_eq!(
+            unsigned_int_64,
+            bincode::deserialize(&serialized_unsigned_int_64).unwrap()
+        );
+        assert_eq!(
+            unsigned_int_128,
+            bincode::deserialize(&serialized_unsigned_int_128).unwrap()
+        );
     }
 }
