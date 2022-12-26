@@ -79,4 +79,8 @@ impl Transition {
     pub fn fee(&self) -> &i64 {
         &self.fee
     }
+
+    pub fn program_id(&self) -> String {
+        self.program_id.clone()
+    }
 }
