@@ -1,4 +1,4 @@
-use crate::jaleo::{Field, Record, UserInputValueType};
+use crate::jaleo::{EncryptedRecord, Field, Record, UserInputValueType};
 use std::fmt::Display;
 
 use anyhow::Result;
@@ -16,6 +16,7 @@ pub enum VariableType {
     /// The serial number, and the record.
     // The serial number is an option because output records don't have serial numbers.
     Record(Option<Field>, Record),
+    EncryptedRecord(EncryptedRecord),
     // The input commitment to the external record. Note: This is **not** the record commitment.
     // ExternalRecord(ConstraintF),
 }
@@ -39,6 +40,7 @@ impl VariableType {
                 data: data.clone(),
                 nonce: *nonce,
             })),
+            VariableType::EncryptedRecord(_) => todo!(),
             // XXX::ExternalRecord(value) => Ok(value.to_string()),
         }
     }
@@ -49,6 +51,7 @@ impl Display for VariableType {
         match self {
             VariableType::Public(v) | VariableType::Private(v) => UserInputValueType::fmt(v, f),
             VariableType::Record(_, v) => Record::fmt(v, f),
+            VariableType::EncryptedRecord(v) => EncryptedRecord::fmt(v, f),
         }
     }
 }
@@ -160,7 +163,7 @@ mod tests {
 
         assert_eq!(
             serialized_record_variable,
-            "{\"Record\":[null,{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"entries\":{},\"nonce\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+            "{\"Record\":[null,{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{},\"nonce\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
         );
     }
 
@@ -242,7 +245,7 @@ mod tests {
         let nonce = ConstraintF::default();
         let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
         let serialized_record_variable = format!(
-            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{encoded_nonce}"}}]}}"#
+            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}]}}"#
         );
 
         let record_variable: VariableType =
@@ -268,7 +271,7 @@ mod tests {
         let nonce = ConstraintF::default();
         let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
         let serialized_public_record_variable = format!(
-            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{encoded_nonce}"}}"#,
+            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}"#,
         );
 
         assert!(serde_json::from_str::<VariableType>(&serialized_public_record_variable).is_err());

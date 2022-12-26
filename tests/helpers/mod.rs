@@ -15,13 +15,13 @@ pub mod test_helpers {
     pub fn input_record(
         owner: jaleo::AddressBytes,
         gates: u64,
-        entries: jaleo::RecordEntriesMap,
+        data: jaleo::RecordEntriesMap,
         nonce: ConstraintF,
     ) -> jaleo::UserInputValueType {
         jaleo::UserInputValueType::Record(jaleo::Record {
             owner,
             gates,
-            entries,
+            data,
             nonce,
         })
     }

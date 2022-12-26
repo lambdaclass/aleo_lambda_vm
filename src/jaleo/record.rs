@@ -1,6 +1,9 @@
 use super::{AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
 use crate::helpers;
-use aes::cipher::{BlockDecrypt, BlockEncrypt};
+use aes::{
+    cipher::{BlockDecrypt, BlockEncrypt, KeyInit},
+    Aes128,
+};
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
@@ -23,11 +26,12 @@ pub struct EncryptedRecord {
 
 impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
+        let aes_key = Aes128::new_from_slice(&view_key.to_string().as_bytes()[..16])?;
         let mut plaintext: Vec<u8> = Vec::new();
         let ciphertext_bytes = hex::decode(&self.ciphertext)?;
         ciphertext_bytes.chunks_exact(16).for_each(|chunk| {
             let mut block = GenericArray::clone_from_slice(chunk);
-            view_key.decrypt_block(&mut block);
+            aes_key.decrypt_block(&mut block);
             plaintext.extend_from_slice(&block);
         });
 
@@ -36,6 +40,12 @@ impl EncryptedRecord {
                 anyhow!("Error getting the original-size plaintext when decrypting a record")
             })?)?;
         Ok(record)
+    }
+}
+
+impl Display for EncryptedRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.ciphertext)
     }
 }
 
@@ -139,12 +149,13 @@ impl Record {
         self.owner == *address
     }
     pub fn encrypt(&self, view_key: &ViewKey) -> Result<EncryptedRecord> {
+        let aes_key = Aes128::new_from_slice(&view_key.to_string().as_bytes()[..16])?;
         let mut encrypted_record_bytes: Vec<u8> = Vec::new();
         let record_bytes = self.to_bytes()?;
 
         record_bytes.chunks_exact(16).for_each(|chunk| {
             let mut block = GenericArray::clone_from_slice(chunk);
-            view_key.encrypt_block(&mut block);
+            aes_key.encrypt_block(&mut block);
             encrypted_record_bytes.extend_from_slice(&block);
         });
 
@@ -156,7 +167,7 @@ impl Record {
             *extended_chunk_byte = *chunk_byte;
         }
         let mut block = GenericArray::clone_from_slice(&extended_chunk);
-        view_key.encrypt_block(&mut block);
+        aes_key.encrypt_block(&mut block);
         encrypted_record_bytes.extend_from_slice(&block);
 
         Ok(EncryptedRecord {
@@ -200,13 +211,11 @@ impl Serialize for Record {
 
 #[cfg(test)]
 mod tests {
-    use crate::jaleo::{AddressBytes, RecordEntriesMap};
+    use crate::jaleo::{AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
 
     use super::Record;
-    use aes::cipher::KeyInit;
     use ark_ff::UniformRand;
     use ark_std::rand::thread_rng;
-    use digest::generic_array::GenericArray;
     use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 
     fn address(n: u64) -> (String, AddressBytes) {
@@ -301,9 +310,9 @@ mod tests {
     fn test_record_encryption() {
         let (_owner_str, owner) = address(0);
         let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
-        let encrypted_record = record
-            .encrypt(&aes::Aes128::new(&GenericArray::from([0_u8; 16])))
-            .unwrap();
+        let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
+        let view_key = ViewKey::try_from(&private_key).unwrap();
+        let encrypted_record = record.encrypt(&view_key).unwrap();
 
         assert_eq!(encrypted_record.commitment, record.commitment().unwrap());
     }
@@ -311,8 +320,9 @@ mod tests {
     #[test]
     fn test_record_decryption() {
         let (_owner_str, owner) = address(0);
-        let view_key = aes::Aes128::new(&GenericArray::from([0_u8; 16]));
         let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
+        let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
+        let view_key = ViewKey::try_from(&private_key).unwrap();
         let encrypted_record = record.encrypt(&view_key).unwrap();
         let decrypted_record = encrypted_record.decrypt(&view_key).unwrap();
 

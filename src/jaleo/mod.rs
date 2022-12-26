@@ -1,8 +1,6 @@
 use std::str::FromStr;
 
-use aes::cipher::KeyInit;
 use anyhow::{anyhow, Result};
-use digest::generic_array::GenericArray;
 use simpleworks::{
     gadgets::ConstraintF,
     marlin::{generate_rand, MarlinProof},
@@ -37,7 +35,7 @@ pub use simpleworks::marlin::serialization::{deserialize_proof, serialize_proof}
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
-pub type ViewKey = aes::Aes128;
+pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 // This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
 pub type Field = String;
 pub type ProgramID = String;
@@ -77,7 +75,8 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, Enc
     }
 
     let non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
-    let view_key = ViewKey::new(&GenericArray::from([0; 16]));
+    let private_key = PrivateKey::new(&mut ark_std::rand::thread_rng()).unwrap();
+    let view_key = ViewKey::try_from(&private_key).unwrap();
     let encrypted_record = non_encrypted_record.encrypt(&view_key)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))

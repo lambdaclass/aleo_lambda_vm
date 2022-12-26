@@ -670,7 +670,7 @@ mod tests {
             Record(JAleoRecord {
                 owner: address,
                 gates: 0,
-                entries: RecordEntriesMap::default(),
+                data: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
             }),
             U64(1),
@@ -705,7 +705,7 @@ mod tests {
             Record(JAleoRecord {
                 owner: address,
                 gates: 1,
-                entries: RecordEntriesMap::default(),
+                data: RecordEntriesMap::default(),
                 nonce: ConstraintF::default(),
             }),
             U64(1),

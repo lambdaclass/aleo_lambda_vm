@@ -1,4 +1,4 @@
-use super::Record;
+use super::EncryptedRecord;
 use crate::variable_type::VariableType;
 use serde::{Deserialize, Serialize};
 
@@ -27,13 +27,13 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn output_records(&self) -> Vec<Record> {
+    pub fn output_records(&self) -> Vec<EncryptedRecord> {
         self.outputs
             .clone()
             .into_iter()
             .filter_map(|o| {
-                if let VariableType::Record(_serial_number, record) = o {
-                    Some(record)
+                if let VariableType::EncryptedRecord(encrypted_record) = o {
+                    Some(encrypted_record)
                 } else {
                     None
                 }
