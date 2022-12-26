@@ -41,6 +41,14 @@ impl EncryptedRecord {
             })?)?;
         Ok(record)
     }
+
+    pub fn is_owner(&self, address: &AddressBytes, view_key: &ViewKey) -> bool {
+        if let Ok(decrypted_record) = self.decrypt(view_key) {
+            return decrypted_record.owner == *address;
+        }
+
+        false
+    }
 }
 
 impl Display for EncryptedRecord {
@@ -148,6 +156,7 @@ impl Record {
     pub fn is_owner(&self, address: &AddressBytes, _view_key: &ViewKey) -> bool {
         self.owner == *address
     }
+
     pub fn encrypt(&self, view_key: &ViewKey) -> Result<EncryptedRecord> {
         let aes_key = Aes128::new_from_slice(&view_key.to_string().as_bytes()[..16])?;
         let mut encrypted_record_bytes: Vec<u8> = Vec::new();
