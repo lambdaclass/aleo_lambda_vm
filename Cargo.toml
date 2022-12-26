@@ -51,5 +51,7 @@ sha3 = "0.10"
 
 bincode = "1"
 
+aes = "0.8"
+
 [[example]]
 name = "sample-program"
