@@ -14,7 +14,7 @@ use sha3::{Digest, Sha3_256};
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 use std::fmt::Display;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct EncryptedRecord {
     pub commitment: String,
     pub ciphertext: String,
