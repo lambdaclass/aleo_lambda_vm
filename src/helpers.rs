@@ -87,7 +87,7 @@ pub(crate) fn default_user_inputs(
                 UserInputValueType::Record(JAleoRecord {
                     owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
                     gates: u64::default(),
-                    entries: aleo_entries_to_vm_entries(aleo_record_entries)?,
+                    data: aleo_entries_to_vm_entries(aleo_record_entries)?,
                     nonce: ConstraintF::default(),
                 })
             }
@@ -353,12 +353,12 @@ pub(crate) fn process_inputs(
                 UserInputValueType::Record(JAleoRecord {
                     owner: address,
                     gates,
-                    entries,
+                    data,
                     nonce,
                 }),
             ) => {
                 let mut entries_gadgets: IndexMap<String, CircuitIOType> = IndexMap::new();
-                for (k, v) in entries {
+                for (k, v) in data {
                     let entry = match v {
                         UserInputValueType::U8(v) => SimpleUInt8(UInt8Gadget::new_witness(
                             Namespace::new(cs.clone(), None),

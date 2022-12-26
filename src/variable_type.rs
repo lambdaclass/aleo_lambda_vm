@@ -30,13 +30,13 @@ impl VariableType {
                 Record {
                     owner,
                     gates,
-                    entries,
+                    data,
                     nonce,
                 },
             ) => Ok(UserInputValueType::Record(Record {
                 owner: *owner,
                 gates: *gates,
-                entries: entries.clone(),
+                data: data.clone(),
                 nonce: *nonce,
             })),
             // XXX::ExternalRecord(value) => Ok(value.to_string()),

@@ -74,4 +74,9 @@ impl Transition {
             })
             .collect()
     }
+
+    /// This exists just to conform to the snarkVM API.
+    pub fn fee(&self) -> &i64 {
+        &self.fee
+    }
 }

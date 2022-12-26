@@ -102,7 +102,7 @@ impl fmt::Display for UserInputValueType {
             UserInputValueType::Record(JAleoRecord {
                 owner,
                 gates,
-                entries,
+                data,
                 nonce,
             }) => {
                 write!(
@@ -110,7 +110,7 @@ impl fmt::Display for UserInputValueType {
                     "{{\"owner\":\"{}\",\"gates\":\"{}u64\",\"entries\":{},\"nonce\":\"{}\"}}",
                     helpers::bytes_to_string(owner).map_err(fmt::Error::custom)?,
                     gates,
-                    hashmap_to_string(entries).map_err(fmt::Error::custom)?,
+                    hashmap_to_string(data).map_err(fmt::Error::custom)?,
                     hex::encode(serialize_field_element(*nonce).map_err(fmt::Error::custom)?)
                 )
             }
@@ -130,7 +130,7 @@ impl ToFieldElements<ConstraintF> for UserInputValueType {
             UserInputValueType::Record(JAleoRecord {
                 owner: _,
                 gates: _,
-                entries: _,
+                data: _,
                 nonce: _,
             }) => {
                 bail!("Converting records to field elements is not supported")
@@ -190,7 +190,7 @@ mod tests {
         let v = UserInputValueType::Record(Record {
             owner: address,
             gates,
-            entries: RecordEntriesMap::default(),
+            data: RecordEntriesMap::default(),
             nonce,
         });
         let out = format!("{v}");
@@ -337,13 +337,13 @@ mod tests {
         let data = UserInputValueType::Record(Record {
             owner: address,
             gates: 0,
-            entries: RecordEntriesMap::default(),
+            data: RecordEntriesMap::default(),
             nonce,
         });
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
     }
 
     #[test]
@@ -355,19 +355,19 @@ mod tests {
         {
             *sender_address_byte = *address_string_byte;
         }
-        let mut entries = RecordEntriesMap::new();
-        entries.insert("amount".to_owned(), UserInputValueType::U64(0));
+        let mut data = RecordEntriesMap::new();
+        data.insert("amount".to_owned(), UserInputValueType::U64(0));
         let nonce = ConstraintF::rand(&mut generate_rand());
         let data = UserInputValueType::Record(Record {
             owner: address,
             gates: 0,
-            entries,
+            data,
             nonce,
         });
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"entries\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
     }
 
     #[test]

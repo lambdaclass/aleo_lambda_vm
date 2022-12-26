@@ -20,7 +20,7 @@ pub struct Record {
     pub owner: AddressBytes,
     #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
-    pub entries: RecordEntriesMap,
+    pub data: RecordEntriesMap,
     #[serde(deserialize_with = "deserialize_field_element")]
     pub nonce: ConstraintF,
 }
@@ -63,7 +63,7 @@ impl Record {
     pub fn new(
         owner: AddressBytes,
         gates: u64,
-        entries: RecordEntriesMap,
+        data: RecordEntriesMap,
         nonce: Option<ConstraintF>,
     ) -> Self {
         let nonce_value = if let Some(value) = nonce {
@@ -75,9 +75,19 @@ impl Record {
         Self {
             owner,
             gates,
-            entries,
+            data,
             nonce: nonce_value,
         }
+    }
+
+    /// This method exists just to conform to the SnarkVM API.
+    pub fn owner(&self) -> AddressBytes {
+        self.owner
+    }
+
+    /// This method exists just to conform to the SnarkVM API.
+    pub fn gates(&self) -> u64 {
+        self.gates
     }
 
     /// Returns the record commitment. This is a Pedersen hash underneath.
@@ -132,7 +142,7 @@ impl Serialize for Record {
             std::str::from_utf8(&self.owner).map_err(serde::ser::Error::custom)?,
         )?;
         state.serialize_field("gates", &format!("{}u64", self.gates))?;
-        state.serialize_field("entries", &self.entries)?;
+        state.serialize_field("data", &self.data)?;
 
         let nonce = serialize_field_element(self.nonce).map_err(serde::ser::Error::custom)?;
         state.serialize_field("nonce", &hex::encode(nonce))?;
@@ -165,8 +175,8 @@ mod tests {
     fn test_record_commitment() {
         let (_address_string, address) = address(0);
         let gates = 0_u64;
-        let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries, None);
+        let data = RecordEntriesMap::default();
+        let record = Record::new(address, gates, data, None);
 
         assert!(record.commitment().is_ok());
     }
@@ -175,8 +185,8 @@ mod tests {
     fn test_serialize_record() {
         let (address_string, address) = address(0);
         let gates = 0_u64;
-        let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries, None);
+        let data = RecordEntriesMap::default();
+        let record = Record::new(address, gates, data, None);
         let nonce = serialize_field_element(record.nonce).unwrap();
 
         let record_string = serde_json::to_string(&record).unwrap();
@@ -184,7 +194,7 @@ mod tests {
         assert_eq!(
             record_string,
             format!(
-                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"entries\":{{}},\"nonce\":\"{}\"}}",
+                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{}\"}}",
                 hex::encode(nonce),
             )
         );
@@ -196,14 +206,14 @@ mod tests {
         let nonce = ConstraintF::rand(&mut thread_rng());
         let encoded_nonce = &hex::encode(serialize_field_element(nonce).unwrap());
         let record_str = &format!(
-            r#"{{"owner": "{address}","gates": "0u64","entries": {{}},"nonce": "{encoded_nonce}"}}"#
+            r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{encoded_nonce}"}}"#
         );
         println!("record_str: {}", record_str);
         let record: Record = serde_json::from_str(record_str).unwrap();
 
         assert_eq!(record.owner, address.as_bytes());
         assert_eq!(record.gates, 0);
-        assert_eq!(record.entries, RecordEntriesMap::default());
+        assert_eq!(record.data, RecordEntriesMap::default());
         assert_eq!(record.nonce, nonce);
     }
 
@@ -211,8 +221,8 @@ mod tests {
     fn test_bincode_serialization() {
         let (_address_string, address) = address(0);
         let gates = 0_u64;
-        let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries, None);
+        let data = RecordEntriesMap::default();
+        let record = Record::new(address, gates, data, None);
 
         assert!(bincode::serialize(&record).is_ok());
     }
@@ -221,8 +231,8 @@ mod tests {
     fn test_bincode_deserialization() {
         let (_address_string, address) = address(0);
         let gates = 0_u64;
-        let entries = RecordEntriesMap::default();
-        let record = Record::new(address, gates, entries, None);
+        let data = RecordEntriesMap::default();
+        let record = Record::new(address, gates, data, None);
         let serialized_record = bincode::serialize(&record).unwrap();
 
         assert!(bincode::deserialize::<Record>(&serialized_record).is_ok());

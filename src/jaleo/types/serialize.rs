@@ -13,7 +13,7 @@ impl Serialize for UserInputValueType {
             UserInputValueType::Record(JAleoRecord {
                 owner,
                 gates,
-                entries,
+                data,
                 nonce,
             }) => {
                 let mut state = serializer.serialize_struct("Record", 4)?;
@@ -22,7 +22,7 @@ impl Serialize for UserInputValueType {
                     std::str::from_utf8(owner).map_err(serde::ser::Error::custom)?,
                 )?;
                 state.serialize_field("gates", &format!("{gates}u64"))?;
-                state.serialize_field("entries", &entries)?;
+                state.serialize_field("data", &data)?;
                 state.serialize_field(
                     "nonce",
                     &hex::encode(
