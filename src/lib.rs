@@ -144,7 +144,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
             }
         };
         program_build.map.insert(
-            function.name().to_string(),
+            *function.name(),
             (function_proving_key, function_verifying_key),
         );
     }

@@ -2,6 +2,8 @@ mod helpers;
 
 #[cfg(test)]
 mod credits_functions_tests {
+    use std::str::FromStr;
+
     use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
     use ark_r1cs_std::R1CSVar;
     use simpleworks::gadgets::ConstraintF;
@@ -60,8 +62,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let genesis_identifier = Identifier::from_str("genesis").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get("genesis").unwrap();
+            program_build.map.get(&genesis_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
@@ -120,8 +123,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let mint_identifier = Identifier::from_str("mint").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get("mint").unwrap();
+            program_build.map.get(&mint_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
@@ -236,8 +240,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let transfer_identifier = Identifier::from_str("transfer").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get("transfer").unwrap();
+            program_build.map.get(&transfer_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
@@ -353,8 +358,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let combine_identifier = Identifier::from_str("combine").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get("combine").unwrap();
+            program_build.map.get(&combine_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
@@ -461,8 +467,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let split_identifier = Identifier::from_str("split").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get("split").unwrap();
+            program_build.map.get(&split_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
@@ -534,7 +541,9 @@ mod credits_functions_tests {
         }
 
         let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.map.get("fee").unwrap();
+        let fee_identifier = Identifier::from_str("fee").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&fee_identifier).unwrap();
         let public_inputs = [];
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()

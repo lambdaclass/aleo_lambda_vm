@@ -1,4 +1,4 @@
-use crate::FunctionKeys;
+use crate::{jaleo::Identifier, FunctionKeys};
 use indexmap::IndexMap;
 use serde::{
     de,
@@ -12,7 +12,7 @@ use simpleworks::marlin::serialization::{
 use std::fmt::Debug;
 
 pub struct ProgramBuild {
-    pub map: IndexMap<String, FunctionKeys>,
+    pub map: IndexMap<Identifier, FunctionKeys>,
 }
 
 impl Serialize for ProgramBuild {
@@ -38,7 +38,7 @@ impl<'de> Deserialize<'de> for ProgramBuild {
         D: serde::Deserializer<'de>,
     {
         // It's called EncodedProgramBuild because its values are encoded.
-        type EncodedProgramBuild = IndexMap<String, (String, String)>;
+        type EncodedProgramBuild = IndexMap<Identifier, (String, String)>;
 
         let intermediate_verifying_key_map = EncodedProgramBuild::deserialize(deserializer)?;
         let mut verifying_key_map = IndexMap::new();

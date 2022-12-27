@@ -1,4 +1,4 @@
-use super::EncryptedRecord;
+use super::{EncryptedRecord, Identifier, ProgramID};
 use crate::variable_type::VariableType;
 use serde::{Deserialize, Serialize};
 
@@ -7,9 +7,9 @@ pub struct Transition {
     // /// The transition ID.
     // id: String,
     /// The program ID.
-    pub program_id: String,
+    pub program_id: ProgramID,
     /// The function name.
-    pub function_name: String,
+    pub function_name: Identifier,
     /// The transition inputs.
     pub inputs: Vec<VariableType>,
     /// The transition outputs.
@@ -80,7 +80,7 @@ impl Transition {
         &self.fee
     }
 
-    pub fn program_id(&self) -> String {
+    pub fn program_id(&self) -> ProgramID {
         self.program_id.clone()
     }
 }

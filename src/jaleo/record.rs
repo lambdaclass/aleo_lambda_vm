@@ -1,5 +1,5 @@
-use super::{AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
-use crate::helpers;
+use super::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
+use crate::helpers::{self};
 use aes::{
     cipher::{BlockDecrypt, BlockEncrypt, KeyInit},
     Aes128,
@@ -42,12 +42,44 @@ impl EncryptedRecord {
         Ok(record)
     }
 
-    pub fn is_owner(&self, address: &AddressBytes, view_key: &ViewKey) -> bool {
+    pub fn is_owner(&self, address: &Address, view_key: &ViewKey) -> bool {
+        let vm_address = crate::helpers::to_address(address.to_string());
         if let Ok(decrypted_record) = self.decrypt(view_key) {
-            return decrypted_record.owner == *address;
+            return decrypted_record.owner == vm_address;
         }
 
         false
+    }
+}
+
+impl TryFrom<&Vec<u8>> for EncryptedRecord {
+    type Error = anyhow::Error;
+
+    fn try_from(bytes: &Vec<u8>) -> Result<Self, Self::Error> {
+        let commitment_bytes = &bytes[..32];
+        let mut ciphertext_bytes = vec![];
+
+        let number_of_blocks = (bytes.len() - 32) / 16;
+        for _ in 0..number_of_blocks {
+            for j in 0..16 {
+                ciphertext_bytes.push(bytes[32 + j * 16]);
+            }
+        }
+
+        let mut original_size_bytes: [u8; 8] = [0; 8];
+        for i in 0..8 {
+            original_size_bytes[i] = bytes[bytes.len() - 8 + i];
+        }
+
+        let commitment = String::from_utf8(commitment_bytes.to_vec())?;
+        let ciphertext = String::from_utf8(ciphertext_bytes.to_vec())?;
+        let original_size = usize::from_le_bytes(original_size_bytes);
+
+        Ok(Self {
+            commitment: commitment,
+            ciphertext: ciphertext,
+            original_size: original_size,
+        })
     }
 }
 
@@ -117,6 +149,28 @@ impl Record {
 
         Self {
             owner,
+            gates,
+            data,
+            nonce: nonce_value,
+        }
+    }
+
+    pub fn new_from_aleo_address(
+        owner: String,
+        gates: u64,
+        data: RecordEntriesMap,
+        nonce: Option<ConstraintF>,
+    ) -> Self {
+        let nonce_value = if let Some(value) = nonce {
+            value
+        } else {
+            ConstraintF::rand(&mut thread_rng())
+        };
+
+        let vm_address = crate::helpers::to_address(owner);
+
+        Self {
+            owner: vm_address,
             gates,
             data,
             nonce: nonce_value,

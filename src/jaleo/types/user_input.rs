@@ -6,6 +6,7 @@ use serde::ser::Error;
 use serde::Deserialize;
 use simpleworks::gadgets::traits::ToFieldElements;
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
 pub type Address = [u8; 63];
@@ -41,6 +42,15 @@ fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
 impl From<UserInputValueType> for String {
     fn from(value: UserInputValueType) -> Self {
         format!("{}", value)
+    }
+}
+
+// This exists to conform to how snarkVM does things (it uses FromStr instead of TryFrom<String>)
+impl FromStr for UserInputValueType {
+    type Err = anyhow::Error;
+
+    fn from_str(string: &str) -> Result<Self> {
+        UserInputValueType::try_from(string.to_string())
     }
 }
 

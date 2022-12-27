@@ -52,8 +52,8 @@ pub fn execution(
     let encoded_proof = hex::encode(bytes_proof);
 
     let transition = Transition {
-        program_id: program.id().to_string(),
-        function_name: function_name.to_string(),
+        program_id: *program.id(),
+        function_name: *function_name,
         inputs: inputs.into_values().collect::<Vec<VariableType>>(),
         outputs: outputs.into_values().collect::<Vec<VariableType>>(),
         proof: encoded_proof,

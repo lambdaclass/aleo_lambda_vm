@@ -38,7 +38,7 @@ pub type Program = snarkvm::prelude::Program<Testnet3>;
 pub type ViewKey = snarkvm::prelude::ViewKey<Testnet3>;
 // This should be ConstraintF in the future (revisit when commitment() returns ConstraintF).
 pub type Field = String;
-pub type ProgramID = String;
+pub type ProgramID = snarkvm::prelude::ProgramID<Testnet3>;
 pub type ProvingKey = simpleworks::marlin::ProvingKey;
 pub type VerifyingKey = simpleworks::marlin::VerifyingKey;
 pub type PrivateKey = snarkvm::prelude::PrivateKey<Testnet3>;

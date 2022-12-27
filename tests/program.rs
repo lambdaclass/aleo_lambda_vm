@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use anyhow::Result;
     use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
@@ -47,8 +49,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
     }
 
@@ -84,8 +87,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -119,8 +123,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -154,8 +159,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -189,8 +195,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -224,8 +231,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -259,8 +267,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -294,8 +303,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -329,8 +339,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -364,8 +375,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -399,8 +411,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -434,8 +447,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -469,8 +483,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -504,8 +519,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -539,8 +555,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -574,8 +591,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -609,8 +627,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = [];
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
@@ -644,8 +663,9 @@ mod tests {
         // );
 
         let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.map.get(function_name).unwrap();
+            program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
