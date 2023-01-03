@@ -84,7 +84,7 @@ pub fn execute_function(
     user_inputs: &[UserInputValueType],
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    let universal_srs = simpleworks::marlin::generate_universal_srs(rng)?;
+    let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
     let mut function_variables = helpers::function_variables(function);
@@ -115,7 +115,8 @@ pub fn execute_function(
 /// for each function in the program.
 pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, ProgramBuild)> {
     let mut rng = simpleworks::marlin::generate_rand();
-    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
+    let universal_srs =
+        simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut rng)?;
 
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
@@ -176,7 +177,7 @@ pub fn build_function(
 /// to derive them deterministically like this.
 pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    simpleworks::marlin::generate_universal_srs(rng)
+    simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)
 }
 
 pub fn verify_proof(

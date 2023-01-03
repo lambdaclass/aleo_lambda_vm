@@ -83,7 +83,8 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, Enc
 }
 
 pub fn get_credits_key(program: &Program, function_name: &Identifier) -> Result<FunctionKeys> {
-    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut generate_rand())?;
+    let universal_srs =
+        simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut generate_rand())?;
     let constraint_system = ark_relations::r1cs::ConstraintSystem::<ConstraintF>::new_ref();
     let function = program.get_function(function_name)?;
     build_function(

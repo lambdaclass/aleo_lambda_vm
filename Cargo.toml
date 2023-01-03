@@ -35,8 +35,8 @@ clap = { version = "4", features = ["derive", "unstable-grouped"] }
 derivative = { version = "2.0", features = ["use_core"] }
 digest = "0.9"
 
-snarkvm = { git = "https://github.com/Entropy1729/snarkVM.git" }
-simpleworks = { git = "https://github.com/Entropy1729/simpleworks.git" }
+snarkvm = { git = "https://github.com/Lambdaclass/snarkVM.git", branch = "entropy_fork" }
+simpleworks = { git = "https://github.com/Lambdaclass/simpleworks.git" }
 anyhow = "1"
 hex = "0.4.3"
 

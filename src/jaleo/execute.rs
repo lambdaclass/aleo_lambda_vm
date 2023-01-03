@@ -1,4 +1,4 @@
-use super::{credits, Function, Identifier, PrivateKey, Program, Transition};
+use super::{credits, Function, Identifier, PrivateKey, Program, Transition, ViewKey};
 use crate::{
     helpers::to_address,
     jaleo::{program_is_coinbase, Record, UserInputValueType},
@@ -46,7 +46,8 @@ pub fn execution(
     let (compiled_function_variables, proof) = crate::execute_function(&function, inputs)?;
 
     let inputs = process_circuit_inputs(&function, &compiled_function_variables, private_key)?;
-    let outputs = process_circuit_outputs(&function, &compiled_function_variables)?;
+    let view_key = ViewKey::try_from(private_key)?;
+    let outputs = process_circuit_outputs(&function, &compiled_function_variables, view_key)?;
 
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
@@ -165,6 +166,7 @@ pub fn process_circuit_inputs(
 pub fn process_circuit_outputs(
     function: &Function,
     program_variables: &SimpleFunctionVariables,
+    view_key: ViewKey,
 ) -> Result<CircuitOutputType> {
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
@@ -206,7 +208,8 @@ pub fn process_circuit_outputs(
                             primitive_entries,
                             Some(r.nonce),
                         );
-                        VariableType::Record(None, record)
+                        let encrypted_record = record.encrypt(&view_key)?;
+                        VariableType::EncryptedRecord(encrypted_record)
                     }
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];
