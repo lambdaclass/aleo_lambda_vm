@@ -75,8 +75,8 @@ pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, Enc
     }
 
     let non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
-    let private_key = PrivateKey::new(&mut ark_std::rand::thread_rng()).unwrap();
-    let view_key = ViewKey::try_from(&private_key).unwrap();
+    let private_key = PrivateKey::new(&mut ark_std::rand::thread_rng())?;
+    let view_key = ViewKey::try_from(&private_key)?;
     let encrypted_record = non_encrypted_record.encrypt(&view_key)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
@@ -88,6 +88,7 @@ pub fn get_credits_key(program: &Program, function_name: &Identifier) -> Result<
     let constraint_system = ark_relations::r1cs::ConstraintSystem::<ConstraintF>::new_ref();
     let function = program.get_function(function_name)?;
     build_function(
+        program,
         &function,
         &default_user_inputs(program, function_name)?,
         constraint_system,

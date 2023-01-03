@@ -1,12 +1,86 @@
 use crate::{
-    circuit_io_type::CircuitIOType, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+    circuit_io_type::CircuitIOType::{self, SimpleAddress, SimpleRecord},
+    ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget,
 };
 use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 
-use anyhow::{bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 
 use indexmap::IndexMap;
+use snarkvm::prelude::{Literal, Operand, Register, Testnet3};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+
+pub fn sub(
+    operands: &[Operand<Testnet3>],
+    program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
+) -> Result<CircuitIOType> {
+    // instruction_operands is an IndexMap only to keep track of the
+    // name of the record entries, so then when casting into records
+    // we can know which entry is which.
+    let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
+    for operand in operands {
+        let variable_name = &operand.to_string();
+        match (operand, program_variables.get(variable_name)) {
+            (Operand::Register(Register::Member(locator, members)), Some(None)) => {
+                if let Some(Some(SimpleRecord(record))) =
+                    program_variables.get(&format!("r{locator}"))
+                {
+                    match members
+                        .get(0)
+                        .ok_or("Error getting the first member of a register member")
+                        .map_err(|e| anyhow!("{}", e))?
+                        .to_string()
+                        .as_str()
+                    {
+                        "owner" => {
+                            let owner_operand = SimpleAddress(record.owner.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(owner_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), owner_operand);
+                        }
+                        "gates" => {
+                            let gates_operand = SimpleUInt64(record.gates.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(gates_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), gates_operand);
+                        }
+                        entry => {
+                            let entry_operand = record
+                                .entries
+                                .get(entry)
+                                .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
+                                .map_err(|e| anyhow!("{e}"))?
+                                .clone();
+                            program_variables
+                                .insert(variable_name.to_string(), Some(entry_operand.clone()));
+                            instruction_operands.insert(entry.to_owned(), entry_operand);
+                        }
+                    };
+                }
+            }
+            (Operand::Register(_), Some(Some(operand))) => {
+                instruction_operands.insert(variable_name.to_owned(), operand.clone());
+            }
+            (Operand::Register(r), Some(None)) => {
+                bail!("Register \"{}\" not assigned in registers", r.to_string())
+            }
+            (Operand::Register(r), None) => {
+                bail!("Register \"{}\" not found in registers", r.to_string())
+            }
+            (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
+                "Literal \"{}\"u64 not assigned in registers",
+                Operand::Literal(Literal::U64(*v))
+            ),
+            (Operand::Literal(_), _) => bail!("Literal operand not supported"),
+            (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
+            (Operand::Caller, _) => bail!("Caller operands are not supported"),
+        };
+    }
+    _sub(&instruction_operands)
+}
 
 // Aleo instructions support the subtraction of two numbers and not for UInt8.
 // We compute the subtraction as an addition thanks to the following:
@@ -15,7 +89,7 @@ pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 // module - (minuend + module - subtrahend) = difference
 // not(minuend + not(subtrahend)) = difference
 // where module = 2^size and module - n could be done negating bit by bit in binary so there are no subtractions.
-pub fn sub(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn _sub(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -139,7 +213,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -166,7 +240,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -190,7 +264,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands);
+        let result_var = super::_sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -220,7 +294,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -247,7 +321,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -271,7 +345,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands);
+        let result_var = super::_sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");
@@ -301,7 +375,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -328,7 +402,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands).unwrap();
+        let result_var = super::_sub(&operands).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
@@ -352,7 +426,7 @@ mod subtract_tests {
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
         operands.insert("r1".to_owned(), subtrahend_var);
-        let result_var = super::sub(&operands);
+        let result_var = super::_sub(&operands);
 
         if let Err(err) = result_var {
             assert_eq!(err.to_string(), "Subtraction underflow");

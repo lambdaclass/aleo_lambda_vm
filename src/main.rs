@@ -106,6 +106,10 @@ fn execute(
 ) -> Result<()> {
     println!("Executing function {}...", function_name);
 
+    // TODO: We need to reverse to do things in the right order. Revisit this.
+    let mut inputs_copy = user_inputs.to_vec();
+    inputs_copy.reverse();
+
     let program_str = std::fs::read_to_string(program_string).unwrap();
 
     let (_, program) = Program::<Testnet3>::parse(&program_str).map_err(|e| anyhow!("{}", e))?;
@@ -114,11 +118,16 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (_compiled_function_variables, proof) = vmtropy::execute_function(&function, user_inputs)?;
+    let (_compiled_function_variables, proof) =
+        vmtropy::execute_function(&program, &function, &inputs_copy)?;
 
-    // for (register, value) in outputs {
-    //     println!("Output register {} has value {}", register, value.value()?);
-    // }
+    for (register, value) in _compiled_function_variables {
+        println!(
+            "Output register {} has value {}",
+            register,
+            value.unwrap().value()?
+        );
+    }
 
     let mut bytes_proof = Vec::new();
     match proof.serialize(&mut bytes_proof) {

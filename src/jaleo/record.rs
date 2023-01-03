@@ -26,7 +26,13 @@ pub struct EncryptedRecord {
 
 impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
-        let aes_key = Aes128::new_from_slice(&view_key.to_string().as_bytes()[..16])?;
+        let aes_key = Aes128::new_from_slice(
+            view_key
+                .to_string()
+                .as_bytes()
+                .get(..16)
+                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
+        )?;
         let mut plaintext: Vec<u8> = Vec::new();
         let ciphertext_bytes = hex::decode(&self.ciphertext)?;
         ciphertext_bytes.chunks_exact(16).for_each(|chunk| {
@@ -56,19 +62,29 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
     type Error = anyhow::Error;
 
     fn try_from(bytes: &Vec<u8>) -> Result<Self, Self::Error> {
-        let commitment_bytes = &bytes[..32];
+        let commitment_bytes = bytes
+            .get(..32)
+            .ok_or_else(|| anyhow!("Error getting the commitment"))?;
         let mut ciphertext_bytes = vec![];
 
         let number_of_blocks = (bytes.len() - 32) / 16;
         for _ in 0..number_of_blocks {
             for j in 0..16 {
-                ciphertext_bytes.push(bytes[32 + j * 16]);
+                ciphertext_bytes.push(
+                    *bytes
+                        .get(32 + j * 16)
+                        .ok_or_else(|| anyhow!("Error getting the ciphertext"))?,
+                );
             }
         }
 
         let mut original_size_bytes: [u8; 8] = [0; 8];
         for i in 0..8 {
-            original_size_bytes[i] = bytes[bytes.len() - 8 + i];
+            *original_size_bytes
+                .get_mut(i)
+                .ok_or_else(|| anyhow!("Error storing original size byte"))? = *bytes
+                .get(bytes.len() - 8 + i)
+                .ok_or_else(|| anyhow!("Error getting original size"))?;
         }
 
         let commitment = String::from_utf8(commitment_bytes.to_vec())?;
@@ -76,9 +92,9 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
         let original_size = usize::from_le_bytes(original_size_bytes);
 
         Ok(Self {
-            commitment: commitment,
-            ciphertext: ciphertext,
-            original_size: original_size,
+            commitment,
+            ciphertext,
+            original_size,
         })
     }
 }
@@ -212,7 +228,13 @@ impl Record {
     }
 
     pub fn encrypt(&self, view_key: &ViewKey) -> Result<EncryptedRecord> {
-        let aes_key = Aes128::new_from_slice(&view_key.to_string().as_bytes()[..16])?;
+        let aes_key = Aes128::new_from_slice(
+            view_key
+                .to_string()
+                .as_bytes()
+                .get(..16)
+                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
+        )?;
         let mut encrypted_record_bytes: Vec<u8> = Vec::new();
         let record_bytes = self.to_bytes()?;
 

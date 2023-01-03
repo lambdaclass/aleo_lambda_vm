@@ -1,7 +1,7 @@
 use crate::jaleo::{EncryptedRecord, Field, Record, UserInputValueType};
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -40,8 +40,9 @@ impl VariableType {
                 data: data.clone(),
                 nonce: *nonce,
             })),
-            VariableType::EncryptedRecord(_) => todo!(),
-            // XXX::ExternalRecord(value) => Ok(value.to_string()),
+            VariableType::EncryptedRecord(_) => {
+                bail!("value() for EncryptedRecord is not implemented yet.")
+            } // XXX::ExternalRecord(value) => Ok(value.to_string()),
         }
     }
 }

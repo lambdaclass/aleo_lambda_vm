@@ -1,12 +1,108 @@
 use crate::{circuit_io_type::CircuitIOType, record::Record, VMRecordEntriesMap};
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
 use indexmap::IndexMap;
 use simpleworks::gadgets::ConstraintF;
+use snarkvm::prelude::{EntryType, Identifier, Literal, Operand, Register, Testnet3};
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
-pub fn cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn cast(
+    operands: &[Operand<Testnet3>],
+    program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
+    aleo_record_entries: &IndexMap<Identifier<Testnet3>, EntryType<Testnet3>>,
+) -> Result<CircuitIOType> {
+    // instruction_operands is an IndexMap only to keep track of the
+    // name of the record entries, so then when casting into records
+    // we can know which entry is which.
+    let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
+    // TODO: Make the same match as the function below.
+    // match operands
+    //     .iter()
+    //     .map(|operand| (operand, program_variables.get(&operand.to_string())))
+    //     .collect::<Vec<_>>()
+    //     .as_slice() {
+    // }
+    for (operand_index, operand) in operands.iter().enumerate() {
+        let variable_name = &operand.to_string();
+        match (operand, program_variables.get(variable_name)) {
+            (Operand::Register(Register::Member(locator, members)), Some(None)) => {
+                if let Some(Some(SimpleRecord(record))) =
+                    program_variables.get(&format!("r{locator}"))
+                {
+                    match members
+                        .get(0)
+                        .ok_or("Error getting the first member of a register member")
+                        .map_err(|e| anyhow!("{}", e))?
+                        .to_string()
+                        .as_str()
+                    {
+                        "owner" => {
+                            let owner_operand = SimpleAddress(record.owner.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(owner_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), owner_operand);
+                        }
+                        "gates" => {
+                            let gates_operand = SimpleUInt64(record.gates.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(gates_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), gates_operand);
+                        }
+                        entry => {
+                            let entry_operand = record
+                                .entries
+                                .get(entry)
+                                .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
+                                .map_err(|e| anyhow!("{e}"))?
+                                .clone();
+                            program_variables
+                                .insert(variable_name.to_string(), Some(entry_operand.clone()));
+                            instruction_operands.insert(entry.to_owned(), entry_operand);
+                        }
+                    };
+                }
+            }
+            (Operand::Register(_), Some(Some(operand))) => {
+                // An operand is an entry of the record if the index is greater
+                // than 1 because the index 0 is always for the record owner and
+                // the index 1 is always for the record gates, the rest are entries.
+                let operand_is_entry = operand_index > 1;
+                if operand_is_entry {
+                    let entry_name = aleo_record_entries
+                        .keys()
+                        .map(|identifier| identifier.to_string())
+                        .collect::<Vec<String>>()
+                        .get(operand_index - 2)
+                        .ok_or_else(|| anyhow!("Error getting entry name from aleo entries"))?
+                        .clone();
+                    instruction_operands.insert(entry_name, operand.clone());
+                } else {
+                    instruction_operands.insert(variable_name.to_owned(), operand.clone());
+                }
+            }
+            (Operand::Register(r), Some(None)) => {
+                bail!("Register \"{}\" not assigned in registers", r.to_string())
+            }
+            (Operand::Register(r), None) => {
+                bail!("Register \"{}\" not found in registers", r.to_string())
+            }
+            (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
+                "Literal \"{}\"u64 not assigned in registers",
+                Operand::Literal(Literal::U64(*v))
+            ),
+            (Operand::Literal(_), _) => bail!("Literal operand not supported"),
+            (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
+            (Operand::Caller, _) => bail!("Caller operands are not supported"),
+        };
+    }
+    _cast(instruction_operands)
+}
+
+pub fn _cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .into_iter()
         .collect::<Vec<(String, CircuitIOType)>>()
@@ -34,7 +130,7 @@ pub fn cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
 
 #[cfg(test)]
 mod cast_tests {
-    use super::cast;
+    use super::_cast;
     use crate::{
         CircuitIOType::{SimpleAddress, SimpleUInt64},
         ConstraintF,
@@ -71,7 +167,7 @@ mod cast_tests {
         let mut operands = IndexMap::new();
         operands.insert("owner".to_owned(), owner_address);
         operands.insert("gates".to_owned(), gates);
-        let record = cast(operands).unwrap();
+        let record = _cast(operands).unwrap();
 
         assert_eq!(
             record.value().unwrap(),
@@ -95,7 +191,7 @@ mod cast_tests {
         let mut operands = IndexMap::new();
         operands.insert("owner".to_owned(), gates);
         operands.insert("gates".to_owned(), owner_address);
-        let cast_result = cast(operands);
+        let cast_result = _cast(operands);
 
         assert!(cast_result.is_err());
         assert_eq!(
@@ -114,7 +210,7 @@ mod cast_tests {
         let mut operands = IndexMap::new();
         operands.insert("owner".to_owned(), gates.clone());
         operands.insert("gates".to_owned(), gates);
-        let cast_result = cast(operands);
+        let cast_result = _cast(operands);
 
         assert!(cast_result.is_err());
         assert_eq!(

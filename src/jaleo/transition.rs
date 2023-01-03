@@ -81,6 +81,6 @@ impl Transition {
     }
 
     pub fn program_id(&self) -> ProgramID {
-        self.program_id.clone()
+        self.program_id
     }
 }

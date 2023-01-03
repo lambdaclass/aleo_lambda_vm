@@ -12,6 +12,9 @@ pub mod test_helpers {
         (primitive_address, address_bytes)
     }
 
+    // This allow macro is added because of a bug, you could see that his function
+    // is used in credits_aleo.rs
+    #[allow(dead_code)]
     pub fn input_record(
         owner: jaleo::AddressBytes,
         gates: u64,
@@ -26,10 +29,16 @@ pub mod test_helpers {
         })
     }
 
+    // This allow macro is added because of a bug, you could see that his function
+    // is used in credits_aleo.rs
+    #[allow(dead_code)]
     pub fn sample_nonce() -> ConstraintF {
         ConstraintF::rand(&mut ark_std::rand::thread_rng())
     }
 
+    // This allow macro is added because of a bug, you could see that his function
+    // is used in credits_aleo.rs
+    #[allow(dead_code)]
     pub fn vm_record_entries_are_equal(
         some_entries: &VMRecordEntriesMap,
         other_entries: VMRecordEntriesMap,

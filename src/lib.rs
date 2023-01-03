@@ -80,6 +80,7 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 /// -  Marlin Proof of the function.
 ///
 pub fn execute_function(
+    program: &Program<Testnet3>,
     function: &Function<Testnet3>,
     user_inputs: &[UserInputValueType],
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
@@ -89,6 +90,7 @@ pub fn execute_function(
 
     let mut function_variables = helpers::function_variables(function);
     let (function_proving_key, _function_verifying_key) = build_function(
+        program,
         function,
         user_inputs,
         constraint_system.clone(),
@@ -127,6 +129,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
         let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
         let inputs = helpers::default_user_inputs(&program, function_name)?;
         let (function_proving_key, function_verifying_key) = match build_function(
+            &program,
             function,
             &inputs,
             constraint_system,
@@ -155,6 +158,7 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
 
 /// Builds a function, which means generating its proving and verifying keys.
 pub fn build_function(
+    program: &Program<Testnet3>,
     function: &Function<Testnet3>,
     user_inputs: &[UserInputValueType],
     constraint_system: ConstraintSystemRef<ConstraintF>,
@@ -167,7 +171,7 @@ pub fn build_function(
         user_inputs,
         function_variables,
     )?;
-    helpers::process_outputs(function, function_variables)?;
+    helpers::process_outputs(program, function, function_variables)?;
     simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 

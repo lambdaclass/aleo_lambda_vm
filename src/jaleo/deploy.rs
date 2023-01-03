@@ -67,7 +67,7 @@ impl Debug for VerifyingKeyMap {
         for (k, v) in self.map.iter() {
             let serialized_verifying_key =
                 hex::encode(serialize_verifying_key(v.clone()).map_err(std::fmt::Error::custom)?);
-            verifying_keys.insert(k.clone(), serialized_verifying_key.clone());
+            verifying_keys.insert(*k, serialized_verifying_key.clone());
         }
         IndexMap::fmt(&verifying_keys, f)
     }

@@ -29,6 +29,7 @@ impl CircuitIOType {
             SimpleRecord(value) => {
                 let owner = value.owner.value()?;
                 let gates = value.gates.value()?;
+                // TODO: print the entries map here as well.
                 Ok(format!("Record {{ owner: {}, gates: {} }}", owner, gates))
             }
             SimpleAddress(value) => Ok(value.value()?),

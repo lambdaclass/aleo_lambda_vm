@@ -66,7 +66,7 @@ impl Debug for ProgramBuild {
             let serialized_verifying_key =
                 hex::encode(serialize_verifying_key(vk.clone()).map_err(std::fmt::Error::custom)?);
             verifying_keys.insert(
-                k.clone(),
+                *k,
                 (
                     serialized_proving_key.clone(),
                     serialized_verifying_key.clone(),

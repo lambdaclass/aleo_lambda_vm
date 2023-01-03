@@ -50,7 +50,7 @@ impl FromStr for UserInputValueType {
     type Err = anyhow::Error;
 
     fn from_str(string: &str) -> Result<Self> {
-        UserInputValueType::try_from(string.to_string())
+        UserInputValueType::try_from(string.to_owned())
     }
 }
 

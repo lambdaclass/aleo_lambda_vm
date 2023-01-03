@@ -15,8 +15,8 @@ use simpleworks::gadgets::{
     AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use snarkvm::prelude::{
-    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Register,
-    Testnet3, ValueType,
+    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Testnet3,
+    ValueType,
 };
 
 pub fn to_address(primitive_address: String) -> [u8; 63] {
@@ -430,82 +430,26 @@ pub(crate) fn process_inputs(
 /// Literal 'instruction is not supported currently' when a instruction in the circuit output is not supported.
 ///
 pub(crate) fn process_outputs(
+    program: &Program,
     function: &Function<Testnet3>,
     program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
     for instruction in function.instructions() {
-        // instruction_operands is an IndexMap only to keep track of the
-        // name of the record entries, so then when casting into records
-        // we can know which entry is which.
-        let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
-        for operand in instruction.operands() {
-            let variable_name = &operand.to_string();
-            match (operand, program_variables.get(variable_name)) {
-                (Operand::Register(Register::Member(locator, members)), Some(None)) => {
-                    if let Some(Some(SimpleRecord(record))) =
-                        program_variables.get(&format!("r{locator}"))
-                    {
-                        match members
-                            .get(0)
-                            .ok_or("Error getting the first member of a register member")
-                            .map_err(|e| anyhow!("{}", e))?
-                            .to_string()
-                            .as_str()
-                        {
-                            "owner" => {
-                                let owner_operand = SimpleAddress(record.owner.clone());
-                                program_variables
-                                    .insert(variable_name.to_string(), Some(owner_operand.clone()));
-                                instruction_operands
-                                    .insert(variable_name.to_owned(), owner_operand);
-                            }
-                            "gates" => {
-                                let gates_operand = SimpleUInt64(record.gates.clone());
-                                program_variables
-                                    .insert(variable_name.to_string(), Some(gates_operand.clone()));
-                                instruction_operands
-                                    .insert(variable_name.to_owned(), gates_operand);
-                            }
-                            entry => {
-                                let entry_operand = record
-                                    .entries
-                                    .get(entry)
-                                    .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
-                                    .map_err(|e| anyhow!("{e}"))?
-                                    .clone();
-                                program_variables
-                                    .insert(variable_name.to_string(), Some(entry_operand.clone()));
-                                instruction_operands.insert(entry.to_owned(), entry_operand);
-                            }
-                        };
-                    }
-                }
-                (Operand::Register(_), Some(Some(operand))) => {
-                    instruction_operands.insert(variable_name.to_owned(), operand.clone());
-                }
-                (Operand::Register(r), Some(None)) => {
-                    bail!("Register \"{}\" not assigned in registers", r.to_string())
-                }
-                (Operand::Register(r), None) => {
-                    bail!("Register \"{}\" not found in registers", r.to_string())
-                }
-                (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
-                    instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
-                }
-                (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
-                    "Literal \"{}\"u64 not assigned in registers",
-                    Operand::Literal(Literal::U64(*v))
-                ),
-                (Operand::Literal(_), _) => bail!("Literal operand not supported"),
-                (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
-                (Operand::Caller, _) => bail!("Caller operands are not supported"),
-            };
-        }
-
         let circuit_output = match instruction {
-            Instruction::Add(_) => instructions::add(&instruction_operands)?,
-            Instruction::Cast(_) => instructions::cast(instruction_operands)?,
-            Instruction::Sub(_) => instructions::sub(&instruction_operands)?,
+            Instruction::Add(_) => instructions::add(instruction.operands(), program_variables)?,
+            Instruction::Cast(cast) => match cast.register_type() {
+                snarkvm::prelude::RegisterType::Record(record_identifier) => {
+                    let aleo_record = program.get_record(record_identifier)?;
+                    let aleo_record_entries = aleo_record.entries();
+                    instructions::cast(
+                        instruction.operands(),
+                        program_variables,
+                        aleo_record_entries,
+                    )?
+                }
+                _ => bail!("Cast is not supported for non-record types"),
+            },
+            Instruction::Sub(_) => instructions::sub(instruction.operands(), program_variables)?,
             _ => bail!(
                 "{} instruction is not supported currently",
                 instruction.opcode()

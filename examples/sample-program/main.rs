@@ -15,7 +15,7 @@ fn main() {
 
     // Run the `hello` function defined in the `sample.aleo` program
     let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&function, &user_inputs).unwrap();
+        vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
     // for (register, value) in outputs {
     //     println!(

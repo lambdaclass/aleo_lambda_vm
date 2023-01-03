@@ -29,7 +29,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -90,7 +90,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -159,7 +159,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r2", "r0.gates", "r3", "r0.owner", "r4", "r5"];
@@ -281,7 +281,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r1.gates", "r2", "r0.owner", "r3"];
@@ -393,7 +393,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r2", "r0.owner", "r3", "r4"];
@@ -502,7 +502,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
         // Input record.
         let r0 = function_variables["r0"].as_ref().unwrap();
