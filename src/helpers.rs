@@ -449,6 +449,7 @@ pub(crate) fn process_outputs(
                 }
                 _ => bail!("Cast is not supported for non-record types"),
             },
+            Instruction::Mul(_) => instructions::mul(instruction.operands(), program_variables)?,
             Instruction::Sub(_) => instructions::sub(instruction.operands(), program_variables)?,
             _ => bail!(
                 "{} instruction is not supported currently",

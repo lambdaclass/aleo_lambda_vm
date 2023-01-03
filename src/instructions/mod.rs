@@ -6,5 +6,10 @@ pub use add::add;
 mod cast;
 pub use cast::cast;
 
+pub(crate) mod helpers;
+
+mod mul;
+pub use mul::mul;
+
 mod sub;
 pub use sub::sub;
