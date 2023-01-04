@@ -457,6 +457,9 @@ pub(crate) fn process_outputs(
             Instruction::IsEq(_) => instructions::is_eq(instruction.operands(), program_variables)?,
             Instruction::Mul(_) => instructions::mul(instruction.operands(), program_variables)?,
             Instruction::Sub(_) => instructions::sub(instruction.operands(), program_variables)?,
+            Instruction::Ternary(_) => {
+                instructions::ternary(instruction.operands(), program_variables)?
+            }
             _ => bail!(
                 "{} instruction is not supported currently",
                 instruction.opcode()

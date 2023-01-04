@@ -16,3 +16,6 @@ pub use mul::mul;
 
 mod sub;
 pub use sub::sub;
+
+mod ternary;
+pub use ternary::ternary;
