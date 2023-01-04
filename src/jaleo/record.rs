@@ -63,16 +63,16 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
 
     fn try_from(bytes: &Vec<u8>) -> Result<Self, Self::Error> {
         let commitment_bytes = bytes
-            .get(..32)
+            .get(..64)
             .ok_or_else(|| anyhow!("Error getting the commitment"))?;
         let mut ciphertext_bytes = vec![];
 
-        let number_of_blocks = (bytes.len() - 32) / 16;
-        for _ in 0..number_of_blocks {
+        let number_of_blocks = (bytes.len() - 64) / 16;
+        for i in 0..number_of_blocks {
             for j in 0..16 {
                 ciphertext_bytes.push(
                     *bytes
-                        .get(32 + j * 16)
+                        .get(64 + i * 16 + j)
                         .ok_or_else(|| anyhow!("Error getting the ciphertext"))?,
                 );
             }
@@ -89,7 +89,8 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
 
         let commitment = String::from_utf8(commitment_bytes.to_vec())?;
         let ciphertext = String::from_utf8(ciphertext_bytes.to_vec())?;
-        let original_size = usize::from_le_bytes(original_size_bytes);
+        let original_size =
+            usize::from_str_radix(&String::from_utf8(original_size_bytes.to_vec())?, 16)?;
 
         Ok(Self {
             commitment,
@@ -101,7 +102,11 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
 
 impl Display for EncryptedRecord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.ciphertext)
+        write!(
+            f,
+            "{}{}{:08x}",
+            self.commitment, self.ciphertext, self.original_size
+        )
     }
 }
 
