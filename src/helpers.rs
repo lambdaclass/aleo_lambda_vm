@@ -1,6 +1,7 @@
 use crate::{
     circuit_io_type::{
-        SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        SimpleAddress, SimpleBoolean, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+        SimpleUInt8,
     },
     instructions,
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
@@ -8,7 +9,7 @@ use crate::{
     CircuitIOType, SimpleFunctionVariables,
 };
 use anyhow::{anyhow, bail, Result};
-use ark_r1cs_std::prelude::AllocVar;
+use ark_r1cs_std::prelude::{AllocVar, Boolean};
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
 use simpleworks::gadgets::{
@@ -381,6 +382,10 @@ pub(crate) fn process_inputs(
                             AddressGadget::new_witness(Namespace::new(cs.clone(), None), || Ok(a))?,
                         ),
                         UserInputValueType::Record(_) => bail!("Nested records are not supported"),
+                        UserInputValueType::Boolean(v) => SimpleBoolean(Boolean::new_witness(
+                            Namespace::new(cs.clone(), None),
+                            || Ok(v),
+                        )?),
                     };
                     entries_gadgets.insert(k.to_owned(), entry);
                 }
@@ -449,6 +454,7 @@ pub(crate) fn process_outputs(
                 }
                 _ => bail!("Cast is not supported for non-record types"),
             },
+            Instruction::IsEq(_) => instructions::is_eq(instruction.operands(), program_variables)?,
             Instruction::Mul(_) => instructions::mul(instruction.operands(), program_variables)?,
             Instruction::Sub(_) => instructions::sub(instruction.operands(), program_variables)?,
             _ => bail!(

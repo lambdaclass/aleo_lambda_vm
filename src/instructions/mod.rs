@@ -8,6 +8,9 @@ pub use cast::cast;
 
 pub(crate) mod helpers;
 
+mod is_eq;
+pub use is_eq::is_eq;
+
 mod mul;
 pub use mul::mul;
 

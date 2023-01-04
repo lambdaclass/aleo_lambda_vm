@@ -12,7 +12,8 @@ use log::debug;
 use simpleworks::marlin::serialization::serialize_proof;
 
 use crate::CircuitIOType::{
-    SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleBoolean, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+    SimpleUInt8,
 };
 
 pub fn credits_execution(
@@ -109,6 +110,7 @@ pub fn process_circuit_inputs(
                                 SimpleAddress(v) => {
                                     UserInputValueType::Address(to_address(v.value()?))
                                 }
+                                SimpleBoolean(b) => UserInputValueType::Boolean(b.value()?),
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
@@ -129,6 +131,9 @@ pub fn process_circuit_inputs(
                         }
                         VariableType::Private(UserInputValueType::Address(primitive_bytes))
                     }
+                    SimpleBoolean(b) => {
+                        VariableType::Private(UserInputValueType::Boolean(b.value()?))
+                    }
                 }
             } else {
                 match program_variable {
@@ -145,6 +150,9 @@ pub fn process_circuit_inputs(
                             *primitive_byte = *byte;
                         }
                         VariableType::Public(UserInputValueType::Address(primitive_bytes))
+                    }
+                    SimpleBoolean(b) => {
+                        VariableType::Public(UserInputValueType::Boolean(b.value()?))
                     }
                 }
             }
@@ -199,6 +207,7 @@ pub fn process_circuit_outputs(
                                 SimpleAddress(v) => {
                                     UserInputValueType::Address(to_address(v.value()?))
                                 }
+                                SimpleBoolean(b) => UserInputValueType::Boolean(b.value()?),
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
@@ -220,6 +229,9 @@ pub fn process_circuit_outputs(
                         }
                         VariableType::Private(UserInputValueType::Address(primitive_bytes))
                     }
+                    SimpleBoolean(b) => {
+                        VariableType::Private(UserInputValueType::Boolean(b.value()?))
+                    }
                 }
             } else {
                 match program_variable {
@@ -236,6 +248,9 @@ pub fn process_circuit_outputs(
                             *primitive_byte = *byte;
                         }
                         VariableType::Private(UserInputValueType::Address(primitive_bytes))
+                    }
+                    SimpleBoolean(b) => {
+                        VariableType::Public(UserInputValueType::Boolean(b.value()?))
                     }
                 }
             }

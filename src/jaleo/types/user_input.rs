@@ -1,6 +1,7 @@
 use crate::helpers;
 use crate::jaleo::Record as JAleoRecord;
 use anyhow::{anyhow, bail, Result};
+use ark_ff::ToConstraintField;
 use indexmap::IndexMap;
 use serde::ser::Error;
 use serde::Deserialize;
@@ -22,6 +23,7 @@ pub enum UserInputValueType {
     U128(u128),
     Address(Address),
     Record(JAleoRecord),
+    Boolean(bool),
 }
 
 fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
@@ -124,6 +126,7 @@ impl fmt::Display for UserInputValueType {
                     hex::encode(serialize_field_element(*nonce).map_err(fmt::Error::custom)?)
                 )
             }
+            UserInputValueType::Boolean(b) => write!(f, "{b}"),
         }
     }
 }
@@ -145,6 +148,9 @@ impl ToFieldElements<ConstraintF> for UserInputValueType {
             }) => {
                 bail!("Converting records to field elements is not supported")
             }
+            UserInputValueType::Boolean(b) => b
+                .to_field_elements()
+                .ok_or_else(|| anyhow!("Error turning bool to field elements")),
         }
     }
 }

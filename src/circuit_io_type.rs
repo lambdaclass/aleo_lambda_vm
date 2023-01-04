@@ -1,12 +1,14 @@
 use crate::record::Record;
 use anyhow::Result;
-use ark_r1cs_std::R1CSVar;
+use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 use simpleworks::gadgets::{
-    traits::IsWitness, AddressGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    traits::IsWitness, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+    UInt8Gadget,
 };
 
 pub use CircuitIOType::{
-    SimpleAddress, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleBoolean, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+    SimpleUInt8,
 };
 
 #[derive(Clone, Debug)]
@@ -17,6 +19,7 @@ pub enum CircuitIOType {
     SimpleUInt64(UInt64Gadget),
     SimpleRecord(Record),
     SimpleAddress(AddressGadget),
+    SimpleBoolean(Boolean<ConstraintF>),
 }
 
 impl CircuitIOType {
@@ -33,6 +36,7 @@ impl CircuitIOType {
                 Ok(format!("Record {{ owner: {}, gates: {} }}", owner, gates))
             }
             SimpleAddress(value) => Ok(value.value()?),
+            SimpleBoolean(value) => Ok(value.value()?.to_string()),
         }
     }
 
@@ -47,6 +51,16 @@ impl CircuitIOType {
             SimpleUInt64(v) => v.is_witness(),
             SimpleRecord(_) => Ok(true),
             SimpleAddress(v) => v.is_witness(),
+            // TODO: Use .is_witness() when https://github.com/lambdaclass/simpleworks/pull/46 is merged.
+            SimpleBoolean(v) => {
+                if let ark_r1cs_std::prelude::Boolean::Is(bool)
+                | ark_r1cs_std::prelude::Boolean::Not(bool) = v
+                {
+                    Ok(bool.variable().is_witness())
+                } else {
+                    Ok(false)
+                }
+            }
         }
     }
 
@@ -61,6 +75,7 @@ impl CircuitIOType {
             SimpleUInt64(v) => v.is_constant(),
             SimpleRecord(_) => true,
             SimpleAddress(v) => v.is_constant(),
+            SimpleBoolean(v) => v.is_constant(),
         }
     }
 }
