@@ -6,6 +6,9 @@ pub use add::add;
 mod cast;
 pub use cast::cast;
 
+mod div;
+pub use div::div;
+
 pub(crate) mod helpers;
 
 mod is_eq;
