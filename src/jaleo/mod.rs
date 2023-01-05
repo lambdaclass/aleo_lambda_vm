@@ -65,19 +65,17 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 
 /// Generate a credits record of the given amount for the given owner,
 /// by using the given seed to deterministically generate a nonce.
-pub fn mint_credits(owner_address: &Address, credits: u64) -> Result<(Field, EncryptedRecord)> {
+pub fn mint_credits(owner_view_key: &ViewKey, credits: u64) -> Result<(Field, EncryptedRecord)> {
     // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
 
     let mut address = [0_u8; 63];
-    let owner_address = owner_address.to_string();
+    let owner_address = Address::try_from(owner_view_key)?.to_string();
     for (address_byte, owner_address_byte) in address.iter_mut().zip(owner_address.as_bytes()) {
         *address_byte = *owner_address_byte;
     }
 
     let non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
-    let private_key = PrivateKey::new(&mut ark_std::rand::thread_rng())?;
-    let view_key = ViewKey::try_from(&private_key)?;
-    let encrypted_record = non_encrypted_record.encrypt(&view_key)?;
+    let encrypted_record = non_encrypted_record.encrypt(&owner_view_key)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
 }
