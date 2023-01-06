@@ -1,88 +1,12 @@
 use super::helpers::{add, shift_right, to_bits_be};
-use crate::{
-    circuit_io_type::CircuitIOType::{self, SimpleAddress, SimpleRecord},
-    UInt16Gadget, UInt32Gadget, UInt64Gadget,
-};
-use anyhow::{anyhow, bail, ensure, Result};
+use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Gadget};
+use anyhow::{bail, ensure, Result};
 use ark_r1cs_std::{prelude::AllocVar, R1CSVar, ToBitsGadget};
 use indexmap::IndexMap;
 use simpleworks::gadgets::UInt8Gadget;
-use snarkvm::prelude::{Literal, Operand, Register, Testnet3};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-pub fn div(
-    operands: &[Operand<Testnet3>],
-    program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
-) -> Result<CircuitIOType> {
-    // instruction_operands is an IndexMap only to keep track of the
-    // name of the record entries, so then when casting into records
-    // we can know which entry is which.
-    let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
-    for operand in operands {
-        let variable_name = &operand.to_string();
-        match (operand, program_variables.get(variable_name)) {
-            (Operand::Register(Register::Member(locator, members)), Some(None)) => {
-                if let Some(Some(SimpleRecord(record))) =
-                    program_variables.get(&format!("r{locator}"))
-                {
-                    match members
-                        .get(0)
-                        .ok_or("Error getting the first member of a register member")
-                        .map_err(|e| anyhow!("{}", e))?
-                        .to_string()
-                        .as_str()
-                    {
-                        "owner" => {
-                            let owner_operand = SimpleAddress(record.owner.clone());
-                            program_variables
-                                .insert(variable_name.to_string(), Some(owner_operand.clone()));
-                            instruction_operands.insert(variable_name.to_owned(), owner_operand);
-                        }
-                        "gates" => {
-                            let gates_operand = SimpleUInt64(record.gates.clone());
-                            program_variables
-                                .insert(variable_name.to_string(), Some(gates_operand.clone()));
-                            instruction_operands.insert(variable_name.to_owned(), gates_operand);
-                        }
-                        entry => {
-                            let entry_operand = record
-                                .entries
-                                .get(entry)
-                                .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
-                                .map_err(|e| anyhow!("{e}"))?
-                                .clone();
-                            program_variables
-                                .insert(variable_name.to_string(), Some(entry_operand.clone()));
-                            instruction_operands.insert(entry.to_owned(), entry_operand);
-                        }
-                    };
-                }
-            }
-            (Operand::Register(_), Some(Some(operand))) => {
-                instruction_operands.insert(variable_name.to_owned(), operand.clone());
-            }
-            (Operand::Register(r), Some(None)) => {
-                bail!("Register \"{}\" not assigned in registers", r.to_string())
-            }
-            (Operand::Register(r), None) => {
-                bail!("Register \"{}\" not found in registers", r.to_string())
-            }
-            (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
-                instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
-            }
-            (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
-                "Literal \"{}\"u64 not assigned in registers",
-                Operand::Literal(Literal::U64(*v))
-            ),
-            (Operand::Literal(_), _) => bail!("Literal operand not supported"),
-            (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
-            (Operand::Caller, _) => bail!("Caller operands are not supported"),
-        };
-    }
-    _div(&instruction_operands)
-}
-
-pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -91,8 +15,21 @@ pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
         [SimpleUInt8(dividend), SimpleUInt8(divisor)] => {
             ensure!(divisor.value()? != 0_u8, "attempt to divide by zero");
             let dividend_bits = dividend.to_bits_be()?;
-            let cs = dividend.cs();
-            let mut quotient = UInt8Gadget::new_witness(cs, || Ok(0))?.to_bits_be()?;
+            // This is being done because some of the function variables (defined
+            // and intermediate) could be constant, and if thats the case we need
+            // to get the constraint system from the non-constant variable or else
+            // we will create a constant gadget.
+            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
+                (false, false) | (false, true) => {
+                    let cs = dividend.cs();
+                    UInt8Gadget::new_witness(cs, || Ok(0))?.to_bits_be()?
+                }
+                (true, false) => {
+                    let cs = divisor.cs();
+                    UInt8Gadget::new_witness(cs, || Ok(0))?.to_bits_be()?
+                }
+                (true, true) => UInt8Gadget::constant(0).to_bits_le()?,
+            };
             for (i, divisor_bit) in divisor.to_bits_be()?.iter().rev().enumerate() {
                 // If the divisor bit is a 1.
                 if divisor_bit.value()? {
@@ -112,8 +49,21 @@ pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
         [SimpleUInt16(dividend), SimpleUInt16(divisor)] => {
             ensure!(divisor.value()? != 0_u16, "attempt to divide by zero");
             let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            let cs = dividend.cs();
-            let mut quotient = UInt16Gadget::new_witness(cs, || Ok(0))?.to_bits_le();
+            // This is being done because some of the function variables (defined
+            // and intermediate) could be constant, and if thats the case we need
+            // to get the constraint system from the non-constant variable or else
+            // we will create a constant gadget.
+            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
+                (false, false) | (false, true) => {
+                    let cs = dividend.cs();
+                    UInt16Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, false) => {
+                    let cs = divisor.cs();
+                    UInt16Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, true) => UInt16Gadget::constant(0).to_bits_le(),
+            };
             for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
                 // If the divisor bit is a 1.
                 if divisor_bit.value()? {
@@ -133,8 +83,21 @@ pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
         [SimpleUInt32(dividend), SimpleUInt32(divisor)] => {
             ensure!(divisor.value()? != 0_u32, "attempt to divide by zero");
             let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            let cs = dividend.cs();
-            let mut quotient = UInt32Gadget::new_witness(cs, || Ok(0))?.to_bits_le();
+            // This is being done because some of the function variables (defined
+            // and intermediate) could be constant, and if thats the case we need
+            // to get the constraint system from the non-constant variable or else
+            // we will create a constant gadget.
+            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
+                (false, false) | (false, true) => {
+                    let cs = dividend.cs();
+                    UInt32Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, false) => {
+                    let cs = divisor.cs();
+                    UInt32Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, true) => UInt32Gadget::constant(0).to_bits_le(),
+            };
             for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
                 // If the divisor bit is a 1.
                 if divisor_bit.value()? {
@@ -154,8 +117,21 @@ pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
         [SimpleUInt64(dividend), SimpleUInt64(divisor)] => {
             ensure!(divisor.value()? != 0_u64, "attempt to divide by zero");
             let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            let cs = dividend.cs();
-            let mut quotient = UInt64Gadget::new_witness(cs, || Ok(0))?.to_bits_le();
+            // This is being done because some of the function variables (defined
+            // and intermediate) could be constant, and if thats the case we need
+            // to get the constraint system from the non-constant variable or else
+            // we will create a constant gadget.
+            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
+                (false, false) | (false, true) => {
+                    let cs = dividend.cs();
+                    UInt64Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, false) => {
+                    let cs = divisor.cs();
+                    UInt64Gadget::new_witness(cs, || Ok(0))?.to_bits_le()
+                }
+                (true, true) => UInt64Gadget::constant(0).to_bits_le(),
+            };
             for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
                 // If the divisor bit is a 1.
                 if divisor_bit.value()? {
@@ -181,7 +157,7 @@ pub fn _div(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
 #[cfg(test)]
 mod div_unit_tests {
     use crate::{
-        instructions::div::_div,
+        instructions::div::div,
         CircuitIOType::{
             self, SimpleAddress, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
         },
@@ -224,7 +200,7 @@ mod div_unit_tests {
             SimpleUInt8(UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
         let divisor = SimpleUInt8(UInt8Gadget::new_witness(cs, || Ok(primitive_divisor)).unwrap());
 
-        let result = _div(&sample_operands(dividend, divisor)).unwrap_err();
+        let result = div(&sample_operands(dividend, divisor)).unwrap_err();
 
         assert_eq!(result.to_string(), "attempt to divide by zero");
     }
@@ -243,7 +219,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -265,7 +241,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -287,7 +263,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -309,7 +285,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -328,7 +304,7 @@ mod div_unit_tests {
         let divisor =
             SimpleUInt16(UInt16Gadget::new_witness(cs, || Ok(primitive_divisor)).unwrap());
 
-        let result = _div(&sample_operands(dividend, divisor)).unwrap_err();
+        let result = div(&sample_operands(dividend, divisor)).unwrap_err();
 
         assert_eq!(result.to_string(), "attempt to divide by zero");
     }
@@ -347,7 +323,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -369,7 +345,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -388,7 +364,7 @@ mod div_unit_tests {
         let divisor =
             SimpleUInt32(UInt32Gadget::new_witness(cs, || Ok(primitive_divisor)).unwrap());
 
-        let result = _div(&sample_operands(dividend, divisor)).unwrap_err();
+        let result = div(&sample_operands(dividend, divisor)).unwrap_err();
 
         assert_eq!(result.to_string(), "attempt to divide by zero");
     }
@@ -407,7 +383,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -429,7 +405,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -451,7 +427,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -470,7 +446,7 @@ mod div_unit_tests {
         let divisor =
             SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_divisor)).unwrap());
 
-        let result = _div(&sample_operands(dividend, divisor)).unwrap_err();
+        let result = div(&sample_operands(dividend, divisor)).unwrap_err();
 
         assert_eq!(result.to_string(), "attempt to divide by zero");
     }
@@ -489,7 +465,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -511,7 +487,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -533,7 +509,7 @@ mod div_unit_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            _div(&sample_operands(dividend, divisor))
+            div(&sample_operands(dividend, divisor))
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -560,7 +536,7 @@ mod div_unit_tests {
         let mut operands = sample_operands(left_operand, right_operand);
         operands.insert("r2".to_owned(), third_operand);
 
-        let result = _div(&operands).unwrap_err();
+        let result = div(&operands).unwrap_err();
 
         assert_eq!(result.to_string(), "div requires two operands");
     }
@@ -580,7 +556,7 @@ mod div_unit_tests {
         let mut operands = sample_operands(left_operand, right_operand);
         operands.remove("r1");
 
-        let result = _div(&operands).unwrap_err();
+        let result = div(&operands).unwrap_err();
 
         assert_eq!(result.to_string(), "div requires two operands");
     }
@@ -597,7 +573,7 @@ mod div_unit_tests {
         let right_operand =
             SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
 
-        let result = _div(&sample_operands(left_operand, right_operand)).unwrap_err();
+        let result = div(&sample_operands(left_operand, right_operand)).unwrap_err();
 
         assert_eq!(
             result.to_string(),

@@ -24,6 +24,7 @@ pub enum UserInputValueType {
     Address(Address),
     Record(JAleoRecord),
     Boolean(bool),
+    Field(ConstraintF),
 }
 
 fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
@@ -127,6 +128,7 @@ impl fmt::Display for UserInputValueType {
                 )
             }
             UserInputValueType::Boolean(b) => write!(f, "{b}"),
+            UserInputValueType::Field(field_element) => write!(f, "{field_element}"),
         }
     }
 }
@@ -151,6 +153,7 @@ impl ToFieldElements<ConstraintF> for UserInputValueType {
             UserInputValueType::Boolean(b) => b
                 .to_field_elements()
                 .ok_or_else(|| anyhow!("Error turning bool to field elements")),
+            UserInputValueType::Field(field_element) => Ok(vec![*field_element]),
         }
     }
 }

@@ -1,89 +1,14 @@
 use crate::{
-    circuit_io_type::CircuitIOType::{self, SimpleAddress, SimpleRecord},
+    circuit_io_type::CircuitIOType::{self, SimpleAddress},
     UInt16Gadget, UInt32Gadget, UInt64Gadget,
 };
-
-use anyhow::{anyhow, bail, Result};
-
+use anyhow::{bail, Result};
 use ark_r1cs_std::{select::CondSelectGadget, R1CSVar};
 use indexmap::IndexMap;
 use simpleworks::gadgets::UInt8Gadget;
-use snarkvm::prelude::{Literal, Operand, Register, Testnet3};
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-pub fn ternary(
-    operands: &[Operand<Testnet3>],
-    program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
-) -> Result<CircuitIOType> {
-    // instruction_operands is an IndexMap only to keep track of the
-    // name of the record entries, so then when casting into records
-    // we can know which entry is which.
-    let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
-    for operand in operands {
-        let variable_name = &operand.to_string();
-        match (operand, program_variables.get(variable_name)) {
-            (Operand::Register(Register::Member(locator, members)), Some(None)) => {
-                if let Some(Some(SimpleRecord(record))) =
-                    program_variables.get(&format!("r{locator}"))
-                {
-                    match members
-                        .get(0)
-                        .ok_or("Error getting the first member of a register member")
-                        .map_err(|e| anyhow!("{}", e))?
-                        .to_string()
-                        .as_str()
-                    {
-                        "owner" => {
-                            let owner_operand = SimpleAddress(record.owner.clone());
-                            program_variables
-                                .insert(variable_name.to_string(), Some(owner_operand.clone()));
-                            instruction_operands.insert(variable_name.to_owned(), owner_operand);
-                        }
-                        "gates" => {
-                            let gates_operand = SimpleUInt64(record.gates.clone());
-                            program_variables
-                                .insert(variable_name.to_string(), Some(gates_operand.clone()));
-                            instruction_operands.insert(variable_name.to_owned(), gates_operand);
-                        }
-                        entry => {
-                            let entry_operand = record
-                                .entries
-                                .get(entry)
-                                .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
-                                .map_err(|e| anyhow!("{e}"))?
-                                .clone();
-                            program_variables
-                                .insert(variable_name.to_string(), Some(entry_operand.clone()));
-                            instruction_operands.insert(entry.to_owned(), entry_operand);
-                        }
-                    };
-                }
-            }
-            (Operand::Register(_), Some(Some(operand))) => {
-                instruction_operands.insert(variable_name.to_owned(), operand.clone());
-            }
-            (Operand::Register(r), Some(None)) => {
-                bail!("Register \"{}\" not assigned in registers", r.to_string())
-            }
-            (Operand::Register(r), None) => {
-                bail!("Register \"{}\" not found in registers", r.to_string())
-            }
-            (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
-                instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
-            }
-            (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
-                "Literal \"{}\"u64 not assigned in registers",
-                Operand::Literal(Literal::U64(*v))
-            ),
-            (Operand::Literal(_), _) => bail!("Literal operand not supported"),
-            (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
-            (Operand::Caller, _) => bail!("Caller operands are not supported"),
-        };
-    }
-    _ternary(&instruction_operands)
-}
-
-pub fn _ternary(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn ternary(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -141,7 +66,7 @@ mod ternary_tests {
     };
 
     use crate::{
-        instructions::ternary::_ternary,
+        instructions::ternary::ternary,
         CircuitIOType::{
             self, SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64,
             SimpleUInt8,
@@ -177,8 +102,7 @@ mod ternary_tests {
         );
         let expected_result = true_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt8(_)));
@@ -202,8 +126,7 @@ mod ternary_tests {
         );
         let expected_result = false_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt8(_)));
@@ -228,8 +151,7 @@ mod ternary_tests {
         );
         let expected_result = true_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt16(_)));
@@ -254,8 +176,7 @@ mod ternary_tests {
         );
         let expected_result = false_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt16(_)));
@@ -280,8 +201,7 @@ mod ternary_tests {
         );
         let expected_result = true_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt32(_)));
@@ -306,8 +226,7 @@ mod ternary_tests {
         );
         let expected_result = false_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt32(_)));
@@ -332,8 +251,7 @@ mod ternary_tests {
         );
         let expected_result = true_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt64(_)));
@@ -358,8 +276,7 @@ mod ternary_tests {
         );
         let expected_result = false_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt64(_)));
@@ -387,8 +304,7 @@ mod ternary_tests {
 
         let expected_result = true_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleAddress(_)));
@@ -416,8 +332,7 @@ mod ternary_tests {
 
         let expected_result = false_value.clone();
 
-        let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleAddress(_)));
@@ -441,7 +356,7 @@ mod ternary_tests {
             SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_false_value)).unwrap());
 
         let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap_err();
+            ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap_err();
 
         assert_eq!(
             result.to_string(),
@@ -464,7 +379,7 @@ mod ternary_tests {
             SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_false_value)).unwrap());
 
         let result =
-            _ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap_err();
+            ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap_err();
 
         assert_eq!(
             result.to_string(),
@@ -495,7 +410,7 @@ mod ternary_tests {
         let mut operands = sample_ternary_operands(condition, true_value, false_value);
         operands.insert("r3".to_owned(), fourth_operand);
 
-        let result = _ternary(&operands).unwrap_err();
+        let result = ternary(&operands).unwrap_err();
 
         assert_eq!(result.to_string(), "ternary requires three operands");
     }
@@ -519,7 +434,7 @@ mod ternary_tests {
         let mut operands = sample_ternary_operands(condition, true_value, false_value);
         operands.remove("r2");
 
-        let result = _ternary(&operands).unwrap_err();
+        let result = ternary(&operands).unwrap_err();
 
         assert_eq!(result.to_string(), "ternary requires three operands");
     }

@@ -172,17 +172,19 @@ pub fn shift_left(
         return Ok(bits_to_shift.to_vec());
     }
     let mut shifted = Vec::new();
-    let cs = bits_to_shift
-        .first()
-        .ok_or_else(|| anyhow!("Error getting the cs when shifting left"))?
-        .cs();
     for multiplicand_bit in bits_to_shift.iter().skip(n_bits_to_shift) {
         shifted.push((*multiplicand_bit).clone())
     }
+
     for _ in 0..n_bits_to_shift {
-        shifted.push(Boolean::<ConstraintF>::new_witness(cs.clone(), || {
-            Ok(false)
-        })?)
+        if bits_to_shift.is_constant() {
+            shifted.push(Boolean::constant(false))
+        } else {
+            shifted.push(Boolean::<ConstraintF>::new_witness(
+                bits_to_shift.cs(),
+                || Ok(false),
+            )?)
+        }
     }
     ensure!(shifted.len() == bits_to_shift.len());
     Ok(shifted)
@@ -197,14 +199,16 @@ pub fn shift_right(
         return Ok(bits_to_shift.to_vec());
     }
     let mut shifted = Vec::new();
-    let cs = bits_to_shift
-        .first()
-        .ok_or_else(|| anyhow!("Error getting the cs when shifting left"))?
-        .cs();
+
     for _ in 0..n_bits_to_shift {
-        shifted.push(Boolean::<ConstraintF>::new_witness(cs.clone(), || {
-            Ok(false)
-        })?)
+        if bits_to_shift.is_constant() {
+            shifted.push(Boolean::constant(false))
+        } else {
+            shifted.push(Boolean::<ConstraintF>::new_witness(
+                bits_to_shift.cs(),
+                || Ok(false),
+            )?)
+        }
     }
     for multiplicand_bit in bits_to_shift
         .iter()

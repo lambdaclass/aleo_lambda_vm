@@ -16,13 +16,6 @@ pub fn cast(
     // name of the record entries, so then when casting into records
     // we can know which entry is which.
     let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
-    // TODO: Make the same match as the function below.
-    // match operands
-    //     .iter()
-    //     .map(|operand| (operand, program_variables.get(&operand.to_string())))
-    //     .collect::<Vec<_>>()
-    //     .as_slice() {
-    // }
     for (operand_index, operand) in operands.iter().enumerate() {
         let variable_name = &operand.to_string();
         match (operand, program_variables.get(variable_name)) {
@@ -87,6 +80,48 @@ pub fn cast(
             (Operand::Register(r), None) => {
                 bail!("Register \"{}\" not found in registers", r.to_string())
             }
+            (Operand::Literal(Literal::Field(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Field(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Field(*v))
+            ),
+            (Operand::Literal(Literal::Boolean(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Boolean(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Boolean(*v))
+            ),
+            (Operand::Literal(Literal::Address(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Address(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Address(*v))
+            ),
+            (Operand::Literal(Literal::U8(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u8", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U8(v)), Some(None)) => bail!(
+                "Literal \"{}\"u8 not assigned in registers",
+                Operand::Literal(Literal::U8(*v))
+            ),
+            (Operand::Literal(Literal::U16(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u16", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U16(v)), Some(None)) => bail!(
+                "Literal \"{}\"u16 not assigned in registers",
+                Operand::Literal(Literal::U16(*v))
+            ),
+            (Operand::Literal(Literal::U32(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u32", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U32(v)), Some(None)) => bail!(
+                "Literal \"{}\"u32 not assigned in registers",
+                Operand::Literal(Literal::U32(*v))
+            ),
             (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
                 instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
             }

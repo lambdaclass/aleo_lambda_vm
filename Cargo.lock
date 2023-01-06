@@ -395,6 +395,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-sponge"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0c7a8ce8c0b0dad619872efd707395884fc05f46e9b0e7ac3903b51fa0e59ac"
+dependencies = [
+ "ark-ec",
+ "ark-ff",
+ "ark-nonnative-field",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "ark-std",
+ "derivative",
+ "digest 0.9.0",
+ "rand_chacha",
+ "tracing",
+]
+
+[[package]]
 name = "ark-std"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2200,7 +2219,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+https://github.com/Lambdaclass/simpleworks.git#91999b53c9d9466d1aa0b94a874addfc76887601"
+source = "git+https://github.com/Lambdaclass/simpleworks.git#ed24c1de9263296c449742e4182f9c3f8eec36d1"
 dependencies = [
  "anyhow",
  "ark-bls12-377",
@@ -2215,6 +2234,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
+ "ark-sponge",
  "ark-std",
  "bitvec",
  "blake2",

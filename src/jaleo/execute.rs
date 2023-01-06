@@ -12,8 +12,8 @@ use log::debug;
 use simpleworks::marlin::serialization::serialize_proof;
 
 use crate::CircuitIOType::{
-    SimpleAddress, SimpleBoolean, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-    SimpleUInt8,
+    SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
+    SimpleUInt64, SimpleUInt8,
 };
 
 pub fn credits_execution(
@@ -111,6 +111,7 @@ pub fn process_circuit_inputs(
                                     UserInputValueType::Address(to_address(v.value()?))
                                 }
                                 SimpleBoolean(b) => UserInputValueType::Boolean(b.value()?),
+                                SimpleField(f) => UserInputValueType::Field(f.value()?),
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
@@ -134,6 +135,7 @@ pub fn process_circuit_inputs(
                     SimpleBoolean(b) => {
                         VariableType::Private(UserInputValueType::Boolean(b.value()?))
                     }
+                    SimpleField(f) => VariableType::Private(UserInputValueType::Field(f.value()?)),
                 }
             } else {
                 match program_variable {
@@ -154,6 +156,7 @@ pub fn process_circuit_inputs(
                     SimpleBoolean(b) => {
                         VariableType::Public(UserInputValueType::Boolean(b.value()?))
                     }
+                    SimpleField(f) => VariableType::Public(UserInputValueType::Field(f.value()?)),
                 }
             }
         });
@@ -208,6 +211,7 @@ pub fn process_circuit_outputs(
                                     UserInputValueType::Address(to_address(v.value()?))
                                 }
                                 SimpleBoolean(b) => UserInputValueType::Boolean(b.value()?),
+                                SimpleField(f) => UserInputValueType::Field(f.value()?),
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
@@ -232,6 +236,7 @@ pub fn process_circuit_outputs(
                     SimpleBoolean(b) => {
                         VariableType::Private(UserInputValueType::Boolean(b.value()?))
                     }
+                    SimpleField(f) => VariableType::Private(UserInputValueType::Field(f.value()?)),
                 }
             } else {
                 match program_variable {
@@ -252,6 +257,7 @@ pub fn process_circuit_outputs(
                     SimpleBoolean(b) => {
                         VariableType::Public(UserInputValueType::Boolean(b.value()?))
                     }
+                    SimpleField(f) => VariableType::Public(UserInputValueType::Field(f.value()?)),
                 }
             }
         });

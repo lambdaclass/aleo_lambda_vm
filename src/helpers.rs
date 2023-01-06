@@ -1,7 +1,7 @@
 use crate::{
     circuit_io_type::{
-        SimpleAddress, SimpleBoolean, SimpleRecord, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-        SimpleUInt8,
+        SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
+        SimpleUInt64, SimpleUInt8,
     },
     instructions,
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
@@ -13,11 +13,11 @@ use ark_r1cs_std::prelude::{AllocVar, Boolean};
 use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
 use indexmap::IndexMap;
 use simpleworks::gadgets::{
-    AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use snarkvm::prelude::{
-    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Testnet3,
-    ValueType,
+    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Register,
+    Testnet3, ValueType,
 };
 
 pub fn to_address(primitive_address: String) -> [u8; 63] {
@@ -43,6 +43,9 @@ pub fn bytes_to_string(bytes: &[u8]) -> Result<String> {
 
 // We are using this function to build a program because in order to do that
 // we need inputs.
+// NOTE: Default values could make a function not to compile. For example:
+// if in some instance of the function there is a subtraction overflow, then
+// the function will not compile. We should fix this.
 /// Defaults the inputs for a given function.
 pub(crate) fn default_user_inputs(
     program: &Program,
@@ -79,8 +82,21 @@ pub(crate) fn default_user_inputs(
                     *b"aleo11111111111111111111111111111111111111111111111111111111111",
                 )
             }
+            // Field
+            ValueType::Public(PlaintextType::Literal(LiteralType::Field))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::Field)) => {
+                UserInputValueType::Field(ConstraintF::default())
+            }
+            // Boolean
+            ValueType::Public(PlaintextType::Literal(LiteralType::Boolean))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::Boolean)) => {
+                UserInputValueType::Boolean(false)
+            }
             // Unsupported Cases
-            ValueType::Public(_) | ValueType::Private(_) => bail!("Unsupported type"),
+            ValueType::Public(v) | ValueType::Private(v) => {
+                println!("UNSUPPORTED TYPE: {v:?}");
+                bail!("Unsupported type")
+            }
             // Records
             ValueType::Record(record_identifier) => {
                 let aleo_record = program.get_record(record_identifier)?;
@@ -201,11 +217,40 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
     });
     function.instructions().iter().for_each(|i| {
         i.operands().iter().for_each(|o| {
-            if let Operand::Literal(Literal::U64(v)) = o {
+            if let Operand::Literal(Literal::U8(v)) = o {
+                registers.insert(o.to_string(), Some(SimpleUInt8(UInt8Gadget::constant(**v))));
+            } else if let Operand::Literal(Literal::U16(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleUInt16(UInt16Gadget::constant(**v))),
+                );
+            } else if let Operand::Literal(Literal::U32(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleUInt32(UInt32Gadget::constant(**v))),
+                );
+            } else if let Operand::Literal(Literal::U64(v)) = o {
                 registers.insert(
                     o.to_string(),
                     Some(SimpleUInt64(UInt64Gadget::constant(**v))),
                 );
+            // TODO: Implement .constant() for AddressGadget.
+            // } else if let Operand::Literal(Literal::Address(v)) = o {
+            //     registers.insert(
+            //         o.to_string(),
+            //         Some(SimpleAddress(AddressGadget::constant(**v))),
+            //     );
+            } else if let Operand::Literal(Literal::Boolean(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleBoolean(Boolean::<ConstraintF>::constant(**v))),
+                );
+            // TODO: Turn a snarkvm_fields::fp_256::Fp256 into an ark_ff::Fp256.
+            // } else if let Operand::Literal(Literal::Field(v)) = o {
+            //     registers.insert(
+            //         o.to_string(),
+            //         Some(SimpleField(FieldGadget::constant(**v))),
+            //     );
             } else if !function_outputs.contains(&o.to_string())
                 && !function_inputs.contains(&o.to_string())
             {
@@ -289,6 +334,22 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(a),
             )?),
+            // Public Field
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::Field)),
+                UserInputValueType::Field(f),
+            ) => SimpleField(FieldGadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(f),
+            )?),
+            // Private Boolean
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::Boolean)),
+                UserInputValueType::Boolean(b),
+            ) => SimpleBoolean(Boolean::<ConstraintF>::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(b),
+            )?),
             // Private UInt
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::U8)),
@@ -326,6 +387,22 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(a),
             )?),
+            // Private Field
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::Field)),
+                UserInputValueType::Field(f),
+            ) => SimpleField(FieldGadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(f),
+            )?),
+            // Private Boolean
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::Boolean)),
+                UserInputValueType::Boolean(b),
+            ) => SimpleBoolean(Boolean::<ConstraintF>::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(b),
+            )?),
             // Literal Type Error Cases
             (
                 ValueType::Private(PlaintextType::Literal(
@@ -347,7 +424,10 @@ pub(crate) fn process_inputs(
                 bail!("Mismatched function input type with user input type")
             }
             // Unsupported Cases
-            (ValueType::Public(_) | ValueType::Private(_), _) => bail!("Unsupported type"),
+            (ValueType::Public(v) | ValueType::Private(v), t) => {
+                println!("UNSUPPORTED TYPE: {:?} {:?}", v, t);
+                bail!("Unsupported type")
+            }
             // Records
             (
                 ValueType::Record(_),
@@ -385,6 +465,10 @@ pub(crate) fn process_inputs(
                         UserInputValueType::Boolean(v) => SimpleBoolean(Boolean::new_witness(
                             Namespace::new(cs.clone(), None),
                             || Ok(v),
+                        )?),
+                        UserInputValueType::Field(f) => SimpleField(FieldGadget::new_witness(
+                            Namespace::new(cs.clone(), None),
+                            || Ok(f),
                         )?),
                     };
                     entries_gadgets.insert(k.to_owned(), entry);
@@ -440,8 +524,9 @@ pub(crate) fn process_outputs(
     program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
     for instruction in function.instructions() {
+        let operands = process_operands(instruction.operands(), program_variables)?;
         let circuit_output = match instruction {
-            Instruction::Add(_) => instructions::add(instruction.operands(), program_variables)?,
+            Instruction::Add(_) => instructions::add(&operands)?,
             Instruction::Cast(cast) => match cast.register_type() {
                 snarkvm::prelude::RegisterType::Record(record_identifier) => {
                     let aleo_record = program.get_record(record_identifier)?;
@@ -454,13 +539,12 @@ pub(crate) fn process_outputs(
                 }
                 _ => bail!("Cast is not supported for non-record types"),
             },
-            Instruction::Div(_) => instructions::div(instruction.operands(), program_variables)?,
-            Instruction::IsEq(_) => instructions::is_eq(instruction.operands(), program_variables)?,
-            Instruction::Mul(_) => instructions::mul(instruction.operands(), program_variables)?,
-            Instruction::Sub(_) => instructions::sub(instruction.operands(), program_variables)?,
-            Instruction::Ternary(_) => {
-                instructions::ternary(instruction.operands(), program_variables)?
-            }
+            Instruction::Div(_) => instructions::div(&operands)?,
+            Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
+            Instruction::IsEq(_) => instructions::is_eq(&operands)?,
+            Instruction::Mul(_) => instructions::mul(&operands)?,
+            Instruction::Sub(_) => instructions::sub(&operands)?,
+            Instruction::Ternary(_) => instructions::ternary(&operands)?,
             _ => bail!(
                 "{} instruction is not supported currently",
                 instruction.opcode()
@@ -476,4 +560,118 @@ pub(crate) fn process_outputs(
         program_variables.insert(destination, Some(circuit_output));
     }
     Ok(())
+}
+
+pub fn process_operands(
+    operands: &[Operand<Testnet3>],
+    program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
+) -> Result<IndexMap<String, CircuitIOType>> {
+    // instruction_operands is an IndexMap only to keep track of the
+    // name of the record entries, so then when casting into records
+    // we can know which entry is which.
+    let mut instruction_operands: IndexMap<String, CircuitIOType> = IndexMap::new();
+    for operand in operands {
+        let variable_name = &operand.to_string();
+        match (operand, program_variables.get(variable_name)) {
+            (Operand::Register(Register::Member(locator, members)), Some(None)) => {
+                if let Some(Some(SimpleRecord(record))) =
+                    program_variables.get(&format!("r{locator}"))
+                {
+                    match members
+                        .get(0)
+                        .ok_or("Error getting the first member of a register member")
+                        .map_err(|e| anyhow!("{}", e))?
+                        .to_string()
+                        .as_str()
+                    {
+                        "owner" => {
+                            let owner_operand = SimpleAddress(record.owner.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(owner_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), owner_operand);
+                        }
+                        "gates" => {
+                            let gates_operand = SimpleUInt64(record.gates.clone());
+                            program_variables
+                                .insert(variable_name.to_string(), Some(gates_operand.clone()));
+                            instruction_operands.insert(variable_name.to_owned(), gates_operand);
+                        }
+                        entry => {
+                            let entry_operand = record
+                                .entries
+                                .get(entry)
+                                .ok_or(format!("Could not find entry `{entry}` in record entries map. Record entries are {entries:?}", entries = record.entries.keys()))
+                                .map_err(|e| anyhow!("{e}"))?
+                                .clone();
+                            program_variables
+                                .insert(variable_name.to_string(), Some(entry_operand.clone()));
+                            instruction_operands.insert(entry.to_owned(), entry_operand);
+                        }
+                    };
+                }
+            }
+            (Operand::Register(_), Some(Some(operand))) => {
+                instruction_operands.insert(variable_name.to_owned(), operand.clone());
+            }
+            (Operand::Register(r), Some(None)) => {
+                bail!("Register \"{}\" not assigned in registers", r.to_string())
+            }
+            (Operand::Register(r), None) => {
+                bail!("Register \"{}\" not found in registers", r.to_string())
+            }
+            (Operand::Literal(Literal::Field(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Field(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Field(*v))
+            ),
+            (Operand::Literal(Literal::Boolean(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Boolean(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Boolean(*v))
+            ),
+            (Operand::Literal(Literal::Address(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::Address(v)), Some(None)) => bail!(
+                "Literal \"{}\" not assigned in registers",
+                Operand::Literal(Literal::Address(*v))
+            ),
+            (Operand::Literal(Literal::U8(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u8", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U8(v)), Some(None)) => bail!(
+                "Literal \"{}\"u8 not assigned in registers",
+                Operand::Literal(Literal::U8(*v))
+            ),
+            (Operand::Literal(Literal::U16(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u16", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U16(v)), Some(None)) => bail!(
+                "Literal \"{}\"u16 not assigned in registers",
+                Operand::Literal(Literal::U16(*v))
+            ),
+            (Operand::Literal(Literal::U32(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u32", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U32(v)), Some(None)) => bail!(
+                "Literal \"{}\"u32 not assigned in registers",
+                Operand::Literal(Literal::U32(*v))
+            ),
+            (Operand::Literal(Literal::U64(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}u64", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
+                "Literal \"{}\"u64 not assigned in registers",
+                Operand::Literal(Literal::U64(*v))
+            ),
+            (Operand::Literal(_), _) => bail!("Literal operand not supported"),
+            (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
+            (Operand::Caller, _) => bail!("Caller operands are not supported"),
+        };
+    }
+    Ok(instruction_operands)
 }
