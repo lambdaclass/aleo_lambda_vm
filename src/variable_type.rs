@@ -6,8 +6,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum VariableType {
-    /// The plaintext hash and (optional) plaintext.
-    // Constant(ConstraintF, UserInputValueType),
     /// The plaintext.
     Public(UserInputValueType),
     /// The ciphertext.
@@ -17,8 +15,6 @@ pub enum VariableType {
     // The serial number is an option because output records don't have serial numbers.
     Record(Option<Field>, Record),
     EncryptedRecord(EncryptedRecord),
-    // The input commitment to the external record. Note: This is **not** the record commitment.
-    // ExternalRecord(ConstraintF),
 }
 
 impl VariableType {
@@ -56,65 +52,6 @@ impl Display for VariableType {
         }
     }
 }
-
-// impl Serialize for VariableType {
-//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-//     where
-//         S: serde::Serializer,
-//     {
-//         match self {
-//             VariableType::Public(UserInputValueType::Record(..))
-//             | VariableType::Private(UserInputValueType::Record(..)) => Err(ser::Error::custom(
-//                 "Cannot serialize a record as a public or private variable",
-//             )),
-//             VariableType::Public(v) => {
-//                 let mut s = serializer.serialize_struct("PublicVariableType", 2)?;
-//                 s.serialize_field("type", "public")?;
-//                 s.serialize_field("value", v)?;
-//                 s.end()
-//             }
-//             VariableType::Private(v) => {
-//                 let mut s = serializer.serialize_struct("PublicVariableType", 2)?;
-//                 s.serialize_field("type", "private")?;
-//                 s.serialize_field("value", v)?;
-//                 s.end()
-//             }
-//             VariableType::Record(_, v) => Record::serialize(v, serializer),
-//         }
-//     }
-// }
-
-// impl<'de> Deserialize<'de> for VariableType {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: serde::Deserializer<'de>,
-//     {
-//         #[derive(Deserialize)]
-//         #[serde(tag = "type", content = "value")]
-//         enum Variable {
-//             #[serde(rename = "public")]
-//             Public(UserInputValueType),
-//             #[serde(rename = "private")]
-//             Private(UserInputValueType),
-//         }
-
-//         #[derive(Deserialize)]
-//         #[serde(untagged)]
-//         enum TempVariableType {
-//             Variable(Variable),
-//             Record(Record),
-//         }
-
-//         let variable = TempVariableType::deserialize(deserializer)?;
-//         match variable {
-//             TempVariableType::Variable(Variable::Public(value)) => Ok(VariableType::Public(value)),
-//             TempVariableType::Variable(Variable::Private(value)) => {
-//                 Ok(VariableType::Private(value))
-//             }
-//             TempVariableType::Record(record) => Ok(VariableType::Record(None, record)),
-//         }
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
