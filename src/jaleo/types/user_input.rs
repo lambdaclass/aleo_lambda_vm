@@ -89,6 +89,14 @@ impl TryFrom<String> for UserInputValueType {
                 *sender_address_byte = *address_string_byte;
             }
             Ok(UserInputValueType::Address(address))
+        } else if value == "true" {
+            Ok(UserInputValueType::Boolean(true))
+        } else if value == "false" {
+            Ok(UserInputValueType::Boolean(false))
+        } else if value.ends_with("field") {
+            let v = value.trim_end_matches("field");
+            let value_int = v.parse::<ConstraintF>().map_err(|e| anyhow!("{:?}", e))?;
+            Ok(UserInputValueType::Field(value_int))
         } else {
             // This is the Record case, we expect it to be json
             let record = serde_json::from_str::<JAleoRecord>(&value)?;
