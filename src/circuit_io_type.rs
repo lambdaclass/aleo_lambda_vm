@@ -1,6 +1,6 @@
 use crate::record::Record;
 use anyhow::Result;
-use ark_r1cs_std::{fields::fp::FpVar, prelude::Boolean, R1CSVar};
+use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 use simpleworks::gadgets::{
     traits::IsWitness, AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget,
     UInt64Gadget, UInt8Gadget,
