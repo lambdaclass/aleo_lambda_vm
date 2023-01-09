@@ -3,10 +3,7 @@ use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Ga
 use anyhow::{bail, ensure, Result};
 use ark_r1cs_std::{prelude::AllocVar, R1CSVar, ToBitsGadget};
 use indexmap::IndexMap;
-use simpleworks::{
-    gadgets::UInt8Gadget,
-    marlin::ConstraintSystemRef,
-};
+use simpleworks::{gadgets::UInt8Gadget, marlin::ConstraintSystemRef};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn div(
