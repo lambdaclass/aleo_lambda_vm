@@ -10,10 +10,14 @@ use crate::{
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::prelude::{AllocVar, Boolean};
-use ark_relations::r1cs::{ConstraintSystemRef, Namespace};
+use ark_relations::r1cs::Namespace;
 use indexmap::IndexMap;
-use simpleworks::gadgets::{
-    AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+use simpleworks::{
+    gadgets::{
+        AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+        UInt8Gadget,
+    },
+    marlin::ConstraintSystemRef,
 };
 use snarkvm::prelude::{
     EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Register,
@@ -197,7 +201,10 @@ fn aleo_entries_to_vm_entries(
 /// # Returns
 /// - `IndexMap` with the program variables and its `CircuitIOType` values.
 ///
-pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariables {
+pub fn function_variables(
+    function: &Function<Testnet3>,
+    constraint_system: ConstraintSystemRef,
+) -> Result<SimpleFunctionVariables> {
     let mut registers: SimpleFunctionVariables = IndexMap::new();
 
     let function_inputs: Vec<String> = function
@@ -215,60 +222,82 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
     function.inputs().into_iter().for_each(|i| {
         registers.insert(i.register().to_string(), None);
     });
-    function.instructions().iter().for_each(|i| {
-        i.operands().iter().for_each(|o| {
+    function.instructions().iter().try_for_each(|i| {
+        i.operands().iter().try_for_each(|o| {
             if let Operand::Literal(Literal::U8(v)) = o {
-                registers.insert(o.to_string(), Some(SimpleUInt8(UInt8Gadget::constant(**v))));
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleUInt8(UInt8Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
+                );
             } else if let Operand::Literal(Literal::U16(v)) = o {
                 registers.insert(
                     o.to_string(),
-                    Some(SimpleUInt16(UInt16Gadget::constant(**v))),
+                    Some(SimpleUInt16(UInt16Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
                 );
             } else if let Operand::Literal(Literal::U32(v)) = o {
                 registers.insert(
                     o.to_string(),
-                    Some(SimpleUInt32(UInt32Gadget::constant(**v))),
+                    Some(SimpleUInt32(UInt32Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
                 );
             } else if let Operand::Literal(Literal::U64(v)) = o {
                 registers.insert(
                     o.to_string(),
-                    Some(SimpleUInt64(UInt64Gadget::constant(**v))),
+                    Some(SimpleUInt64(UInt64Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
                 );
-            // TODO: Implement .constant() for AddressGadget.
-            // } else if let Operand::Literal(Literal::Address(v)) = o {
-            //     registers.insert(
-            //         o.to_string(),
-            //         Some(SimpleAddress(AddressGadget::constant(**v))),
-            //     );
+            } else if let Operand::Literal(Literal::Address(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleAddress(AddressGadget::new_constant(
+                        constraint_system.clone(),
+                        to_address(v.to_string()),
+                    )?)),
+                );
             } else if let Operand::Literal(Literal::Boolean(v)) = o {
                 registers.insert(
                     o.to_string(),
-                    Some(SimpleBoolean(Boolean::<ConstraintF>::constant(**v))),
+                    Some(SimpleBoolean(Boolean::<ConstraintF>::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
                 );
             // TODO: Turn a snarkvm_fields::fp_256::Fp256 into an ark_ff::Fp256.
             // } else if let Operand::Literal(Literal::Field(v)) = o {
             //     registers.insert(
             //         o.to_string(),
-            //         Some(SimpleField(FieldGadget::constant(**v))),
+            //         Some(SimpleField(FieldGadget::new_constant(cs.clone(), **v)?)),
             //     );
             } else if !function_outputs.contains(&o.to_string())
                 && !function_inputs.contains(&o.to_string())
             {
                 registers.insert(o.to_string(), None);
             }
-        });
+            Ok::<_, anyhow::Error>(())
+        })?;
         i.destinations().iter().for_each(|d| {
             if !function_outputs.contains(&d.to_string()) {
                 registers.insert(d.to_string(), None);
             }
         });
-    });
+        Ok::<_, anyhow::Error>(())
+    })?;
 
     for function_output in function_outputs {
         registers.insert(function_output, None);
     }
 
-    registers
+    Ok(registers)
 }
 
 /// Instantiates the inputs inside the given constraint system.
@@ -290,7 +319,7 @@ pub fn function_variables(function: &Function<Testnet3>) -> SimpleFunctionVariab
 ///
 pub(crate) fn process_inputs(
     function: &Function<Testnet3>,
-    cs: &ConstraintSystemRef<ConstraintF>,
+    cs: &ConstraintSystemRef,
     user_inputs: &[UserInputValueType],
     program_variables: &mut SimpleFunctionVariables,
 ) -> Result<()> {
@@ -522,6 +551,7 @@ pub(crate) fn process_outputs(
     program: &Program,
     function: &Function<Testnet3>,
     program_variables: &mut SimpleFunctionVariables,
+    constraint_system: ConstraintSystemRef,
 ) -> Result<()> {
     for instruction in function.instructions() {
         let operands = process_operands(instruction.operands(), program_variables)?;
@@ -535,14 +565,15 @@ pub(crate) fn process_outputs(
                         instruction.operands(),
                         program_variables,
                         aleo_record_entries,
+                        constraint_system.clone(),
                     )?
                 }
                 _ => bail!("Cast is not supported for non-record types"),
             },
-            Instruction::Div(_) => instructions::div(&operands)?,
+            Instruction::Div(_) => instructions::div(&operands, constraint_system.clone())?,
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
-            Instruction::Mul(_) => instructions::mul(&operands)?,
+            Instruction::Mul(_) => instructions::mul(&operands, constraint_system.clone())?,
             Instruction::Sub(_) => instructions::sub(&operands)?,
             Instruction::Ternary(_) => instructions::ternary(&operands)?,
             _ => bail!(

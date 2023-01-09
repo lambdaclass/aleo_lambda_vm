@@ -3,10 +3,13 @@ use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Ga
 use anyhow::{bail, Result};
 use ark_r1cs_std::ToBitsGadget;
 use indexmap::IndexMap;
-use simpleworks::gadgets::UInt8Gadget;
+use simpleworks::{gadgets::UInt8Gadget, marlin::ConstraintSystemRef};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-pub fn mul(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn mul(
+    operands: &IndexMap<String, CircuitIOType>,
+    constraint_system: ConstraintSystemRef,
+) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -16,6 +19,7 @@ pub fn mul(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             let mut product = helpers::modified_booth_mul(
                 &multiplicand.to_bits_be()?,
                 &multiplier.to_bits_be()?,
+                constraint_system,
             )?;
             product.reverse();
             Ok(SimpleUInt8(UInt8Gadget::from_bits_le(&product)))
@@ -24,6 +28,7 @@ pub fn mul(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             let mut product = helpers::modified_booth_mul(
                 &to_bits_be(&multiplicand.to_bits_le())?,
                 &to_bits_be(&multiplier.to_bits_le())?,
+                constraint_system,
             )?;
             product.reverse();
             Ok(SimpleUInt16(UInt16Gadget::from_bits_le(&product)))
@@ -32,6 +37,7 @@ pub fn mul(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             let mut product = helpers::modified_booth_mul(
                 &to_bits_be(&multiplicand.to_bits_le())?,
                 &to_bits_be(&multiplier.to_bits_le())?,
+                constraint_system,
             )?;
             product.reverse();
             Ok(SimpleUInt32(UInt32Gadget::from_bits_le(&product)))
@@ -40,6 +46,7 @@ pub fn mul(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             let mut product = helpers::modified_booth_mul(
                 &to_bits_be(&multiplicand.to_bits_le())?,
                 &to_bits_be(&multiplier.to_bits_le())?,
+                constraint_system,
             )?;
             product.reverse();
             Ok(SimpleUInt64(UInt64Gadget::from_bits_le(&product)))
@@ -88,7 +95,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -111,7 +118,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -134,7 +141,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -157,7 +164,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -183,7 +190,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -207,7 +214,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -231,7 +238,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -255,7 +262,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -281,7 +288,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -305,7 +312,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -329,7 +336,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -353,7 +360,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -379,7 +386,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -403,7 +410,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -427,7 +434,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),
@@ -451,7 +458,7 @@ mod tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
-            mul(&sample_operands(multiplicand, multiplier))
+            mul(&sample_operands(multiplicand, multiplier), cs)
                 .unwrap()
                 .value()
                 .unwrap(),

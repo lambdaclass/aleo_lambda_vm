@@ -89,8 +89,8 @@ pub fn get_credits_key(program: &Program, function_name: &Identifier) -> Result<
         program,
         &function,
         &default_user_inputs(program, function_name)?,
-        constraint_system,
+        constraint_system.clone(),
         &universal_srs,
-        &mut helpers::function_variables(&function),
+        &mut helpers::function_variables(&function, constraint_system)?,
     )
 }

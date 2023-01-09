@@ -88,7 +88,7 @@ pub fn execute_function(
     let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
-    let mut function_variables = helpers::function_variables(function);
+    let mut function_variables = helpers::function_variables(function, constraint_system.clone())?;
     let (function_proving_key, _function_verifying_key) = build_function(
         program,
         function,
@@ -132,9 +132,9 @@ pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, Program
             &program,
             function,
             &inputs,
-            constraint_system,
+            constraint_system.clone(),
             &universal_srs,
-            &mut helpers::function_variables(function),
+            &mut helpers::function_variables(function, constraint_system.clone())?,
         ) {
             Ok((function_proving_key, function_verifying_key)) => {
                 (function_proving_key, function_verifying_key)
@@ -171,7 +171,12 @@ pub fn build_function(
         user_inputs,
         function_variables,
     )?;
-    helpers::process_outputs(program, function, function_variables)?;
+    helpers::process_outputs(
+        program,
+        function,
+        function_variables,
+        constraint_system.clone(),
+    )?;
     simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 

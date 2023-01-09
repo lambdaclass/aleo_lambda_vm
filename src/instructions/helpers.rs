@@ -5,7 +5,7 @@ use ark_r1cs_std::{
     prelude::{AllocVar, Boolean},
     R1CSVar,
 };
-use simpleworks::gadgets::ConstraintF;
+use simpleworks::{gadgets::ConstraintF, marlin::ConstraintSystemRef};
 
 pub fn to_bits_be(bits: &[Boolean<ConstraintF>]) -> Result<Vec<Boolean<ConstraintF>>> {
     let mut bits_be = bits.to_vec();
@@ -167,6 +167,7 @@ pub fn twos_complement(
 pub fn shift_left(
     bits_to_shift: &Vec<Boolean<ConstraintF>>,
     n_bits_to_shift: usize,
+    constraint_system: ConstraintSystemRef,
 ) -> Result<Vec<Boolean<ConstraintF>>> {
     if n_bits_to_shift == 0 {
         return Ok(bits_to_shift.to_vec());
@@ -178,10 +179,13 @@ pub fn shift_left(
 
     for _ in 0..n_bits_to_shift {
         if bits_to_shift.is_constant() {
-            shifted.push(Boolean::constant(false))
+            shifted.push(Boolean::<ConstraintF>::new_input(
+                constraint_system.clone(),
+                || Ok(false),
+            )?)
         } else {
             shifted.push(Boolean::<ConstraintF>::new_witness(
-                bits_to_shift.cs(),
+                constraint_system.clone(),
                 || Ok(false),
             )?)
         }
@@ -194,6 +198,7 @@ pub fn shift_left(
 pub fn shift_right(
     bits_to_shift: &Vec<Boolean<ConstraintF>>,
     n_bits_to_shift: usize,
+    constraint_system: ConstraintSystemRef,
 ) -> Result<Vec<Boolean<ConstraintF>>> {
     if n_bits_to_shift == 0 {
         return Ok(bits_to_shift.to_vec());
@@ -202,10 +207,13 @@ pub fn shift_right(
 
     for _ in 0..n_bits_to_shift {
         if bits_to_shift.is_constant() {
-            shifted.push(Boolean::constant(false))
+            shifted.push(Boolean::<ConstraintF>::new_input(
+                constraint_system.clone(),
+                || Ok(false),
+            )?)
         } else {
             shifted.push(Boolean::<ConstraintF>::new_witness(
-                bits_to_shift.cs(),
+                constraint_system.clone(),
                 || Ok(false),
             )?)
         }
@@ -224,21 +232,30 @@ pub fn shift_right(
 pub fn modified_booth_mul(
     multiplicand: &Vec<Boolean<ConstraintF>>,
     multiplier: &[Boolean<ConstraintF>],
+    constraint_system: ConstraintSystemRef,
 ) -> Result<Vec<Boolean<ConstraintF>>> {
     let mut product = vec![Boolean::FALSE; multiplicand.len()];
     let encoded_multiplier = encode_bits_pairwise(multiplier)?;
     for (i, token) in encoded_multiplier.iter().rev().enumerate() {
         let partial_product = match token.as_str() {
             "0" => continue,
-            "+1" => shift_left(multiplicand, 2 * i)?,
+            "+1" => shift_left(multiplicand, 2 * i, constraint_system.clone())?,
             "-1" => {
                 let multiplicand_twos_complement = twos_complement(multiplicand)?;
-                shift_left(&multiplicand_twos_complement, 2 * i)?
+                shift_left(
+                    &multiplicand_twos_complement,
+                    2 * i,
+                    constraint_system.clone(),
+                )?
             }
-            "+2" => shift_left(multiplicand, 2 * i + 1)?,
+            "+2" => shift_left(multiplicand, 2 * i + 1, constraint_system.clone())?,
             "-2" => {
                 let multiplicand_twos_complement = twos_complement(multiplicand)?;
-                shift_left(&multiplicand_twos_complement, 2 * i + 1)?
+                shift_left(
+                    &multiplicand_twos_complement,
+                    2 * i + 1,
+                    constraint_system.clone(),
+                )?
             }
             _ => bail!("Invalid encoded token"),
         };
@@ -714,13 +731,13 @@ mod tests {
     #[test]
     fn test_shift_left_zero_times_leave_the_bits_as_they_are() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(1))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(1))
             .unwrap()
             .to_bits_be()
             .unwrap();
         let expected_shifted_bits = bits.iter().map(|b| b.value().unwrap()).collect::<Vec<_>>();
 
-        let left_shifted_bits = shift_left(&bits, 0)
+        let left_shifted_bits = shift_left(&bits, 0, cs.clone())
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -732,7 +749,7 @@ mod tests {
     #[test]
     fn test_shift_left_one_time() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(1))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(1))
             .unwrap()
             .to_bits_be()
             .unwrap();
@@ -750,7 +767,7 @@ mod tests {
         .map(|b| b.value().unwrap())
         .collect::<Vec<_>>();
 
-        let left_shifted_bits = shift_left(&bits, 1)
+        let left_shifted_bits = shift_left(&bits, 1, cs.clone())
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -762,7 +779,7 @@ mod tests {
     #[test]
     fn test_shift_left_more_than_one_time() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(1))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(1))
             .unwrap()
             .to_bits_be()
             .unwrap();
@@ -771,7 +788,7 @@ mod tests {
             .map(|b| b.value().unwrap())
             .collect::<Vec<_>>();
 
-        let left_shifted_bits = shift_left(&bits, 2)
+        let left_shifted_bits = shift_left(&bits, 2, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -783,7 +800,7 @@ mod tests {
     #[test]
     fn test_shift_right_one_time() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(4))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(4))
             .unwrap()
             .to_bits_be()
             .unwrap();
@@ -801,7 +818,7 @@ mod tests {
         .map(|b| b.value().unwrap())
         .collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 1)
+        let right_shifted_bits = shift_right(&bits, 1, cs.clone())
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -813,7 +830,7 @@ mod tests {
     #[test]
     fn test_shift_right_more_than_one_time() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(4))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(4))
             .unwrap()
             .to_bits_be()
             .unwrap();
@@ -822,7 +839,7 @@ mod tests {
             .map(|b| b.value().unwrap())
             .collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 2)
+        let right_shifted_bits = shift_right(&bits, 2, cs.clone())
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -834,13 +851,13 @@ mod tests {
     #[test]
     fn test_shift_right_zero_times_leave_the_bits_as_they_are() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let bits = UInt8Gadget::new_witness(cs, || Ok(1))
+        let bits = UInt8Gadget::new_witness(cs.clone(), || Ok(1))
             .unwrap()
             .to_bits_be()
             .unwrap();
         let expected_shifted_bits = bits.iter().map(|b| b.value().unwrap()).collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 0)
+        let right_shifted_bits = shift_right(&bits, 0, cs.clone())
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
