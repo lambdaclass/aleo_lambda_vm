@@ -1,16 +1,31 @@
-use crate::{circuit_io_type::CircuitIOType, record::Record, VMRecordEntriesMap};
+use std::str::FromStr;
+
+use crate::{circuit_io_type::CircuitIOType, helpers, record::Record, VMRecordEntriesMap};
 use anyhow::{anyhow, bail, Result};
 use ark_ff::UniformRand;
+use ark_r1cs_std::{
+    prelude::{AllocVar, Boolean},
+    R1CSVar,
+};
 use ark_std::rand::thread_rng;
 use indexmap::IndexMap;
-use simpleworks::gadgets::ConstraintF;
-use snarkvm::prelude::{EntryType, Identifier, Literal, Operand, Register, Testnet3};
+use simpleworks::{
+    gadgets::{
+        traits::IsWitness, AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget,
+        UInt64Gadget, UInt8Gadget,
+    },
+    marlin::ConstraintSystemRef,
+};
+use snarkvm::prelude::{
+    EntryType, Identifier, Literal, LiteralType, Operand, PlaintextType, Register, Testnet3,
+};
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
 pub fn cast(
     operands: &[Operand<Testnet3>],
     program_variables: &mut IndexMap<String, Option<CircuitIOType>>,
     aleo_record_entries: &IndexMap<Identifier<Testnet3>, EntryType<Testnet3>>,
+    constraint_system: ConstraintSystemRef,
 ) -> Result<CircuitIOType> {
     // instruction_operands is an IndexMap only to keep track of the
     // name of the record entries, so then when casting into records
@@ -19,6 +34,7 @@ pub fn cast(
     for (operand_index, operand) in operands.iter().enumerate() {
         let variable_name = &operand.to_string();
         match (operand, program_variables.get(variable_name)) {
+            // Handle register members
             (Operand::Register(Register::Member(locator, members)), Some(None)) => {
                 if let Some(Some(SimpleRecord(record))) =
                     program_variables.get(&format!("r{locator}"))
@@ -56,6 +72,7 @@ pub fn cast(
                     };
                 }
             }
+            // Handle registers
             (Operand::Register(_), Some(Some(operand))) => {
                 // An operand is an entry of the record if the index is greater
                 // than 1 because the index 0 is always for the record owner and
@@ -69,7 +86,175 @@ pub fn cast(
                         .get(operand_index - 2)
                         .ok_or_else(|| anyhow!("Error getting entry name from aleo entries"))?
                         .clone();
-                    instruction_operands.insert(entry_name, operand.clone());
+                    let entry = aleo_record_entries
+                        .get(&Identifier::from_str(&entry_name)?)
+                        .ok_or_else(|| anyhow!("Error getting entry name from aleo entries"))?;
+                    let entry_operand: Result<CircuitIOType> = match (entry, operand) {
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::Address)),
+                            CircuitIOType::SimpleAddress(operand_value),
+                        ) => Ok(CircuitIOType::SimpleAddress(AddressGadget::new_constant(
+                            constraint_system.clone(),
+                            helpers::to_address(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::Boolean)),
+                            CircuitIOType::SimpleBoolean(operand_value),
+                        ) => Ok(CircuitIOType::SimpleBoolean(
+                            Boolean::<ConstraintF>::new_constant(
+                                constraint_system.clone(),
+                                operand_value.value()?,
+                            )?,
+                        )),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::Field)),
+                            CircuitIOType::SimpleField(operand_value),
+                        ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::U8)),
+                            CircuitIOType::SimpleUInt8(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::U16)),
+                            CircuitIOType::SimpleUInt16(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::U32)),
+                            CircuitIOType::SimpleUInt32(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::U64)),
+                            CircuitIOType::SimpleUInt64(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Address)),
+                            CircuitIOType::SimpleAddress(operand_value),
+                        ) => Ok(CircuitIOType::SimpleAddress(AddressGadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(helpers::to_address(operand_value.value()?)),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Boolean)),
+                            CircuitIOType::SimpleBoolean(operand_value),
+                        ) => Ok(CircuitIOType::SimpleBoolean(
+                            Boolean::<ConstraintF>::new_input(constraint_system.clone(), || {
+                                Ok(operand_value.value()?)
+                            })?,
+                        )),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Field)),
+                            CircuitIOType::SimpleField(operand_value),
+                        ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U8)),
+                            CircuitIOType::SimpleUInt8(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U16)),
+                            CircuitIOType::SimpleUInt16(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U32)),
+                            CircuitIOType::SimpleUInt32(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U64)),
+                            CircuitIOType::SimpleUInt64(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_input(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::Address)),
+                            CircuitIOType::SimpleAddress(operand_value),
+                        ) => Ok(CircuitIOType::SimpleAddress(AddressGadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(helpers::to_address(operand_value.value()?)),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::Boolean)),
+                            CircuitIOType::SimpleBoolean(operand_value),
+                        ) => Ok(CircuitIOType::SimpleBoolean(
+                            Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || {
+                                Ok(operand_value.value()?)
+                            })?,
+                        )),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::Field)),
+                            CircuitIOType::SimpleField(operand_value),
+                        ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::U8)),
+                            CircuitIOType::SimpleUInt8(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::U16)),
+                            CircuitIOType::SimpleUInt16(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::U32)),
+                            CircuitIOType::SimpleUInt32(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Private(PlaintextType::Literal(LiteralType::U64)),
+                            CircuitIOType::SimpleUInt64(operand_value),
+                        ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_witness(
+                            constraint_system.clone(),
+                            || Ok(operand_value.value()?),
+                        )?)),
+                        (
+                            EntryType::Constant(PlaintextType::Literal(_))
+                            | EntryType::Public(PlaintextType::Literal(_))
+                            | EntryType::Private(PlaintextType::Literal(_)),
+                            _,
+                        ) => bail!("Unsupported literal type as entry"),
+                        (
+                            EntryType::Constant(PlaintextType::Interface(_))
+                            | EntryType::Public(PlaintextType::Interface(_))
+                            | EntryType::Private(PlaintextType::Interface(_)),
+                            _,
+                        ) => bail!("Interface types are not supported yet as entries"),
+                    };
+                    instruction_operands.insert(entry_name, entry_operand?);
                 } else {
                     instruction_operands.insert(variable_name.to_owned(), operand.clone());
                 }
@@ -134,10 +319,13 @@ pub fn cast(
             (Operand::Caller, _) => bail!("Caller operands are not supported"),
         };
     }
-    _cast(instruction_operands)
+    _cast(instruction_operands, constraint_system)
 }
 
-pub fn _cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn _cast(
+    operands: IndexMap<String, CircuitIOType>,
+    constraint_system: ConstraintSystemRef,
+) -> Result<CircuitIOType> {
     match operands
         .into_iter()
         .collect::<Vec<(String, CircuitIOType)>>()
@@ -148,6 +336,35 @@ pub fn _cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
             for (key, value) in entries {
                 entries_map.insert(key.to_owned(), value.clone());
             }
+
+            let (address, gates) =
+                match (address.is_witness()?, gates.is_witness()?) {
+                    (true, true) => (address.clone(), gates.clone()),
+                    (true, false) => {
+                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
+                            Ok(gates.value()?)
+                        })?;
+                        (address.clone(), gates)
+                    }
+                    (false, true) => {
+                        let address =
+                            AddressGadget::new_witness(constraint_system.clone(), || {
+                                Ok(helpers::to_address(address.value()?))
+                            })?;
+                        (address, gates.clone())
+                    }
+                    (false, false) => {
+                        let address =
+                            AddressGadget::new_witness(constraint_system.clone(), || {
+                                Ok(helpers::to_address(address.value()?))
+                            })?;
+                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
+                            Ok(gates.value()?)
+                        })?;
+                        (address, gates)
+                    }
+                };
+
             Ok(SimpleRecord(Record {
                 owner: address.clone(),
                 gates: gates.clone(),
@@ -155,11 +372,8 @@ pub fn _cast(operands: IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
                 nonce: ConstraintF::rand(&mut thread_rng()),
             }))
         }
-        [(_, SimpleUInt64(_gates)), (_, SimpleAddress(_address)), ..] => {
-            bail!("The order of the operands when casting into a record is reversed")
-        }
-        [_, _] => bail!("Cast is not supported for the given types"),
-        [..] => bail!("Cast is a binary operation"),
+        [] | [_] => bail!("Cast is a two or more operands instruction"),
+        _ => bail!("Cast is not supported for the given types"),
     }
 }
 
@@ -202,7 +416,7 @@ mod cast_tests {
         let mut operands = IndexMap::new();
         operands.insert("owner".to_owned(), owner_address);
         operands.insert("gates".to_owned(), gates);
-        let record = _cast(operands).unwrap();
+        let record = _cast(operands, cs.clone()).unwrap();
 
         assert_eq!(
             record.value().unwrap(),
@@ -212,40 +426,17 @@ mod cast_tests {
     }
 
     #[test]
-    fn test_right_operands_wrong_order_record_cast() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-
-        let (_primitive_address_str, primitive_address_bytes) = address();
-        let primitive_gates = 1_u64;
-
-        let owner_address = SimpleAddress(
-            AddressGadget::new_witness(cs.clone(), || Ok(primitive_address_bytes)).unwrap(),
-        );
-        let gates = SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_gates)).unwrap());
-
-        let mut operands = IndexMap::new();
-        operands.insert("owner".to_owned(), gates);
-        operands.insert("gates".to_owned(), owner_address);
-        let cast_result = _cast(operands);
-
-        assert!(cast_result.is_err());
-        assert_eq!(
-            cast_result.err().unwrap().to_string(),
-            "The order of the operands when casting into a record is reversed"
-        );
-    }
-
-    #[test]
     fn test_unsupported_operand_types() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
 
         let primitive_gates = 1_u64;
-        let gates = SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_gates)).unwrap());
+        let gates =
+            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_gates)).unwrap());
 
         let mut operands = IndexMap::new();
         operands.insert("owner".to_owned(), gates.clone());
         operands.insert("gates".to_owned(), gates);
-        let cast_result = _cast(operands);
+        let cast_result = _cast(operands, cs);
 
         assert!(cast_result.is_err());
         assert_eq!(
@@ -254,5 +445,22 @@ mod cast_tests {
         );
     }
 
-    // TODO: Add tests for non binary casts
+    #[test]
+    fn test_cast_is_a_two_or_more_operand_instruction() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_gates = 1_u64;
+        let gates =
+            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_gates)).unwrap());
+
+        let mut operands = IndexMap::new();
+        operands.insert("owner".to_owned(), gates.clone());
+        let cast_result = _cast(operands, cs);
+
+        assert!(cast_result.is_err());
+        assert_eq!(
+            cast_result.err().unwrap().to_string(),
+            "Cast is a two or more operands instruction"
+        );
+    }
 }
