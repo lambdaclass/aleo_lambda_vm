@@ -34,6 +34,7 @@
 
 use anyhow::{anyhow, bail, Result};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
+use ark_std::rand::rngs::StdRng;
 use indexmap::IndexMap;
 use jaleo::UserInputValueType;
 pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
@@ -88,13 +89,26 @@ pub fn execute_function(
     let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
+    _execute_function(program, function, user_inputs, universal_srs.as_ref(), constraint_system, rng)
+}
+
+// This allows us to execute functions without depending on generating the
+// universal srs.
+pub fn _execute_function(
+    program: &Program<Testnet3>,
+    function: &Function<Testnet3>,
+    user_inputs: &[UserInputValueType],
+    universal_srs: &UniversalSRS, 
+    constraint_system: ConstraintSystemRef<ConstraintF>, 
+    rng: &mut StdRng,
+) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let mut function_variables = helpers::function_variables(function, constraint_system.clone())?;
     let (function_proving_key, _function_verifying_key) = build_function(
         program,
         function,
         user_inputs,
         constraint_system.clone(),
-        &universal_srs,
+        universal_srs,
         &mut function_variables,
     )?;
 
