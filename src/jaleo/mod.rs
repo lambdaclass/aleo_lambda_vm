@@ -81,7 +81,7 @@ pub fn mint_credits(
     let nonce = ConstraintF::from(seed);
     let non_encrypted_record =
         Record::new(address, credits, RecordEntriesMap::default(), Some(nonce));
-    let encrypted_record = non_encrypted_record.encrypt(&owner_view_key)?;
+    let encrypted_record = non_encrypted_record.encrypt(owner_view_key)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
 }

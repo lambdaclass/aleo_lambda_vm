@@ -80,7 +80,7 @@ impl Transition {
         &self.fee
     }
 
-    pub fn program_id(&self) -> ProgramID {
-        self.program_id
+    pub fn program_id(&self) -> &ProgramID {
+        &self.program_id
     }
 }

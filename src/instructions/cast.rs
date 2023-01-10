@@ -142,104 +142,61 @@ pub fn cast(
                             operand_value.value()?,
                         )?)),
                         (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::Address)),
-                            CircuitIOType::SimpleAddress(operand_value),
-                        ) => Ok(CircuitIOType::SimpleAddress(AddressGadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(helpers::to_address(operand_value.value()?)),
-                        )?)),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::Boolean)),
-                            CircuitIOType::SimpleBoolean(operand_value),
-                        ) => Ok(CircuitIOType::SimpleBoolean(
-                            Boolean::<ConstraintF>::new_input(constraint_system.clone(), || {
-                                Ok(operand_value.value()?)
-                            })?,
-                        )),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::Field)),
-                            CircuitIOType::SimpleField(operand_value),
-                        ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(operand_value.value()?),
-                        )?)),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::U8)),
-                            CircuitIOType::SimpleUInt8(operand_value),
-                        ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(operand_value.value()?),
-                        )?)),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::U16)),
-                            CircuitIOType::SimpleUInt16(operand_value),
-                        ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(operand_value.value()?),
-                        )?)),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::U32)),
-                            CircuitIOType::SimpleUInt32(operand_value),
-                        ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(operand_value.value()?),
-                        )?)),
-                        (
-                            EntryType::Public(PlaintextType::Literal(LiteralType::U64)),
-                            CircuitIOType::SimpleUInt64(operand_value),
-                        ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_input(
-                            constraint_system.clone(),
-                            || Ok(operand_value.value()?),
-                        )?)),
-                        (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::Address)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Address))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::Address)),
                             CircuitIOType::SimpleAddress(operand_value),
                         ) => Ok(CircuitIOType::SimpleAddress(AddressGadget::new_witness(
                             constraint_system.clone(),
                             || Ok(helpers::to_address(operand_value.value()?)),
                         )?)),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::Boolean)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Boolean))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::Boolean)),
                             CircuitIOType::SimpleBoolean(operand_value),
                         ) => Ok(CircuitIOType::SimpleBoolean(
                             Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || {
-                                Ok(operand_value.value()?)
+                                operand_value.value()
                             })?,
                         )),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::Field)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::Field))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::Field)),
                             CircuitIOType::SimpleField(operand_value),
                         ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::U8)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U8))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::U8)),
                             CircuitIOType::SimpleUInt8(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::U16)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U16))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::U16)),
                             CircuitIOType::SimpleUInt16(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::U32)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U32))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::U32)),
                             CircuitIOType::SimpleUInt32(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
-                            EntryType::Private(PlaintextType::Literal(LiteralType::U64)),
+                            EntryType::Public(PlaintextType::Literal(LiteralType::U64))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::U64)),
                             CircuitIOType::SimpleUInt64(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Constant(PlaintextType::Literal(_))
@@ -331,45 +288,40 @@ pub fn _cast(
         .collect::<Vec<(String, CircuitIOType)>>()
         .as_slice()
     {
-        [(_, SimpleAddress(address)), (_, SimpleUInt64(gates)), entries @ ..] => {
-            let mut entries_map = VMRecordEntriesMap::new();
-            for (key, value) in entries {
-                entries_map.insert(key.to_owned(), value.clone());
+        [(_, SimpleAddress(owner)), (_, SimpleUInt64(gates)), incoming_entries @ ..] => {
+            let mut entries = VMRecordEntriesMap::new();
+            for (key, value) in incoming_entries {
+                entries.insert(key.to_owned(), value.clone());
             }
 
-            let (address, gates) =
-                match (address.is_witness()?, gates.is_witness()?) {
-                    (true, true) => (address.clone(), gates.clone()),
-                    (true, false) => {
-                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
-                            Ok(gates.value()?)
-                        })?;
-                        (address.clone(), gates)
-                    }
-                    (false, true) => {
-                        let address =
-                            AddressGadget::new_witness(constraint_system.clone(), || {
-                                Ok(helpers::to_address(address.value()?))
-                            })?;
-                        (address, gates.clone())
-                    }
-                    (false, false) => {
-                        let address =
-                            AddressGadget::new_witness(constraint_system.clone(), || {
-                                Ok(helpers::to_address(address.value()?))
-                            })?;
-                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
-                            Ok(gates.value()?)
-                        })?;
-                        (address, gates)
-                    }
-                };
+            let (owner, gates) = match (owner.is_witness()?, gates.is_witness()?) {
+                (true, true) => (owner.clone(), gates.clone()),
+                (true, false) => {
+                    let gates = UInt64Gadget::new_witness(constraint_system, || gates.value())?;
+                    (owner.clone(), gates)
+                }
+                (false, true) => {
+                    let owner = AddressGadget::new_witness(constraint_system, || {
+                        Ok(helpers::to_address(owner.value()?))
+                    })?;
+                    (owner, gates.clone())
+                }
+                (false, false) => {
+                    let owner = AddressGadget::new_witness(constraint_system.clone(), || {
+                        Ok(helpers::to_address(owner.value()?))
+                    })?;
+                    let gates = UInt64Gadget::new_witness(constraint_system, || gates.value())?;
+                    (owner, gates)
+                }
+            };
+
+            let nonce = ConstraintF::rand(&mut thread_rng());
 
             Ok(SimpleRecord(Record {
-                owner: address.clone(),
-                gates: gates.clone(),
-                entries: entries_map,
-                nonce: ConstraintF::rand(&mut thread_rng()),
+                owner,
+                gates,
+                entries,
+                nonce,
             }))
         }
         [] | [_] => bail!("Cast is a two or more operands instruction"),
@@ -454,7 +406,7 @@ mod cast_tests {
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_gates)).unwrap());
 
         let mut operands = IndexMap::new();
-        operands.insert("owner".to_owned(), gates.clone());
+        operands.insert("owner".to_owned(), gates);
         let cast_result = _cast(operands, cs);
 
         assert!(cast_result.is_err());
