@@ -1,12 +1,9 @@
 #[cfg(test)]
 mod mul_tests {
     use crate::helpers::test_helpers;
-    use ark_r1cs_std::R1CSVar;
-    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
     use vmtropy::jaleo::{
-        self, Record as JAleoRecord, RecordEntriesMap,
-        UserInputValueType::{Record, U16, U32, U64, U8},
+        UserInputValueType::{U16, U32, U64, U8},
     };
 
     #[test]

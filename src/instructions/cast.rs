@@ -153,7 +153,7 @@ pub fn cast(
                             CircuitIOType::SimpleBoolean(operand_value),
                         ) => Ok(CircuitIOType::SimpleBoolean(
                             Boolean::<ConstraintF>::new_input(constraint_system.clone(), || {
-                                Ok(operand_value.value()?)
+                                operand_value.value()
                             })?,
                         )),
                         (
@@ -161,35 +161,35 @@ pub fn cast(
                             CircuitIOType::SimpleField(operand_value),
                         ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_input(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Public(PlaintextType::Literal(LiteralType::U8)),
                             CircuitIOType::SimpleUInt8(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_input(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Public(PlaintextType::Literal(LiteralType::U16)),
                             CircuitIOType::SimpleUInt16(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_input(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Public(PlaintextType::Literal(LiteralType::U32)),
                             CircuitIOType::SimpleUInt32(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_input(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Public(PlaintextType::Literal(LiteralType::U64)),
                             CircuitIOType::SimpleUInt64(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_input(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Private(PlaintextType::Literal(LiteralType::Address)),
@@ -203,7 +203,7 @@ pub fn cast(
                             CircuitIOType::SimpleBoolean(operand_value),
                         ) => Ok(CircuitIOType::SimpleBoolean(
                             Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || {
-                                Ok(operand_value.value()?)
+                                operand_value.value()
                             })?,
                         )),
                         (
@@ -211,35 +211,35 @@ pub fn cast(
                             CircuitIOType::SimpleField(operand_value),
                         ) => Ok(CircuitIOType::SimpleField(FieldGadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Private(PlaintextType::Literal(LiteralType::U8)),
                             CircuitIOType::SimpleUInt8(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Private(PlaintextType::Literal(LiteralType::U16)),
                             CircuitIOType::SimpleUInt16(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Private(PlaintextType::Literal(LiteralType::U32)),
                             CircuitIOType::SimpleUInt32(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt32(UInt32Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Private(PlaintextType::Literal(LiteralType::U64)),
                             CircuitIOType::SimpleUInt64(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt64(UInt64Gadget::new_witness(
                             constraint_system.clone(),
-                            || Ok(operand_value.value()?),
+                            || operand_value.value(),
                         )?)),
                         (
                             EntryType::Constant(PlaintextType::Literal(_))
@@ -341,14 +341,14 @@ pub fn _cast(
                 match (address.is_witness()?, gates.is_witness()?) {
                     (true, true) => (address.clone(), gates.clone()),
                     (true, false) => {
-                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
-                            Ok(gates.value()?)
+                        let gates = UInt64Gadget::new_witness(constraint_system, || {
+                            gates.value()
                         })?;
                         (address.clone(), gates)
                     }
                     (false, true) => {
                         let address =
-                            AddressGadget::new_witness(constraint_system.clone(), || {
+                            AddressGadget::new_witness(constraint_system, || {
                                 Ok(helpers::to_address(address.value()?))
                             })?;
                         (address, gates.clone())
@@ -358,16 +358,16 @@ pub fn _cast(
                             AddressGadget::new_witness(constraint_system.clone(), || {
                                 Ok(helpers::to_address(address.value()?))
                             })?;
-                        let gates = UInt64Gadget::new_witness(constraint_system.clone(), || {
-                            Ok(gates.value()?)
+                        let gates = UInt64Gadget::new_witness(constraint_system, || {
+                            gates.value()
                         })?;
                         (address, gates)
                     }
                 };
 
             Ok(SimpleRecord(Record {
-                owner: address.clone(),
-                gates: gates.clone(),
+                owner: address,
+                gates,
                 entries: entries_map,
                 nonce: ConstraintF::rand(&mut thread_rng()),
             }))
@@ -454,7 +454,7 @@ mod cast_tests {
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_gates)).unwrap());
 
         let mut operands = IndexMap::new();
-        operands.insert("owner".to_owned(), gates.clone());
+        operands.insert("owner".to_owned(), gates);
         let cast_result = _cast(operands, cs);
 
         assert!(cast_result.is_err());

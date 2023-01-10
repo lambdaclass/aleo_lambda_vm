@@ -75,7 +75,7 @@ pub fn mint_credits(owner_view_key: &ViewKey, credits: u64) -> Result<(Field, En
     }
 
     let non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
-    let encrypted_record = non_encrypted_record.encrypt(&owner_view_key)?;
+    let encrypted_record = non_encrypted_record.encrypt(owner_view_key)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
 }

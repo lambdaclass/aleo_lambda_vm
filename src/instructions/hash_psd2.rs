@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use ark_r1cs_std::{alloc::AllocVar, R1CSVar, ToBytesGadget};
 use indexmap::IndexMap;
 use simpleworks::{
-    gadgets::{traits::IsWitness, FieldGadget},
+    gadgets::FieldGadget,
     hash,
 };
 pub use CircuitIOType::{

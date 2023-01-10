@@ -737,7 +737,7 @@ mod tests {
             .unwrap();
         let expected_shifted_bits = bits.iter().map(|b| b.value().unwrap()).collect::<Vec<_>>();
 
-        let left_shifted_bits = shift_left(&bits, 0, cs.clone())
+        let left_shifted_bits = shift_left(&bits, 0, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -767,7 +767,7 @@ mod tests {
         .map(|b| b.value().unwrap())
         .collect::<Vec<_>>();
 
-        let left_shifted_bits = shift_left(&bits, 1, cs.clone())
+        let left_shifted_bits = shift_left(&bits, 1, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -818,7 +818,7 @@ mod tests {
         .map(|b| b.value().unwrap())
         .collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 1, cs.clone())
+        let right_shifted_bits = shift_right(&bits, 1, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -839,7 +839,7 @@ mod tests {
             .map(|b| b.value().unwrap())
             .collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 2, cs.clone())
+        let right_shifted_bits = shift_right(&bits, 2, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
@@ -857,7 +857,7 @@ mod tests {
             .unwrap();
         let expected_shifted_bits = bits.iter().map(|b| b.value().unwrap()).collect::<Vec<_>>();
 
-        let right_shifted_bits = shift_right(&bits, 0, cs.clone())
+        let right_shifted_bits = shift_right(&bits, 0, cs)
             .unwrap()
             .iter()
             .map(|b| b.value().unwrap())
