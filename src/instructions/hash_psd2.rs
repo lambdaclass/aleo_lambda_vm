@@ -2,10 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use ark_r1cs_std::{alloc::AllocVar, R1CSVar, ToBytesGadget};
 use indexmap::IndexMap;
-use simpleworks::{
-    gadgets::FieldGadget,
-    hash,
-};
+use simpleworks::{gadgets::FieldGadget, hash};
 pub use CircuitIOType::{
     SimpleAddress, SimpleField, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };

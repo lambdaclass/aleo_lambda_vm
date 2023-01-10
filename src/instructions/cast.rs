@@ -337,33 +337,26 @@ pub fn _cast(
                 entries_map.insert(key.to_owned(), value.clone());
             }
 
-            let (address, gates) =
-                match (address.is_witness()?, gates.is_witness()?) {
-                    (true, true) => (address.clone(), gates.clone()),
-                    (true, false) => {
-                        let gates = UInt64Gadget::new_witness(constraint_system, || {
-                            gates.value()
-                        })?;
-                        (address.clone(), gates)
-                    }
-                    (false, true) => {
-                        let address =
-                            AddressGadget::new_witness(constraint_system, || {
-                                Ok(helpers::to_address(address.value()?))
-                            })?;
-                        (address, gates.clone())
-                    }
-                    (false, false) => {
-                        let address =
-                            AddressGadget::new_witness(constraint_system.clone(), || {
-                                Ok(helpers::to_address(address.value()?))
-                            })?;
-                        let gates = UInt64Gadget::new_witness(constraint_system, || {
-                            gates.value()
-                        })?;
-                        (address, gates)
-                    }
-                };
+            let (address, gates) = match (address.is_witness()?, gates.is_witness()?) {
+                (true, true) => (address.clone(), gates.clone()),
+                (true, false) => {
+                    let gates = UInt64Gadget::new_witness(constraint_system, || gates.value())?;
+                    (address.clone(), gates)
+                }
+                (false, true) => {
+                    let address = AddressGadget::new_witness(constraint_system, || {
+                        Ok(helpers::to_address(address.value()?))
+                    })?;
+                    (address, gates.clone())
+                }
+                (false, false) => {
+                    let address = AddressGadget::new_witness(constraint_system.clone(), || {
+                        Ok(helpers::to_address(address.value()?))
+                    })?;
+                    let gates = UInt64Gadget::new_witness(constraint_system, || gates.value())?;
+                    (address, gates)
+                }
+            };
 
             Ok(SimpleRecord(Record {
                 owner: address,
