@@ -11,6 +11,7 @@ mod aleo_roulette_functions_tests {
     use vmtropy::jaleo::{self, Identifier, Program, UserInputValueType};
 
     const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/aleo_roulette.aleo";
+    const RECORDS_PROGRAM_DIR: &str = "programs/records.aleo";
     const PSD_HASH: &str = "psd_hash";
     const MAKE_BET: &str = "make_bet";
     const MINT_CASINO_TOKEN_RECORD: &str = "mint_casino_token_record";
@@ -19,6 +20,18 @@ mod aleo_roulette_functions_tests {
     fn get_aleo_roulette_function(function_name: &str) -> (Program, Function<Testnet3>) {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push(ALEO_ROULETTE_PROGRAM_DIR);
+        let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function = program
+            .get_function(&Identifier::try_from(function_name).unwrap())
+            .unwrap();
+
+        (program, function)
+    }
+
+    fn get_aleo_records_function(function_name: &str) -> (Program, Function<Testnet3>) {
+        let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push(RECORDS_PROGRAM_DIR);
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::parse(&program_string).unwrap();
         let function = program
@@ -501,6 +514,68 @@ mod aleo_roulette_functions_tests {
             &user_inputs,
             &proof,
             PSD_BITS_MOD,
+        );
+    }
+
+    #[test]
+    fn test_records() {
+        let (program, function) = get_aleo_records_function("mint");
+
+        let (address_string, address_bytes) = test_helpers::address(0);
+        let amount_to_mint = 1_u64;
+
+        let user_inputs = vec![
+            UserInputValueType::U64(amount_to_mint),
+            UserInputValueType::Address(address_bytes),
+        ];
+
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "0u64", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        // Address.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r0.value().unwrap(), amount_to_mint.to_string());
+
+        // Amount to mint.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r1.value().unwrap(), address_string);
+
+        // Constant literal (record gates).
+        let constant_0u64 = function_variables["0u64"].as_ref().unwrap();
+        assert!(matches!(
+            constant_0u64,
+            vmtropy::CircuitIOType::SimpleUInt64(_)
+        ));
+        assert_eq!(constant_0u64.value().unwrap(), "0".to_owned());
+
+        // Minted output record.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r2 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), 0);
+            assert_ne!(record.nonce, ConstraintF::default());
+        } else {
+            panic!("r2 should be a record");
+        }
+
+        assert_that_proof_for_function_execution_is_correct(
+            program,
+            &[
+                jaleo::UserInputValueType::U64(amount_to_mint),
+                jaleo::UserInputValueType::Address(address_bytes),
+            ],
+            &proof,
+            "mint",
         );
     }
 }
