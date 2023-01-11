@@ -1,25 +1,14 @@
+mod helpers;
+
 #[cfg(test)]
 mod credits_functions_tests {
-    use ark_r1cs_std::{prelude::AllocVar, R1CSVar};
-    use ark_relations::r1cs::ConstraintSystem;
-    use simpleworks::{
-        gadgets::{AddressGadget, ConstraintF},
-        types::value::{RecordEntriesMap, SimpleworksValueType},
-    };
-    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{build_program, variable_type::VariableType, verify_proof};
+    use std::str::FromStr;
 
-    fn address(n: u64) -> (String, [u8; 63]) {
-        let mut address_bytes = [0_u8; 63];
-        let address_string =
-            format!("aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z{n}");
-        for (address_byte, address_string_byte) in
-            address_bytes.iter_mut().zip(address_string.as_bytes())
-        {
-            *address_byte = *address_string_byte;
-        }
-        (address_string, address_bytes)
-    }
+    use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
+    use ark_r1cs_std::R1CSVar;
+    use simpleworks::gadgets::ConstraintF;
+    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+    use vmtropy::{jaleo, VMRecordEntriesMap};
 
     #[test]
     fn test_genesis() {
@@ -31,46 +20,55 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("genesis").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = address(0);
+        let (address_string, address_bytes) = test_helpers::address(0);
+        let genesis_credits = 1_u64;
 
         let user_inputs = vec![
-            SimpleworksValueType::Address(address_bytes),
-            SimpleworksValueType::U64(1),
+            jaleo::UserInputValueType::Address(address_bytes),
+            jaleo::UserInputValueType::U64(genesis_credits),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
-        let expected_output_register_locator = &"r2".to_string();
-
-        assert!(circuit_outputs.len() == 1);
-        if let (
-            output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: a,
-                    gates,
-                    entries: _,
-                },
-            ),
-        ) = circuit_outputs.first().unwrap()
+        let expected_function_variables = vec!["r0", "r1", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
         {
-            assert_eq!(output_register_locator, expected_output_register_locator);
-            assert_eq!(a, address_string.as_bytes());
-            assert_eq!(*gates, 1);
+            assert_eq!(register, expected_register);
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("genesis").unwrap();
+        // Address.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r0.value().unwrap(), address_string);
+
+        // Genesis credits.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1.value().unwrap(), genesis_credits.to_string());
+
+        // Genesis output record.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), genesis_credits);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, ConstraintF::default());
+        }
+
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let genesis_identifier = Identifier::from_str("genesis").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&genesis_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 
     #[test]
@@ -83,46 +81,55 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("mint").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = address(0);
+        let (address_string, address_bytes) = test_helpers::address(0);
+        let credits_to_mint = 1_u64;
 
         let user_inputs = vec![
-            SimpleworksValueType::Address(address_bytes),
-            SimpleworksValueType::U64(1),
+            jaleo::UserInputValueType::Address(address_bytes),
+            jaleo::UserInputValueType::U64(credits_to_mint),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
-        let expected_output_register_locator = &"r2".to_string();
-
-        assert!(circuit_outputs.len() == 1);
-        if let (
-            output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: o,
-                    gates,
-                    entries: _,
-                },
-            ),
-        ) = circuit_outputs.first().unwrap()
+        let expected_function_variables = vec!["r0", "r1", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
         {
-            assert_eq!(output_register_locator, expected_output_register_locator);
-            assert_eq!(o, address_string.as_bytes());
-            assert_eq!(*gates, 1);
+            assert_eq!(register, expected_register);
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("mint").unwrap();
+        // Address.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r0.value().unwrap(), address_string);
+
+        // Credits to mint.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1.value().unwrap(), credits_to_mint.to_string());
+
+        // Minted output record.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), credits_to_mint);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, ConstraintF::default());
+        }
+
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let mint_identifier = Identifier::from_str("mint").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&mint_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 
     #[test]
@@ -135,86 +142,111 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("transfer").unwrap())
             .unwrap();
 
-        let (sender_address_string, sender_address_bytes) = address(0);
-        let amount_to_transfer = 1_u64;
-        let (receiver_address_string, receiver_address_bytes) = address(0);
+        let (sender_address_string, sender_address_bytes) = test_helpers::address(0);
+        let initial_balance = 1_u64;
+        let amount_to_transfer = initial_balance;
+        let (receiver_address_string, receiver_address_bytes) = test_helpers::address(0);
 
         let user_inputs = vec![
-            SimpleworksValueType::Record {
-                owner: sender_address_bytes,
-                gates: amount_to_transfer,
-                entries: RecordEntriesMap::default(),
-            },
-            SimpleworksValueType::Address(receiver_address_bytes),
-            SimpleworksValueType::U64(amount_to_transfer),
+            test_helpers::input_record(
+                sender_address_bytes,
+                initial_balance,
+                jaleo::RecordEntriesMap::default(),
+                ConstraintF::default(),
+            ),
+            jaleo::UserInputValueType::Address(receiver_address_bytes),
+            jaleo::UserInputValueType::U64(amount_to_transfer),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
-        let receiver_record_output_register = &"r4".to_string();
-        let sender_record_output_register = &"r5".to_string();
-
-        assert_eq!(circuit_outputs.len(), 2);
-
-        let mut circuit_outputs = circuit_outputs.iter();
-
-        // The first output is the resulting record of the receiver.
-        if let Some((
-            output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: receiver,
-                    gates,
-                    entries: _,
-                },
-            ),
-        )) = circuit_outputs.next()
+        let expected_function_variables =
+            vec!["r0", "r1", "r2", "r0.gates", "r3", "r0.owner", "r4", "r5"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
         {
-            assert_eq!(output_register_locator, receiver_record_output_register);
-            assert_eq!(
-                receiver,
-                receiver_address_string.as_bytes(),
-                "Receiver address is incorrect"
-            );
-            assert_eq!(*gates, amount_to_transfer, "Receiver amount is incorrect");
+            assert_eq!(register, expected_register);
         }
 
-        // The second output is the resulting record of the sender.
-        if let Some((
-            output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: sender,
-                    gates,
-                    entries: _,
-                },
-            ),
-        )) = circuit_outputs.next()
-        {
-            assert_eq!(output_register_locator, sender_record_output_register);
-            assert_eq!(
-                sender,
-                sender_address_string.as_bytes(),
-                "Sender address is incorrect"
-            );
-            assert_eq!(*gates, 0, "Sender gates is incorrect");
+        // Sender's input record.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), sender_address_string);
+            assert_eq!(record.gates.value().unwrap(), initial_balance);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_eq!(record.nonce, ConstraintF::default());
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
+        // Receiver's address.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r1.value().unwrap(), receiver_address_string);
+
+        // Amount to transfer.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r2.value().unwrap(), amount_to_transfer.to_string());
+
+        // Sender's record gates.
+        let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
+        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r0_gates.value().unwrap(), initial_balance.to_string());
+
+        // Sender's new balance.
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(
+            r3.value().unwrap(),
+            (initial_balance - amount_to_transfer).to_string()
+        );
+
+        // Sender's address.
+        let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
+        assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r1.value().unwrap(), sender_address_string);
+
+        // Receiver's output record.
+        let r4 = function_variables["r4"].as_ref().unwrap();
+        assert!(matches!(r4, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r4 {
+            assert_eq!(record.owner.value().unwrap(), receiver_address_string);
+            assert_eq!(record.gates.value().unwrap(), amount_to_transfer);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, ConstraintF::default());
+        }
+
+        // Sender's output record.
+        let r5 = function_variables["r5"].as_ref().unwrap();
+        assert!(matches!(r5, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r5 {
+            assert_eq!(record.owner.value().unwrap(), sender_address_string);
+            assert_eq!(
+                record.gates.value().unwrap(),
+                initial_balance - amount_to_transfer
+            );
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, ConstraintF::default());
+        }
+
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let transfer_identifier = Identifier::from_str("transfer").unwrap();
         let (_function_proving_key, function_verifying_key) =
-            program_build.get("transfer").unwrap();
+            program_build.map.get(&transfer_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 
     #[test]
@@ -227,49 +259,112 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("combine").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = address(0);
-        let amount = 1_u64;
+        let (address_string, address_bytes) = test_helpers::address(0);
+        let initial_balance = 1_u64;
 
-        let record = SimpleworksValueType::Record {
-            owner: address_bytes,
-            gates: amount,
-            entries: RecordEntriesMap::default(),
-        };
-        let user_inputs = vec![record.clone(), record];
+        let first_record_nonce = test_helpers::sample_nonce();
+        let second_record_nonce = test_helpers::sample_nonce();
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
-
-        let expected_output_register_locator = &"r3".to_string();
-
-        assert_eq!(circuit_outputs.len(), 1);
-        if let (
-            output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: o,
-                    gates,
-                    entries: _,
-                },
+        let user_inputs = vec![
+            test_helpers::input_record(
+                address_bytes,
+                initial_balance,
+                jaleo::RecordEntriesMap::default(),
+                first_record_nonce,
             ),
-        ) = circuit_outputs.first().unwrap()
+            test_helpers::input_record(
+                address_bytes,
+                initial_balance,
+                jaleo::RecordEntriesMap::default(),
+                second_record_nonce,
+            ),
+        ];
+
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        let expected_function_variables =
+            vec!["r0", "r1", "r0.gates", "r1.gates", "r2", "r0.owner", "r3"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
         {
-            assert_eq!(output_register_locator, expected_output_register_locator);
-            assert_eq!(o, address_string.as_bytes());
-            assert_eq!(*gates, amount * 2);
+            assert_eq!(register, expected_register);
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("combine").unwrap();
+        // First input record.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), initial_balance);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_eq!(record.nonce, first_record_nonce);
+        }
+
+        // Second input record.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r1 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), initial_balance);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_eq!(record.nonce, second_record_nonce);
+        }
+
+        // First record gates.
+        let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
+        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r0_gates.value().unwrap(), initial_balance.to_string());
+
+        // Second record gates.
+        let r1_gates = function_variables["r1.gates"].as_ref().unwrap();
+        assert!(matches!(r1_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1_gates.value().unwrap(), initial_balance.to_string());
+
+        // Amount to transfer.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(
+            r2.value().unwrap(),
+            (initial_balance + initial_balance).to_string()
+        );
+
+        // First record address.
+        let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
+        assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert_eq!(r0_owner.value().unwrap(), address_string);
+
+        // Receiver's output record.
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(
+                record.gates.value().unwrap(),
+                initial_balance + initial_balance
+            );
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, first_record_nonce);
+            assert_ne!(record.nonce, second_record_nonce);
+        }
+
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let combine_identifier = Identifier::from_str("combine").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&combine_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 
     #[test]
@@ -282,75 +377,103 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("split").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = address(0);
+        let (address_string, address_bytes) = test_helpers::address(0);
         let gates_of_existing_record = 2_u64;
         let gates_for_new_record = 1_u64;
+        let nonce = test_helpers::sample_nonce();
 
         let user_inputs = vec![
-            SimpleworksValueType::Record {
-                owner: address_bytes,
-                gates: gates_of_existing_record,
-                entries: RecordEntriesMap::default(),
-            },
-            SimpleworksValueType::U64(gates_for_new_record),
+            test_helpers::input_record(
+                address_bytes,
+                gates_of_existing_record,
+                jaleo::RecordEntriesMap::default(),
+                nonce,
+            ),
+            jaleo::UserInputValueType::U64(gates_for_new_record),
         ];
 
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
-        assert_eq!(circuit_outputs.len(), 2, "Two output records were expected");
-
-        let mut circuit_outputs = circuit_outputs.iter();
-
-        // The first output is new record.
-        if let Some((
-            _output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: o,
-                    gates,
-                    entries: _,
-                },
-            ),
-        )) = circuit_outputs.next()
+        let expected_function_variables =
+            vec!["r0", "r1", "r0.gates", "r2", "r0.owner", "r3", "r4"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
         {
-            assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
-            assert_eq!(*gates, gates_for_new_record, "Record amount is incorrect");
+            assert_eq!(register, expected_register);
         }
 
-        // The second output is the splitted record.
-        if let Some((
-            _output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: o,
-                    gates,
-                    entries: _,
-                },
-            ),
-        )) = circuit_outputs.next()
-        {
-            assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
+        // Record to split.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), gates_of_existing_record);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_eq!(record.nonce, nonce);
+        }
+
+        // Amount to split.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1.value().unwrap(), gates_for_new_record.to_string());
+
+        // Record to split gates.
+        let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
+        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(
+            r0_gates.value().unwrap(),
+            gates_of_existing_record.to_string()
+        );
+
+        // Second new record balance.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(
+            r2.value().unwrap(),
+            (gates_of_existing_record - gates_for_new_record).to_string()
+        );
+
+        // First new record.
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), gates_for_new_record);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, nonce);
+        }
+
+        // Second new record.
+        let r4 = function_variables["r4"].as_ref().unwrap();
+        assert!(matches!(r4, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r4 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(
-                *gates,
-                gates_of_existing_record - gates_for_new_record,
-                "Record gates is incorrect"
+                record.gates.value().unwrap(),
+                gates_of_existing_record - gates_for_new_record
             );
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, nonce);
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("split").unwrap();
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let split_identifier = Identifier::from_str("split").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&split_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 
     #[test]
@@ -363,63 +486,67 @@ mod credits_functions_tests {
             .get_function(&Identifier::try_from("fee").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = address(0);
-        let amount = 1_u64;
+        let (address_string, address_bytes) = test_helpers::address(0);
+        let initial_balance = 1_u64;
         let fee = 1_u64;
+        let nonce = test_helpers::sample_nonce();
 
-        let record = SimpleworksValueType::Record {
-            owner: address_bytes,
-            gates: amount,
-            entries: RecordEntriesMap::default(),
-        };
-        let user_inputs = vec![record, SimpleworksValueType::U64(fee)];
-
-        let (circuit_outputs, proof) = vmtropy::execute_function(
-            &function,
-            &user_inputs,
-            &mut simpleworks::marlin::generate_rand(),
-        )
-        .unwrap();
-
-        assert_eq!(circuit_outputs.len(), 1, "One output records was expected");
-
-        if let Some((
-            _output_register_locator,
-            VariableType::Record(
-                _serial_number,
-                _commitment,
-                SimpleworksValueType::Record {
-                    owner: o,
-                    gates,
-                    entries: _,
-                },
+        let user_inputs = vec![
+            test_helpers::input_record(
+                address_bytes,
+                initial_balance,
+                jaleo::RecordEntriesMap::default(),
+                nonce,
             ),
-        )) = circuit_outputs.iter().next()
-        {
-            assert_eq!(o, address_string.as_bytes(), "Owner address is incorrect");
-            assert_eq!(*gates, amount - fee, "Record amount is incorrect");
+            jaleo::UserInputValueType::U64(fee),
+        ];
+
+        let (function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        // Input record.
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), initial_balance);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_eq!(record.nonce, nonce);
         }
 
-        let rng = &mut ark_std::test_rng();
-        let program_build = build_program(&program_string).unwrap();
-        let (_function_proving_key, function_verifying_key) = program_build.get("fee").unwrap();
+        // Fee.
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1.value().unwrap(), fee.to_string());
+
+        // Output record balance.
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r2.value().unwrap(), (initial_balance - fee).to_string());
+
+        // Output record.
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
+        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+            assert_eq!(record.owner.value().unwrap(), address_string);
+            assert_eq!(record.gates.value().unwrap(), initial_balance - fee);
+            assert!(vm_record_entries_are_equal(
+                &record.entries,
+                VMRecordEntriesMap::default()
+            ));
+            assert_ne!(record.nonce, nonce);
+        }
+
+        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let fee_identifier = Identifier::from_str("fee").unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&fee_identifier).unwrap();
         let public_inputs = [];
-        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof, rng).unwrap())
-    }
-
-    #[test]
-    fn test() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-
-        let mut address = [0_u8; 63];
-        let address_string = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh";
-        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
-        {
-            *address_byte = *address_string_byte;
-        }
-
-        let a = AddressGadget::new_witness(cs, || Ok(address)).unwrap();
-
-        println!("{:?}", a.value().unwrap());
+        assert!(
+            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+        )
     }
 }

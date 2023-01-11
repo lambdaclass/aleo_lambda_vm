@@ -1,6 +1,6 @@
 use ark_serialize::CanonicalSerialize;
-use simpleworks::types::value::SimpleworksValueType::U32;
 use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+use vmtropy::jaleo::UserInputValueType::U32;
 
 fn main() {
     let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -14,20 +14,16 @@ fn main() {
     let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
-    let (outputs, proof) = vmtropy::execute_function(
-        &function,
-        &user_inputs,
-        &mut simpleworks::marlin::generate_rand(),
-    )
-    .unwrap();
+    let (_compiled_function_variables, proof) =
+        vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
 
-    for (register, value) in outputs {
-        println!(
-            "Output register {} has value {}",
-            register,
-            value.value().unwrap()
-        );
-    }
+    // for (register, value) in outputs {
+    //     println!(
+    //         "Output register {} has value {}",
+    //         register,
+    //         value.value().unwrap()
+    //     );
+    // }
 
     let mut bytes_proof = Vec::new();
     match proof.serialize(&mut bytes_proof) {

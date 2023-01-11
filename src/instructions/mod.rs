@@ -6,5 +6,22 @@ pub use add::add;
 mod cast;
 pub use cast::cast;
 
+mod div;
+pub use div::div;
+
+mod hash_psd2;
+pub use hash_psd2::hash_psd2;
+
+pub(crate) mod helpers;
+
+mod is_eq;
+pub use is_eq::is_eq;
+
+mod mul;
+pub use mul::mul;
+
 mod sub;
 pub use sub::sub;
+
+mod ternary;
+pub use ternary::ternary;

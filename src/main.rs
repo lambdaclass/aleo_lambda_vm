@@ -1,11 +1,11 @@
 use anyhow::{anyhow, bail, Result};
 use ark_serialize::{CanonicalSerialize, Write};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
-use simpleworks::types::value::SimpleworksValueType;
 use snarkvm::prelude::{Identifier, Parser as AleoParser, Program, Testnet3};
 use std::fs;
 use std::path::PathBuf;
 use vmtropy::generate_universal_srs;
+use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -59,9 +59,9 @@ fn main() -> Result<()> {
                 _ => bail!("Unsupported command."),
             };
 
-            let mut vec_user_inputs = Vec::<SimpleworksValueType>::new();
+            let mut vec_user_inputs = Vec::<UserInputValueType>::new();
             for input_value in inputs.iter().rev() {
-                let v = SimpleworksValueType::try_from(input_value.clone())?;
+                let v = UserInputValueType::try_from(input_value.clone())?;
                 vec_user_inputs.push(v);
             }
 
@@ -102,9 +102,13 @@ fn main() -> Result<()> {
 fn execute(
     function_name: &str,
     program_string: &str,
-    user_inputs: &[SimpleworksValueType],
+    user_inputs: &[UserInputValueType],
 ) -> Result<()> {
     println!("Executing function {}...", function_name);
+
+    // TODO: We need to reverse to do things in the right order. Revisit this.
+    let mut inputs_copy = user_inputs.to_vec();
+    inputs_copy.reverse();
 
     let program_str = std::fs::read_to_string(program_string).unwrap();
 
@@ -114,14 +118,15 @@ fn execute(
         .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (outputs, proof) = vmtropy::execute_function(
-        &function,
-        user_inputs,
-        &mut simpleworks::marlin::generate_rand(),
-    )?;
+    let (_compiled_function_variables, proof) =
+        vmtropy::execute_function(&program, &function, &inputs_copy)?;
 
-    for (register, value) in outputs {
-        println!("Output register {} has value {}", register, value.value()?);
+    for (register, value) in _compiled_function_variables {
+        println!(
+            "Output register {} has value {}",
+            register,
+            value.unwrap().value()?
+        );
     }
 
     let mut bytes_proof = Vec::new();

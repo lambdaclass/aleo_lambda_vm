@@ -34,9 +34,9 @@
 
 use anyhow::{anyhow, bail, Result};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
-use ark_std::rand::rngs::StdRng;
-use circuit_io_type::CircuitIOType;
 use indexmap::IndexMap;
+use jaleo::UserInputValueType;
+pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
 use simpleworks::{
     gadgets::{
         traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
@@ -47,18 +47,25 @@ use simpleworks::{
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
-pub use variable_type::VariableType;
 
-pub mod circuit_io_type;
-mod helpers;
+pub use snarkvm;
+
+mod circuit_io_type;
+pub use circuit_io_type::CircuitIOType;
+pub mod helpers;
 pub mod instructions;
-pub mod record;
-pub use simpleworks::types::value::SimpleworksValueType;
-pub mod variable_type;
+pub mod jaleo;
+mod record;
+pub use record::{Record, VMRecordEntriesMap};
+mod variable_type;
+pub use variable_type::VariableType;
+mod program_build;
+pub use program_build::ProgramBuild;
+pub use simpleworks::marlin::generate_rand;
 
-pub type CircuitOutputType = IndexMap<String, VariableType>;
+pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
+pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
-pub type ProgramBuild = IndexMap<String, FunctionKeys>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
 
 /// Returns the circuit outputs and the marlin proof.
@@ -73,23 +80,23 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 /// -  Marlin Proof of the function.
 ///
 pub fn execute_function(
+    program: &Program<Testnet3>,
     function: &Function<Testnet3>,
-    user_inputs: &[SimpleworksValueType],
-    rng: &mut StdRng,
-) -> Result<(CircuitOutputType, MarlinProof)> {
-    let universal_srs = simpleworks::marlin::generate_universal_srs(rng)?;
+    user_inputs: &[UserInputValueType],
+) -> Result<(SimpleFunctionVariables, MarlinProof)> {
+    let rng = &mut simpleworks::marlin::generate_rand();
+    let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
 
-    let mut function_variables = helpers::function_variables(function);
-    let (function_proving_key, _function_verifying_key) = helpers::build_function(
+    let mut function_variables = helpers::function_variables(function, constraint_system.clone())?;
+    let (function_proving_key, _function_verifying_key) = build_function(
+        program,
         function,
         user_inputs,
         constraint_system.clone(),
         &universal_srs,
         &mut function_variables,
     )?;
-
-    let circuit_outputs = helpers::circuit_outputs(function, &function_variables)?;
 
     // Here we clone the constraint system because deep down when generating
     // the proof the constraint system is consumed and it has to have one
@@ -103,27 +110,31 @@ pub fn execute_function(
 
     let proof = simpleworks::marlin::generate_proof(cs_ref_clone, function_proving_key, rng)?;
 
-    Ok((circuit_outputs, proof))
+    Ok((function_variables, proof))
 }
 
 /// Builds a program, which means generating the proving and verifying keys
 /// for each function in the program.
-pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
+pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, ProgramBuild)> {
     let mut rng = simpleworks::marlin::generate_rand();
-    let universal_srs = simpleworks::marlin::generate_universal_srs(&mut rng)?;
+    let universal_srs =
+        simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut rng)?;
 
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
-    let mut program_build: ProgramBuild = IndexMap::new();
-    for (function_identifier, function) in program.functions() {
+    let mut program_build = ProgramBuild {
+        map: IndexMap::new(),
+    };
+    for (function_name, function) in program.functions() {
         let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
-        let inputs = helpers::default_user_inputs(function)?;
-        let (function_proving_key, function_verifying_key) = match helpers::build_function(
+        let inputs = helpers::default_user_inputs(&program, function_name)?;
+        let (function_proving_key, function_verifying_key) = match build_function(
+            &program,
             function,
             &inputs,
             constraint_system.clone(),
             &universal_srs,
-            &mut helpers::function_variables(function),
+            &mut helpers::function_variables(function, constraint_system.clone())?,
         ) {
             Ok((function_proving_key, function_verifying_key)) => {
                 (function_proving_key, function_verifying_key)
@@ -131,38 +142,66 @@ pub fn build_program(program_string: &str) -> Result<ProgramBuild> {
             Err(e) => {
                 bail!(
                     "Couldn't build function \"{}\": {}",
-                    function_identifier.to_string(),
+                    function_name.to_string(),
                     e
                 );
             }
         };
-        program_build.insert(
-            function.name().to_string(),
+        program_build.map.insert(
+            *function.name(),
             (function_proving_key, function_verifying_key),
         );
     }
 
-    Ok(program_build)
+    Ok((program, program_build))
+}
+
+/// Builds a function, which means generating its proving and verifying keys.
+pub fn build_function(
+    program: &Program<Testnet3>,
+    function: &Function<Testnet3>,
+    user_inputs: &[UserInputValueType],
+    constraint_system: ConstraintSystemRef<ConstraintF>,
+    universal_srs: &UniversalSRS,
+    function_variables: &mut SimpleFunctionVariables,
+) -> Result<FunctionKeys> {
+    helpers::process_inputs(
+        function,
+        &constraint_system,
+        user_inputs,
+        function_variables,
+    )?;
+    helpers::process_outputs(
+        program,
+        function,
+        function_variables,
+        constraint_system.clone(),
+    )?;
+    simpleworks::marlin::generate_proving_and_verifying_keys(universal_srs, constraint_system)
 }
 
 /// Note: this function will always generate the same universal parameters because
 /// the rng seed is hardcoded. This is not going to be the case forever, though, as eventually
 /// these parameters will be something generated in a setup ceremony and thus it will not be possible
 /// to derive them deterministically like this.
-pub fn generate_universal_srs() -> Result<UniversalSRS> {
+pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
     let rng = &mut simpleworks::marlin::generate_rand();
-    simpleworks::marlin::generate_universal_srs(rng)
+    simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)
 }
 
 pub fn verify_proof(
     verifying_key: VerifyingKey,
-    public_inputs: &[SimpleworksValueType],
+    public_inputs: &[UserInputValueType],
     proof: &MarlinProof,
-    rng: &mut StdRng,
 ) -> Result<bool> {
     let mut inputs = vec![];
     for gadget in public_inputs {
         inputs.extend_from_slice(&gadget.to_field_elements()?);
     }
-    simpleworks::marlin::verify_proof(verifying_key, &inputs, proof, rng)
+    simpleworks::marlin::verify_proof(
+        verifying_key,
+        &inputs,
+        proof,
+        &mut simpleworks::marlin::generate_rand(),
+    )
 }

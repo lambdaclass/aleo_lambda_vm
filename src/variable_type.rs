@@ -1,32 +1,44 @@
+use crate::jaleo::{EncryptedRecord, Field, Record, UserInputValueType};
 use std::fmt::Display;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use serde::{Deserialize, Serialize};
-use simpleworks::types::value::SimpleworksValueType;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum VariableType {
-    /// The plaintext hash and (optional) plaintext.
-    // Constant(ConstraintF, SimpleworksValueType),
-    /// The plaintext hash and (optional) plaintext.
-    Public(String, SimpleworksValueType),
-    /// The ciphertext hash and (optional) ciphertext.
-    // TODO: Replace SimpleworksValueType with Ciphertext.
-    Private(String, SimpleworksValueType),
-    /// The serial number, and the origin of the record.
-    Record(String, String, SimpleworksValueType),
-    // The input commitment to the external record. Note: This is **not** the record commitment.
-    // ExternalRecord(ConstraintF),
+    /// The plaintext.
+    Public(UserInputValueType),
+    /// The ciphertext.
+    // TODO: Replace UserInputValueType with Ciphertext.
+    Private(UserInputValueType),
+    /// The serial number, and the record.
+    // The serial number is an option because output records don't have serial numbers.
+    Record(Option<Field>, Record),
+    EncryptedRecord(EncryptedRecord),
 }
 
 impl VariableType {
-    pub fn value(&self) -> Result<&SimpleworksValueType> {
+    pub fn value(&self) -> Result<UserInputValueType> {
         match self {
             // XXX::Constant(_, value) => Ok(value.to_string()),
-            VariableType::Public(_, value)
-            | VariableType::Private(_, value)
-            | VariableType::Record(_, _, value) => Ok(value),
-            // XXX::ExternalRecord(value) => Ok(value.to_string()),
+            VariableType::Public(value) | VariableType::Private(value) => Ok(value.clone()),
+            VariableType::Record(
+                _,
+                Record {
+                    owner,
+                    gates,
+                    data,
+                    nonce,
+                },
+            ) => Ok(UserInputValueType::Record(Record {
+                owner: *owner,
+                gates: *gates,
+                data: data.clone(),
+                nonce: *nonce,
+            })),
+            VariableType::EncryptedRecord(_) => {
+                bail!("value() for EncryptedRecord is not implemented yet.")
+            } // XXX::ExternalRecord(value) => Ok(value.to_string()),
         }
     }
 }
@@ -34,9 +46,243 @@ impl VariableType {
 impl Display for VariableType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            VariableType::Public(_, v)
-            | VariableType::Private(_, v)
-            | VariableType::Record(_, _, v) => SimpleworksValueType::fmt(v, f),
+            VariableType::Public(v) | VariableType::Private(v) => UserInputValueType::fmt(v, f),
+            VariableType::Record(_, v) => Record::fmt(v, f),
+            VariableType::EncryptedRecord(v) => EncryptedRecord::fmt(v, f),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+
+    use crate::{
+        helpers::to_address,
+        jaleo::{Record, RecordEntriesMap, UserInputValueType},
+        VariableType,
+    };
+
+    #[test]
+    fn test_serialize_public_variable_type() {
+        let public_variable = VariableType::Public(UserInputValueType::U8(1));
+
+        let serialized_public_variable = serde_json::to_string(&public_variable).unwrap();
+
+        assert_eq!(serialized_public_variable, r#"{"Public":"1u8"}"#);
+    }
+
+    #[test]
+    fn test_serialize_private_variable_type() {
+        let private_variable = VariableType::Private(UserInputValueType::U8(1));
+
+        let serialized_private_variable = serde_json::to_string(&private_variable).unwrap();
+
+        assert_eq!(serialized_private_variable, r#"{"Private":"1u8"}"#);
+    }
+
+    #[test]
+    fn test_serialize_record_variable_type() {
+        let primitive_address =
+            "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let record_variable = VariableType::Record(
+            None,
+            Record::new(
+                to_address(primitive_address),
+                gates,
+                RecordEntriesMap::default(),
+                Some(nonce),
+            ),
+        );
+
+        let serialized_record_variable = serde_json::to_string(&record_variable).unwrap();
+
+        assert_eq!(
+            serialized_record_variable,
+            "{\"Record\":[null,{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{},\"nonce\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+        );
+    }
+
+    #[test]
+    #[ignore = "This test should pass (deserialization needs to handle this error)"]
+    fn test_cannot_serialize_a_public_record_variable_type() {
+        let primitive_address =
+            "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let public_record_variable = VariableType::Public(UserInputValueType::Record(Record::new(
+            to_address(primitive_address),
+            gates,
+            RecordEntriesMap::default(),
+            Some(nonce),
+        )));
+
+        let error = serde_json::to_string(&public_record_variable).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Cannot serialize a record as a public or private variable"
+        );
+    }
+
+    #[test]
+    #[ignore = "This test should pass (deserialization needs to handle this error)"]
+    fn test_cannot_serialize_a_private_record_variable_type() {
+        let primitive_address =
+            "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let private_record_variable =
+            VariableType::Private(UserInputValueType::Record(Record::new(
+                to_address(primitive_address),
+                gates,
+                RecordEntriesMap::default(),
+                Some(nonce),
+            )));
+
+        let error = serde_json::to_string(&private_record_variable).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Cannot serialize a record as a public or private variable"
+        );
+    }
+
+    #[test]
+    fn test_deserialize_public_variable_type() {
+        let serialized_public_variable = r#"{"Public":"1u8"}"#;
+
+        let public_variable: VariableType =
+            serde_json::from_str(serialized_public_variable).unwrap();
+
+        assert_eq!(
+            public_variable,
+            VariableType::Public(UserInputValueType::U8(1))
+        );
+    }
+
+    #[test]
+    fn test_deserialize_private_variable_type() {
+        let serialized_private_variable = r#"{"Private":"1u8"}"#;
+
+        let private_variable: VariableType =
+            serde_json::from_str(serialized_private_variable).unwrap();
+
+        assert_eq!(
+            private_variable,
+            VariableType::Private(UserInputValueType::U8(1))
+        );
+    }
+
+    #[test]
+    fn test_deserialize_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let serialized_record_variable = format!(
+            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}]}}"#
+        );
+
+        let record_variable: VariableType =
+            serde_json::from_str(&serialized_record_variable).unwrap();
+
+        assert_eq!(
+            record_variable,
+            VariableType::Record(
+                None,
+                Record::new(
+                    to_address(primitive_address.to_owned()),
+                    gates,
+                    RecordEntriesMap::default(),
+                    Some(nonce),
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn test_cannot_deserialize_a_public_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let nonce = ConstraintF::default();
+        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let serialized_public_record_variable = format!(
+            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}"#,
+        );
+
+        assert!(serde_json::from_str::<VariableType>(&serialized_public_record_variable).is_err());
+    }
+
+    #[test]
+    fn test_cannot_deserialize_a_private_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let nonce = ConstraintF::default();
+        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let serialized_private_record_variable = format!(
+            r#"{{"Private":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{encoded_nonce}"}}"#,
+        );
+
+        assert!(serde_json::from_str::<VariableType>(&serialized_private_record_variable).is_err())
+    }
+
+    #[test]
+    fn test_bincode_serialization() {
+        let public_variable = VariableType::Public(UserInputValueType::U8(1));
+        let private_variable = VariableType::Private(UserInputValueType::U8(1));
+        let primitive_address =
+            "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let record_variable = VariableType::Record(
+            None,
+            Record::new(
+                to_address(primitive_address),
+                gates,
+                RecordEntriesMap::default(),
+                Some(nonce),
+            ),
+        );
+
+        assert!(bincode::serialize(&public_variable).is_ok());
+        assert!(bincode::serialize(&private_variable).is_ok());
+        assert!(bincode::serialize(&record_variable).is_ok());
+    }
+
+    #[test]
+    fn test_bincode_deserialization() {
+        let public_variable = VariableType::Public(UserInputValueType::U8(1));
+        let private_variable = VariableType::Private(UserInputValueType::U8(1));
+        let primitive_address =
+            "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
+        let gates = 1;
+        let nonce = ConstraintF::default();
+        let record_variable = VariableType::Record(
+            None,
+            Record::new(
+                to_address(primitive_address),
+                gates,
+                RecordEntriesMap::default(),
+                Some(nonce),
+            ),
+        );
+
+        let serialized_public_variable = bincode::serialize(&public_variable).unwrap();
+        let serialized_private_variable = bincode::serialize(&private_variable).unwrap();
+        let serialized_record_variable = bincode::serialize(&record_variable).unwrap();
+
+        assert_eq!(
+            bincode::deserialize::<VariableType>(&serialized_public_variable).unwrap(),
+            public_variable
+        );
+        assert_eq!(
+            bincode::deserialize::<VariableType>(&serialized_private_variable).unwrap(),
+            private_variable
+        );
+        assert_eq!(
+            bincode::deserialize::<VariableType>(&serialized_record_variable).unwrap(),
+            record_variable
+        );
     }
 }
