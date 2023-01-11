@@ -2,11 +2,19 @@
 // This allow macro is added because of a bug.
 #[allow(dead_code)]
 pub mod test_helpers {
-    use anyhow::Result;
+    use anyhow::{anyhow, bail, Result};
     use ark_ff::UniformRand;
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
+    use ark_relations::r1cs::ConstraintSystem;
+    use indexmap::IndexMap;
     use simpleworks::gadgets::ConstraintF;
-    use vmtropy::{helpers, jaleo, CircuitIOType, VMRecordEntriesMap};
+    use snarkvm::prelude::{LiteralType, Parser, PlaintextType, ValueType};
+    use vmtropy::{
+        build_function,
+        helpers::{self, aleo_entries_to_vm_entries},
+        jaleo::{self, Identifier, Program, Record, UserInputValueType},
+        CircuitIOType, ProgramBuild, VMRecordEntriesMap,
+    };
 
     pub fn address(n: u64) -> (String, [u8; 63]) {
         let primitive_address =
@@ -89,5 +97,122 @@ pub mod test_helpers {
             }
         }
         entries_are_equal
+    }
+
+    // NOTE: This function wraps the one in src/lib.rs because are wrapping
+    // default_user_inputs originally because of the TODO of the original default_user_inputs
+    // function.
+    // TODO: Remove this when the issue is resolved.
+    pub fn build_program_for_div(program_string: &str) -> Result<(Program, ProgramBuild)> {
+        let mut rng = simpleworks::marlin::generate_rand();
+        let universal_srs =
+            simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut rng)?;
+
+        let (_, program) = Program::parse(program_string).map_err(|e| anyhow!("{}", e))?;
+
+        let mut program_build = ProgramBuild {
+            map: IndexMap::new(),
+        };
+        for (function_name, function) in program.functions() {
+            let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+            let inputs = default_user_inputs_for_div(&program, function_name)?;
+            let (function_proving_key, function_verifying_key) = match build_function(
+                &program,
+                function,
+                &inputs,
+                constraint_system.clone(),
+                &universal_srs,
+                &mut vmtropy::helpers::function_variables(function, constraint_system.clone())?,
+            ) {
+                Ok((function_proving_key, function_verifying_key)) => {
+                    (function_proving_key, function_verifying_key)
+                }
+                Err(e) => {
+                    bail!(
+                        "Couldn't build function \"{}\": {}",
+                        function_name.to_string(),
+                        e
+                    );
+                }
+            };
+            program_build.map.insert(
+                *function.name(),
+                (function_proving_key, function_verifying_key),
+            );
+        }
+
+        Ok((program, program_build))
+    }
+
+    // NOTE: Same as above.
+    pub fn default_user_inputs_for_div(
+        program: &Program,
+        function_name: &Identifier,
+    ) -> Result<Vec<UserInputValueType>> {
+        let mut default_user_inputs: Vec<UserInputValueType> = Vec::new();
+        for function_input in program.get_function(function_name)?.inputs() {
+            let default_user_input = match function_input.value_type() {
+                // UInt
+                ValueType::Public(PlaintextType::Literal(LiteralType::U8))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::U8)) => {
+                    UserInputValueType::U8(1_u8)
+                }
+                ValueType::Public(PlaintextType::Literal(LiteralType::U16))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::U16)) => {
+                    UserInputValueType::U16(1_u16)
+                }
+                ValueType::Public(PlaintextType::Literal(LiteralType::U32))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::U32)) => {
+                    UserInputValueType::U32(1_u32)
+                }
+                ValueType::Public(PlaintextType::Literal(LiteralType::U64))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::U64)) => {
+                    UserInputValueType::U64(1_u64)
+                }
+                ValueType::Public(PlaintextType::Literal(LiteralType::U128))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
+                    UserInputValueType::U128(1_u128)
+                }
+                // Address
+                ValueType::Public(PlaintextType::Literal(LiteralType::Address))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::Address)) => {
+                    UserInputValueType::Address(
+                        *b"aleo11111111111111111111111111111111111111111111111111111111111",
+                    )
+                }
+                // Field
+                ValueType::Public(PlaintextType::Literal(LiteralType::Field))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::Field)) => {
+                    UserInputValueType::Field(ConstraintF::default())
+                }
+                // Boolean
+                ValueType::Public(PlaintextType::Literal(LiteralType::Boolean))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::Boolean)) => {
+                    UserInputValueType::Boolean(false)
+                }
+                // Unsupported Cases
+                ValueType::Public(v) | ValueType::Private(v) => {
+                    println!("UNSUPPORTED TYPE: {v:?}");
+                    bail!("Unsupported type")
+                }
+                // Records
+                ValueType::Record(record_identifier) => {
+                    let aleo_record = program.get_record(record_identifier)?;
+                    let aleo_record_entries = aleo_record.entries();
+                    UserInputValueType::Record(Record {
+                        owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
+                        gates: u64::default(),
+                        data: aleo_entries_to_vm_entries(aleo_record_entries)?,
+                        nonce: ConstraintF::default(),
+                    })
+                }
+                // Constant Types
+                ValueType::Constant(_) => bail!("Constant types are not supported"),
+                // External Records
+                ValueType::ExternalRecord(_) => bail!("ExternalRecord types are not supported"),
+            };
+            default_user_inputs.push(default_user_input);
+        }
+        Ok(default_user_inputs)
     }
 }

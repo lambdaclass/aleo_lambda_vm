@@ -122,7 +122,7 @@ pub(crate) fn default_user_inputs(
     Ok(default_user_inputs)
 }
 
-fn aleo_entries_to_vm_entries(
+pub fn aleo_entries_to_vm_entries(
     aleo_entries: &IndexMap<Identifier, EntryType<Testnet3>>,
 ) -> Result<RecordEntriesMap> {
     let mut vm_entries = RecordEntriesMap::new();

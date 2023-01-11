@@ -167,4 +167,36 @@ mod marlin_tests {
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
     }
+
+    #[test]
+    fn test_div() {
+        let program_string = test_helpers::read_program("div").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_10";
+        let function = program
+            .get_function(&Identifier::try_from(function_name).unwrap())
+            .unwrap();
+
+        /*
+        function hello_10:
+            input r0 as u8.public;
+            input r1 as u8.public;
+            div r0 r1 into r2;
+            output r2 as u8.public;
+        */
+
+        let user_inputs = vec![U8(1), U8(1)];
+
+        // execute circuit
+        let (_function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        let (_program, program_build) =
+            test_helpers::build_program_for_div(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        let public_inputs = user_inputs;
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
+    }
 }

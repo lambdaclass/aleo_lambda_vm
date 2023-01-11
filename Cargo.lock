@@ -2219,7 +2219,7 @@ dependencies = [
 [[package]]
 name = "simpleworks"
 version = "0.1.0"
-source = "git+https://github.com/Lambdaclass/simpleworks.git#a84f249e93203a6c69652534282fa69aae44c97d"
+source = "git+https://github.com/Lambdaclass/simpleworks.git#084daf17f5c01bf1f71a8ba4389b44f8f965ccd2"
 dependencies = [
  "anyhow",
  "ark-bls12-377",

@@ -1,9 +1,13 @@
-use super::helpers::{add, shift_right, to_bits_be};
-use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Gadget};
+use crate::{
+    circuit_io_type::CircuitIOType, instructions::helpers, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+};
 use anyhow::{bail, ensure, Result};
-use ark_r1cs_std::{prelude::AllocVar, R1CSVar, ToBitsGadget};
+use ark_r1cs_std::{prelude::AllocVar, select::CondSelectGadget, R1CSVar, ToBitsGadget};
 use indexmap::IndexMap;
-use simpleworks::{gadgets::UInt8Gadget, marlin::ConstraintSystemRef};
+use simpleworks::{
+    gadgets::{traits::BitShiftGadget, UInt8Gadget},
+    marlin::ConstraintSystemRef,
+};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn div(
@@ -17,139 +21,61 @@ pub fn div(
     {
         [SimpleUInt8(dividend), SimpleUInt8(divisor)] => {
             ensure!(divisor.value()? != 0_u8, "attempt to divide by zero");
-            let dividend_bits = dividend.to_bits_be()?;
-            // This is being done because some of the function variables (defined
-            // and intermediate) could be constant, and if thats the case we need
-            // to get the constraint system from the non-constant variable or else
-            // we will create a constant gadget.
-            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
-                (false, false) | (false, true) => {
-                    UInt8Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_be()?
-                }
-                (true, false) => {
-                    UInt8Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_be()?
-                }
-                (true, true) => {
-                    UInt8Gadget::new_input(constraint_system.clone(), || Ok(0))?.to_bits_le()?
-                }
-            };
-            for (i, divisor_bit) in divisor.to_bits_be()?.iter().rev().enumerate() {
+            let mut quotient = UInt8Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
+            for (i, divisor_bit) in divisor.to_bits_le()?.iter().enumerate() {
                 // If the divisor bit is a 1.
-                if divisor_bit.value()? {
-                    let addend = if i != 0 {
-                        shift_right(&dividend_bits, i, constraint_system.clone())?
-                    } else {
-                        dividend_bits.clone()
-                    };
-                    quotient = add(&quotient, &addend)?;
-                }
+                let addend = UInt8Gadget::shift_right(dividend, i, constraint_system.clone())?;
+                let mut partial_sum = helpers::add(&quotient.to_bits_be()?, &addend.to_bits_be()?)?;
+                partial_sum.reverse();
+                quotient = UInt8Gadget::conditionally_select(
+                    divisor_bit,
+                    &UInt8Gadget::from_bits_le(&partial_sum),
+                    &quotient,
+                )?;
             }
-            // We reverse here because we were working with big endian.
-            quotient.reverse();
-
-            Ok(SimpleUInt8(UInt8Gadget::from_bits_le(&quotient)))
+            Ok(SimpleUInt8(quotient))
         }
         [SimpleUInt16(dividend), SimpleUInt16(divisor)] => {
             ensure!(divisor.value()? != 0_u16, "attempt to divide by zero");
-            let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            // This is being done because some of the function variables (defined
-            // and intermediate) could be constant, and if thats the case we need
-            // to get the constraint system from the non-constant variable or else
-            // we will create a constant gadget.
-            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
-                (false, false) | (false, true) => {
-                    UInt16Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, false) => {
-                    UInt16Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, true) => {
-                    UInt16Gadget::new_input(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-            };
-            for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
+            let mut quotient = UInt16Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
+            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
                 // If the divisor bit is a 1.
-                if divisor_bit.value()? {
-                    let addend = if i != 0 {
-                        shift_right(&dividend_bits, i, constraint_system.clone())?
-                    } else {
-                        dividend_bits.clone()
-                    };
-                    quotient = add(&quotient, &addend)?;
-                }
+                let addend = UInt16Gadget::shift_right(dividend, i, constraint_system.clone())?;
+                quotient = UInt16Gadget::conditionally_select(
+                    divisor_bit,
+                    &UInt16Gadget::addmany(&[quotient.clone(), addend])?,
+                    &quotient,
+                )?;
             }
-            // We reverse here because we were working with big endian.
-            quotient.reverse();
-
-            Ok(SimpleUInt16(UInt16Gadget::from_bits_le(&quotient)))
+            Ok(SimpleUInt16(quotient))
         }
         [SimpleUInt32(dividend), SimpleUInt32(divisor)] => {
             ensure!(divisor.value()? != 0_u32, "attempt to divide by zero");
-            let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            // This is being done because some of the function variables (defined
-            // and intermediate) could be constant, and if thats the case we need
-            // to get the constraint system from the non-constant variable or else
-            // we will create a constant gadget.
-            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
-                (false, false) | (false, true) => {
-                    UInt32Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, false) => {
-                    UInt32Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, true) => {
-                    UInt32Gadget::new_input(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-            };
-            for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
+            let mut quotient = UInt32Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
+            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
                 // If the divisor bit is a 1.
-                if divisor_bit.value()? {
-                    let addend = if i != 0 {
-                        shift_right(&dividend_bits, i, constraint_system.clone())?
-                    } else {
-                        dividend_bits.clone()
-                    };
-                    quotient = add(&quotient, &addend)?;
-                }
+                let addend = UInt32Gadget::shift_right(dividend, i, constraint_system.clone())?;
+                quotient = UInt32Gadget::conditionally_select(
+                    divisor_bit,
+                    &UInt32Gadget::addmany(&[quotient.clone(), addend])?,
+                    &quotient,
+                )?;
             }
-            // We reverse here because we were working with big endian.
-            quotient.reverse();
-
-            Ok(SimpleUInt32(UInt32Gadget::from_bits_le(&quotient)))
+            Ok(SimpleUInt32(quotient))
         }
         [SimpleUInt64(dividend), SimpleUInt64(divisor)] => {
             ensure!(divisor.value()? != 0_u64, "attempt to divide by zero");
-            let dividend_bits = to_bits_be(&dividend.to_bits_le())?;
-            // This is being done because some of the function variables (defined
-            // and intermediate) could be constant, and if thats the case we need
-            // to get the constraint system from the non-constant variable or else
-            // we will create a constant gadget.
-            let mut quotient = match (dividend.is_constant(), divisor.is_constant()) {
-                (false, false) | (false, true) => {
-                    UInt64Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, false) => {
-                    UInt64Gadget::new_witness(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-                (true, true) => {
-                    UInt64Gadget::new_input(constraint_system.clone(), || Ok(0))?.to_bits_le()
-                }
-            };
-            for (i, divisor_bit) in to_bits_be(&divisor.to_bits_le())?.iter().rev().enumerate() {
+            let mut quotient = UInt64Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
+            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
                 // If the divisor bit is a 1.
-                if divisor_bit.value()? {
-                    let addend = if i != 0 {
-                        shift_right(&dividend_bits, i, constraint_system.clone())?
-                    } else {
-                        dividend_bits.clone()
-                    };
-                    quotient = add(&quotient, &addend)?;
-                }
+                let addend = UInt64Gadget::shift_right(dividend, i, constraint_system.clone())?;
+                quotient = UInt64Gadget::conditionally_select(
+                    divisor_bit,
+                    &UInt64Gadget::addmany(&[quotient.clone(), addend])?,
+                    &quotient,
+                )?;
             }
-            // We reverse here because we were working with big endian.
-            quotient.reverse();
-
-            Ok(SimpleUInt64(UInt64Gadget::from_bits_le(&quotient)))
+            Ok(SimpleUInt64(quotient))
         }
         [_, _] => bail!("div is not supported for the given types"),
         [..] => bail!("div requires two operands"),
