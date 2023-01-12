@@ -84,7 +84,7 @@ In Aleo terminology, the symmetric encryption key for a record is called the `re
 
 The symmetric encryption scheme used by Aleo's ECIES implementation is not a traditional one like `AES`, but rather a custom one using the Poseidon hash function.
 
-There are actually some addition to this ECIES scheme in Aleo, with the goal of allowing a user to tell whether an encrypted record belongs to them or not without doing the fully decryption. The general idea remains the same though.
+There are actually some additions to this ECIES scheme in Aleo, with the goal of allowing a user to tell whether an encrypted record belongs to them or not without doing the full decryption. Some documentation on it can be found [here](https://github.com/AleoHQ/snarkVM/issues/359). The general idea remains the same though.
 
 ## How this maps to SnarkVM's API
 
