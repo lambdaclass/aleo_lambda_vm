@@ -25,7 +25,7 @@ pub mod test_helpers {
 
     pub fn read_program(instruction: &str) -> Result<String> {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.push(&format!("programs/{instruction}/main.aleo"));
+        path.push(format!("programs/{instruction}/main.aleo"));
         let program = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         Ok(program)
     }

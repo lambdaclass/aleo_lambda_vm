@@ -32,7 +32,7 @@ fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
     ret.push('{');
 
     for (i, (k, v)) in hashmap.iter().enumerate() {
-        ret.push_str(&format!("\"{}\":\"{}\"", k, v));
+        ret.push_str(&format!("\"{k}\":\"{v}\""));
         if i > 0 {
             ret.push(',');
         }
@@ -44,7 +44,7 @@ fn hashmap_to_string(hashmap: &RecordEntriesMap) -> Result<String> {
 
 impl From<UserInputValueType> for String {
     fn from(value: UserInputValueType) -> Self {
-        format!("{}", value)
+        format!("{value}")
     }
 }
 

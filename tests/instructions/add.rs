@@ -49,9 +49,6 @@ mod add_tests {
 
         let user_inputs = vec![U16(1), U16(1)];
 
-        println!("{}", function);
-        println!("{:?}", user_inputs);
-
         // execute circuit
         let (_compiled_function_variables, _proof) =
             vmtropy::execute_function(&program, &function, &user_inputs).unwrap();

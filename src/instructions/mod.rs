@@ -20,6 +20,12 @@ pub use is_eq::is_eq;
 mod mul;
 pub use mul::mul;
 
+mod shl;
+pub use shl::shl;
+
+mod shr;
+pub use shr::shr;
+
 mod sub;
 pub use sub::sub;
 

@@ -454,7 +454,7 @@ pub(crate) fn process_inputs(
             }
             // Unsupported Cases
             (ValueType::Public(v) | ValueType::Private(v), t) => {
-                println!("UNSUPPORTED TYPE: {:?} {:?}", v, t);
+                println!("UNSUPPORTED TYPE: {v:?} {t:?}");
                 bail!("Unsupported type")
             }
             // Records
@@ -574,6 +574,8 @@ pub(crate) fn process_outputs(
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
             Instruction::Mul(_) => instructions::mul(&operands, constraint_system.clone())?,
+            Instruction::Shl(_) => instructions::shl(&operands, constraint_system.clone())?,
+            Instruction::Shr(_) => instructions::shr(&operands, constraint_system.clone())?,
             Instruction::Sub(_) => instructions::sub(&operands)?,
             Instruction::Ternary(_) => instructions::ternary(&operands)?,
             _ => bail!(

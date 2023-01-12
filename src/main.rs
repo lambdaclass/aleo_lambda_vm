@@ -90,11 +90,11 @@ fn main() -> Result<()> {
             // This let is so clippy doesn't complain
             let _written_amount = file.write(&bytes)?;
 
-            println!("Stored universal parameters under {:?}", file_dir);
+            println!("Stored universal parameters under {file_dir:?}");
 
             Ok(())
         }
-        Some(other_value) => bail!("Unsupported command: {}", other_value),
+        Some(other_value) => bail!("Unsupported command: {other_value}"),
         None => bail!("No subcommand name given"),
     }
 }
@@ -104,7 +104,7 @@ fn execute(
     program_string: &str,
     user_inputs: &[UserInputValueType],
 ) -> Result<()> {
-    println!("Executing function {}...", function_name);
+    println!("Executing function {function_name}...");
 
     // TODO: We need to reverse to do things in the right order. Revisit this.
     let mut inputs_copy = user_inputs.to_vec();
@@ -123,8 +123,7 @@ fn execute(
 
     for (register, value) in _compiled_function_variables {
         println!(
-            "Output register {} has value {}",
-            register,
+            "Output register {register} has value {}",
             value.unwrap().value()?
         );
     }

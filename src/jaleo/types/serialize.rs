@@ -36,7 +36,7 @@ impl Serialize for UserInputValueType {
                 value.serialize(serializer)
             }
             _ => {
-                let value = format!("{}", self);
+                let value = format!("{self}");
                 value.serialize(serializer)
             }
         }

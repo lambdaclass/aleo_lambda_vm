@@ -285,7 +285,7 @@ impl Record {
 impl Display for Record {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let record = serde_json::to_string_pretty(self).map_err(std::fmt::Error::custom)?;
-        write!(f, "{}", record)
+        write!(f, "{record}")
     }
 }
 
@@ -367,7 +367,6 @@ mod tests {
         let record_str = &format!(
             r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{encoded_nonce}"}}"#
         );
-        println!("record_str: {}", record_str);
         let record: Record = serde_json::from_str(record_str).unwrap();
 
         assert_eq!(record.owner, address.as_bytes());

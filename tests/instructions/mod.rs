@@ -9,6 +9,10 @@ mod is_eq;
 #[cfg(test)]
 mod mul;
 #[cfg(test)]
+mod shl;
+#[cfg(test)]
+mod shr;
+#[cfg(test)]
 mod sub;
 #[cfg(test)]
 mod ternary;
