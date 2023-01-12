@@ -64,51 +64,50 @@ make test
 ```
 
 # Aleo Internal Documentation [WIP]
-# Snarkvm Encryption
+# SnarkVM Encryption
 
-## Record Encryption
+Because Aleo is meant to be fully private, users's records need to be stored encrypted on-chain, so only the people who possess the corresponding view key can see them.
 
-- Take a random field element called `randomizer` as an argument, which is the record's nonce. TODO: Explain how nonces are generated?
-- Generate a `record view key` from the record owner's address and the `randomizer`. This record view key is NOT the user's view key, it's the simmetric encryption key used for both encrypting and decrypting this specific record.
-- Use a symmetric encryption scheme involving the poseidon hash function and the record view key to encrypt the record.
+There's a catch here though. When, for instance, user `A` wants to send money to user `B`, they have to create a record owned by `B` *and encrypt it so that only `B` can decrypt it* to store on the blockchain. This means the encryption scheme used by Aleo cannot be symmetric, as that would require user `A` to have `B`'s view key to send them money; not just their address.
 
-## Record Decryption
+This is why the encryption scheme used by Aleo is essentially asymmetric. Records are encrypted using the owner's address, but they can only be decrypted with their view key. The scheme used is called `ECIES` (*Elliptic Curve Integrated Encryption Scheme*).
 
-- Take the view key as argument, recover the record view key from it and the record nonce.
-- Decrypt the record through the symmetric encryption scheme described above.
+What follows is a description of how this scheme works. Keep in mind that in Aleo, a view-key/address pair is nothing more than an elliptic curve private/public key-pair.
 
-## Record View key generation
+- `B` retrieves `A`'s address.
+- `B` generates an ephemeral (one-time only) elliptic curve key-pair.
+- `B` uses Diffie-Hellman with their ephemeral private key and `A`'s address to generate a symmetric encryption key.
+- `B` encrypts the record with the symmetric key, and publishes both the encrypted record and the ephemeral public key.
+- When `A` wants to decrypt their record, they use their view key and the published ephemeral public key to derive (through Diffie-Helman) the symmetric encryption key.
 
-The person doing the encryption derives the record view key through the following computation:
+In Aleo terminology, the symmetric encryption key for a record is called the `record view key`. It is derived from the `transition view key`, which acts as a sort of "Master" encryption key for all the records involved in the transition.
 
+The symmetric encryption scheme used by Aleo's ECIES implementation is not a traditional one like `AES`, but rather a custom one using the Poseidon hash function.
+
+There are actually some addition to this ECIES scheme in Aleo, with the goal of allowing a user to tell whether an encrypted record belongs to them or not without doing the fully decryption. The general idea remains the same though.
+
+## How this maps to SnarkVM's API
+
+The record encryption API in SnarkVM takes a `randomizer` as argument. There's a lot of different names being thrown around here, but this randomizer is just a value derived from the `transition view key`, which in turn allows to derive the `record view key`. You can see this happening in the code, as the `encrypt` method
+
+```rust
+/// Encrypts `self` for the record owner under the given randomizer.
+pub fn encrypt(&self, randomizer: &Scalar<A>) -> Record<A, Ciphertext<A>> {
+    // Ensure the randomizer corresponds to the record nonce.
+    A::assert_eq(&self.nonce, A::g_scalar_multiply(randomizer));
+    // Compute the record view key.
+    let record_view_key = ((*self.owner).to_group() * randomizer).to_x_coordinate();
+    // Encrypt the record.
+    self.encrypt_symmetric(record_view_key)
+}
 ```
-let record_view_key = (address * randomizer).to_x_coordinate();
-```
 
-where the `randomizer` must satisfy the following
+just calls `encrypt_symmetric` after deriving the `record view key` through a simple elliptic curve calculation.
 
-```
-nonce == g_scalar_multiply(randomizer)
-```
+This `randomizer` is also called the record's `nonce`. They call it `nonce` because they also use it as a value to make the record's commitment unique.
 
-with `g_scalar_multiply` a function that `Returns the scalar multiplication on the generator G`.
+## How is the transition view key generated?
 
-The person doing the decryption derives the record view key by doing
+When a user creates a transition, they create what `Aleo` calls a `Request`. As part of creating this request, they have to generate a value called the `transition secret key`. This is nothing more than the hash of the caller's private key and a random number.
 
-```
-let record_view_key = (view_key * nonce).to_x_coordinate();
-```
-
-## How is the nonce generated?
-
-EXPLAIN: Transition secret key, transition view key, transition public key.
-
-Records are created when someone wants to perform a transaction to consume a record and create one or multipe output records. These records that are created might not belong to the caller, but they still need to be encrypted. This is done through the encryption discussed above. The only thing left to explain is how the nonce is generated.
-
-The nonce is generated in the `Request::sign`. This is the function called when crafting a transaction. The steps are the following:
-
-- Retrieve the signature secret key (`sk_sig`) from the private key. An Aleo private key is actually composed of three things, not just one number. One of these numbers is this signature secret key. It's just a random value.
-- Sample a random field element, which we call `nonce`. This is NOT the final nonce we are trying to generate, just an "intermediate" one.
-- Compute the `transition secret key` `tsk` as the hash of the `sk_sig || nonce`. This is the key that needs to be kept secret for the encryption. If this leaks, people can decrypt the output records for this transition, regardless of who they belong to.
-- Compute the `transition public key` as `g ^ tsk`. This value is going to be published as part of the transition in the blockchain. TODO: What is this key for?
-- Compute the `transition view key` as `caller_address ^ tsk`. It's this transition view key that is used to derive the nonce. 
+From this secret key, a key-pair is generated: the `transition view key` and the `transition public key`. As explained above, the `transition view key` is the private key used for ECIES encryption, and the `transition public key` is the corresponding public key, which has to be published as part of the transaction so the owner can decrypt.
