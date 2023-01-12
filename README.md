@@ -1,24 +1,6 @@
 # VMtropy
 Proof of concept for a ZK snark-based VM running Aleo Instructions.
 
-## Roadmap
-
-### Milestone 1: Basic VM functionality
-
-- Check with Valgrind and similar tools to see if running the VM on programs leaks memory or not.
-- Make a Gant with the list and description of instructions needed to support the transfer and mint functions of the `credits.aleo` program.
-- Implement said instructions and run the transfer and mint functions.
-
-### Milestone 2: Tendermint integration
-
-- Integrate our VM with the aleo-consensus node so they can execute the credits program to make transactions.
-- Staking: Focus on the passage between public and private tokens.
-
-## Out of scope for this current roadmap
-
-- Other instructions not used by mint and transfer.
-- 0ther data types not used by mint and transfer (U64 and records are enough).
-
 ## Requirements
 
 - [Rust](https://www.rust-lang.org/tools/install)
@@ -54,6 +36,42 @@ Underneath this runs the binary located in `./target/release`, so you can also d
 ```
 
 after having run `cargo build --release`.
+
+## Roadmap
+
+The VM does not currently support all data types and opcodes. A complete implementation will take around a month more of work. Below is a list of the instructions and data types missing.
+
+### Missing data types
+
+- `Group`
+- All signed Integers. `I8`, `I16`, `I32`, `I64` and `I128`.
+- `Scalar`
+- `String`
+- `Interface`
+
+### Missing instructions
+
+- `abs` and `abs.w` (absolute value and its wrapping version)
+- `add.w`
+- `and`
+- `assert.eq` and `assert.neq`
+- The `BHP` and `Pedersen` commit instructions with all its variants (`commit.bhp256`, `commit.bhp512`, `commit.bhp768`, `commit.bhp1024`, `commit.ped64` and `commit.ped128`).
+- `div.w`
+- `double`
+- `gt`, `gte`, `lt` and `lte`
+- All hash instructions expect for `hash.psd2` (`hash.bhp256`, `hash.bhp512`, `hash.bhp768`, `hash.bhp1024`, `hash.ped64`, `hash.ped128`, `hash.psd4` and `hash.psd8`).
+- `inv`
+- `is.neq`
+- `mul.w`
+- `nand`
+- `neg`
+- `nor`, `not`, `or` and `xor`
+- `pow` and `pow.w`
+- `rem` and `rem.w`
+- `shl.w` and `shr.w`
+- `sqrt`
+- `sub.w`
+- `square`
 
 ## Tests
 
