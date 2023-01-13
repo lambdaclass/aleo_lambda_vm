@@ -1,4 +1,4 @@
-# VMtropy
+# Aleo Lambda VM
 Proof of concept for a ZK snark-based VM running Aleo Instructions.
 
 ## Requirements
