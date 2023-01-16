@@ -571,6 +571,7 @@ pub(crate) fn process_outputs(
                 _ => bail!("Cast is not supported for non-record types"),
             },
             Instruction::Div(_) => instructions::div(&operands, constraint_system.clone())?,
+            Instruction::GreaterThan(_) => instructions::gt(&operands, constraint_system.clone())?,
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
             Instruction::Mul(_) => instructions::mul(&operands, constraint_system.clone())?,
