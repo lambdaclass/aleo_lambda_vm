@@ -1,5 +1,5 @@
 use ark_serialize::CanonicalSerialize;
-use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+use snarkvm::prelude::{Parser, Program, Testnet3};
 use vmtropy::jaleo::UserInputValueType::U32;
 
 fn main() {
@@ -7,15 +7,12 @@ fn main() {
     path.push("examples/sample-program/sample.aleo");
     let program_string = std::fs::read_to_string(path).unwrap();
     let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-    let function = program
-        .get_function(&Identifier::try_from("hello").unwrap())
-        .unwrap();
 
     let user_inputs = vec![U32(2), U32(1)];
 
     // Run the `hello` function defined in the `sample.aleo` program
     let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+        vmtropy::execute_function(&program, "hello", &user_inputs).unwrap();
 
     // for (register, value) in outputs {
     //     println!(
