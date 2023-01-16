@@ -9,6 +9,9 @@ pub use cast::cast;
 mod div;
 pub use div::div;
 
+mod gt;
+pub use gt::gt;
+
 mod hash_psd2;
 pub use hash_psd2::hash_psd2;
 
@@ -31,3 +34,4 @@ pub use sub::sub;
 
 mod ternary;
 pub use ternary::ternary;
+
