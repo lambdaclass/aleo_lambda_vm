@@ -13,6 +13,10 @@ pub fn gt(
     operands: &IndexMap<String, CircuitIOType>,
     constraint_system: ConstraintSystemRef,
 ) -> Result<CircuitIOType> {
+    let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;
+    let left_witness =
+        Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(false))?;
+
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -22,32 +26,32 @@ pub fn gt(
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
-                &Boolean::<ConstraintF>::TRUE,
-                &Boolean::<ConstraintF>::FALSE,
+                &true_witness,
+                &left_witness,
             )?))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
-                &Boolean::<ConstraintF>::TRUE,
-                &Boolean::<ConstraintF>::FALSE,
+                &true_witness,
+                &left_witness,
             )?))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
-                &Boolean::<ConstraintF>::TRUE,
-                &Boolean::<ConstraintF>::FALSE,
+                &true_witness,
+                &left_witness,
             )?))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
-                &Boolean::<ConstraintF>::TRUE,
-                &Boolean::<ConstraintF>::FALSE,
+                &true_witness,
+                &left_witness,
             )?))
         }
         [_, _] => bail!("gt is not supported for the given types"),
