@@ -81,7 +81,6 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 ///
 pub fn execute_function(
     program: &Program<Testnet3>,
-    // function: &Function<Testnet3>,
     function_name: &str,
     user_inputs: &[UserInputValueType],
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
