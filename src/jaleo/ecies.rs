@@ -5,6 +5,8 @@ use ark_std::UniformRand;
 type SecretKey = ScalarField;
 type PublicKey = GAffine;
 
+pub type AesKey = [u8; 32];
+
 pub fn generate_keypair() -> (SecretKey, PublicKey) {
     let mut rng = ark_std::rand::thread_rng();
     let sk = SecretKey::rand(&mut rng);
