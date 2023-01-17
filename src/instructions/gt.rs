@@ -1,16 +1,18 @@
-use crate::{
-    circuit_io_type::CircuitIOType, ConstraintF
-};
+use crate::{circuit_io_type::CircuitIOType, ConstraintF};
 use anyhow::{bail, Result};
-use ark_r1cs_std::{prelude::{Boolean, AllocVar}, R1CSVar, select::CondSelectGadget};
+use ark_r1cs_std::{
+    prelude::{AllocVar, Boolean},
+    select::CondSelectGadget,
+    R1CSVar,
+};
 use indexmap::IndexMap;
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, SimpleBoolean};
-use simpleworks::{marlin::ConstraintSystemRef};
+use simpleworks::marlin::ConstraintSystemRef;
+pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn gt(
     operands: &IndexMap<String, CircuitIOType>,
     constraint_system: ConstraintSystemRef,
-)  -> Result<CircuitIOType> {
+) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -19,35 +21,35 @@ pub fn gt(
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
-                &Boolean::new_witness(constraint_system.clone(), || Ok(gt))?,
+                &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &Boolean::<ConstraintF>::TRUE,
                 &Boolean::<ConstraintF>::FALSE,
             )?))
-        },
+        }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
-                &Boolean::new_witness(constraint_system.clone(), || Ok(gt))?,
+                &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &Boolean::<ConstraintF>::TRUE,
                 &Boolean::<ConstraintF>::FALSE,
             )?))
-        },
+        }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
-                &Boolean::new_witness(constraint_system.clone(), || Ok(gt))?,
+                &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &Boolean::<ConstraintF>::TRUE,
                 &Boolean::<ConstraintF>::FALSE,
             )?))
-        },
+        }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             let gt = left_operand.value()? > right_operand.value()?;
             Ok(SimpleBoolean(Boolean::conditionally_select(
-                &Boolean::new_witness(constraint_system.clone(), || Ok(gt))?,
+                &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &Boolean::<ConstraintF>::TRUE,
                 &Boolean::<ConstraintF>::FALSE,
             )?))
-        } 
+        }
         [_, _] => bail!("gt is not supported for the given types"),
         [..] => bail!("gt requires two operands"),
     }
@@ -270,8 +272,9 @@ mod gt_tests {
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let third_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_third_operand)).unwrap());
+        let third_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_third_operand)).unwrap(),
+        );
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.insert("r2".to_owned(), third_operand);
@@ -290,8 +293,9 @@ mod gt_tests {
         let left_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap());
+        let right_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.remove("r1");
@@ -310,8 +314,9 @@ mod gt_tests {
         let left_operand = SimpleAddress(
             AddressGadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap());
+        let right_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
 
         let result = gt(&sample_operands(left_operand, right_operand), cs).unwrap_err();
 

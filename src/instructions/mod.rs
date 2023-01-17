@@ -34,4 +34,3 @@ pub use sub::sub;
 
 mod ternary;
 pub use ternary::ternary;
-
