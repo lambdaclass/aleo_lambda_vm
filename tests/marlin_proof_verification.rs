@@ -170,7 +170,7 @@ mod marlin_tests {
 
     #[test]
     fn test_gt() {
-        let program_string = test_helpers::read_program("ternary").unwrap();
+        let program_string = test_helpers::read_program("gt").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_10";
         let function = program
