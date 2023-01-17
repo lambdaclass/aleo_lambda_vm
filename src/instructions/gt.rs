@@ -14,7 +14,7 @@ pub fn gt(
     constraint_system: ConstraintSystemRef,
 ) -> Result<CircuitIOType> {
     let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;
-    let left_witness =
+    let false_witness =
         Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(false))?;
 
     match operands
@@ -27,7 +27,7 @@ pub fn gt(
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &true_witness,
-                &left_witness,
+                &false_witness,
             )?))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
@@ -35,7 +35,7 @@ pub fn gt(
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &true_witness,
-                &left_witness,
+                &false_witness,
             )?))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
@@ -43,7 +43,7 @@ pub fn gt(
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &true_witness,
-                &left_witness,
+                &false_witness,
             )?))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
@@ -51,7 +51,7 @@ pub fn gt(
             Ok(SimpleBoolean(Boolean::conditionally_select(
                 &Boolean::new_witness(constraint_system, || Ok(gt))?,
                 &true_witness,
-                &left_witness,
+                &false_witness,
             )?))
         }
         [_, _] => bail!("gt is not supported for the given types"),
