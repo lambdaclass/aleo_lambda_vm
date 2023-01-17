@@ -8,6 +8,8 @@ use simpleworks::{
 pub use snarkvm::prelude::Itertools;
 use snarkvm::prelude::Testnet3;
 
+mod ecies;
+
 mod execute;
 pub use execute::{credits_execution, execution, process_circuit_inputs, process_circuit_outputs};
 
