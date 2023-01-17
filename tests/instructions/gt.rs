@@ -21,7 +21,7 @@ mod gt_tests {
         function hello_1:
             input r0 as u16.public;
             input r1 as u16.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u16.public;
         */
 
@@ -45,7 +45,7 @@ mod gt_tests {
         function hello_2:
             input r0 as u16.private;
             input r1 as u16.private;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u16.private;
         */
 
@@ -69,7 +69,7 @@ mod gt_tests {
         function hello_3:
             input r0 as u16.public;
             input r1 as u16.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u16.private;
         */
 
@@ -93,7 +93,7 @@ mod gt_tests {
         function hello_4:
             input r0 as u32.public;
             input r1 as u32.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u32.public;
         */
 
@@ -117,7 +117,7 @@ mod gt_tests {
         function hello_5:
             input r0 as u32.private;
             input r1 as u32.private;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u32.private;
         */
 
@@ -141,7 +141,7 @@ mod gt_tests {
         function hello_6:
             input r0 as u32.public;
             input r1 as u32.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u32.private;
         */
 
@@ -165,7 +165,7 @@ mod gt_tests {
         function hello_7:
             input r0 as u64.public;
             input r1 as u64.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u64.public;
         */
 
@@ -189,7 +189,7 @@ mod gt_tests {
         function hello_8:
             input r0 as u64.private;
             input r1 as u64.private;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u64.private;
         */
 
@@ -213,7 +213,7 @@ mod gt_tests {
         function hello_9:
             input r0 as u64.public;
             input r1 as u64.public;
-            add r0 r1 into r2;
+            gt r0 r1 into r2;
             output r2 as u64.private;
         */
 
