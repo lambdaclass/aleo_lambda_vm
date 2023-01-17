@@ -232,21 +232,24 @@ function main:
 Executing the function `main` would look like this:
 
 ```rust
-use snarkvm::prelude::{Identifier, Parser, Program};
-use vmtropy::{execute_function, build_program};
+use vmtropy::jaleo::UserInputValueType::U16;
 
-// Parse the program
-let program_string = std::fs::read_to_string("PATH_TO_THE_PROGRAM").unwrap();
-let (program, _build) = build_program(&program_string).unwrap();
-let function = program.get_function(&Identifier::try_from("main").unwrap())
-    .unwrap();
-// Declare the inputs (it is the same for public or private)
-let user_inputs = vec![U16(1), U16(1)];
+fn main() {
+    use vmtropy::{build_program, execute_function};
 
-// Execute the function
-let (function_variables, proof) = execute_function(&program, &function, &user_inputs).unwrap();
+    // Parse the program
+    let program_string = std::fs::read_to_string("./programs/add/main.aleo").unwrap();
+    let (program, build) = build_program(&program_string).unwrap();
+    let function = String::from("hello_1");
+    // Declare the inputs (it is the same for public or private)
+    let user_inputs = vec![U16(1), U16(1)];
 
-assert!(vmtropy::verify_proof(function_verifying_key.clone(), user_inputs, proof).unwrap())
+    // Execute the function
+    let (_function_variables, proof) = execute_function(&program, &function, &user_inputs).unwrap();
+    let (_proving_key, verifying_key) = build.get(&function).unwrap();
+
+    assert!(vmtropy::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
+}
 ```
 
 
