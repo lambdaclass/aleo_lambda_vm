@@ -1,8 +1,6 @@
-use ark_ff::Field;
-use ark_bls12_381::Fq2 as F;
+use ark_bls12_381::{Fr as ScalarField, G1Affine as GAffine};
+use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_std::UniformRand;
-use ark_bls12_381::{G1Projective as G, G1Affine as GAffine, Fr as ScalarField};
-use ark_ec::{ProjectiveCurve, AffineCurve};
 
 type SecretKey = ScalarField;
 type PublicKey = GAffine;
@@ -12,8 +10,7 @@ pub fn generate_keypair() -> (SecretKey, PublicKey) {
     let sk = SecretKey::rand(&mut rng);
 
     use ark_bls12_381::g1::{G1_GENERATOR_X, G1_GENERATOR_Y};
-    let g = GAffine::new(G1_GENERATOR_X,
-        G1_GENERATOR_Y, false); 
+    let g = GAffine::new(G1_GENERATOR_X, G1_GENERATOR_Y, false);
 
     let pk = g.mul(sk).into_affine();
 
