@@ -3,7 +3,6 @@
 /// - GreaterThanOrEqual (`gte`)
 /// - LessThanOrEqual (`lte`)
 /// - LessThan (`lt`)
-
 use crate::{circuit_io_type::CircuitIOType, ConstraintF};
 use anyhow::{bail, Result};
 use ark_r1cs_std::{
@@ -37,37 +36,50 @@ impl Comparison {
 pub fn compare(
     operands: &IndexMap<String, CircuitIOType>,
     constraint_system: ConstraintSystemRef,
-    comparison: Comparison
+    comparison: Comparison,
 ) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
         .as_slice()
     {
-        [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            Ok(SimpleBoolean(compare_ord(left_operand, right_operand, comparison, constraint_system)?))
-        }
-        [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            Ok(SimpleBoolean(compare_ord(left_operand, right_operand, comparison, constraint_system)?))
-        }
-        [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            Ok(SimpleBoolean(compare_ord(left_operand, right_operand, comparison, constraint_system)?))
-        }
-        [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            Ok(SimpleBoolean(compare_ord(left_operand, right_operand, comparison, constraint_system)?))
-        }
-        [_, _] => bail!("{} is not supported for the given types", comparison.instruction()),
+        [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => Ok(SimpleBoolean(compare_ord(
+            left_operand,
+            right_operand,
+            comparison,
+            constraint_system,
+        )?)),
+        [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => Ok(SimpleBoolean(
+            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
+        )),
+        [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => Ok(SimpleBoolean(
+            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
+        )),
+        [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => Ok(SimpleBoolean(
+            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
+        )),
+        [_, _] => bail!(
+            "{} is not supported for the given types",
+            comparison.instruction()
+        ),
         [..] => bail!("{} requires two operands", comparison.instruction()),
     }
 }
 
-fn compare_ord<T: R1CSVar<ConstraintF>>(left_operand: T, right_operand: T, comparison: Comparison, constraint_system: ConstraintSystemRef) -> Result<Boolean<ConstraintF>, SynthesisError> 
-where T::Value: PartialOrd {
+fn compare_ord<T: R1CSVar<ConstraintF>>(
+    left_operand: T,
+    right_operand: T,
+    comparison: Comparison,
+    constraint_system: ConstraintSystemRef,
+) -> Result<Boolean<ConstraintF>, SynthesisError>
+where
+    T::Value: PartialOrd,
+{
     let result = match comparison {
         Comparison::GreaterThan => left_operand.value()? > right_operand.value()?,
         Comparison::GreaterThanOrEqual => left_operand.value()? >= right_operand.value()?,
         Comparison::LessThanOrEqual => left_operand.value()? <= right_operand.value()?,
-        Comparison::LessThan => left_operand.value()? < right_operand.value()?
+        Comparison::LessThan => left_operand.value()? < right_operand.value()?,
     };
 
     let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;

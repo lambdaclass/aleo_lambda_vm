@@ -1,6 +1,7 @@
 #[cfg(test)]
-mod gt_tests {
+mod compare_tests {
     use crate::helpers::test_helpers;
+    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{
         Program, Record as JAleoRecord, RecordEntriesMap,
@@ -201,9 +202,6 @@ mod gt_tests {
         let program_string = test_helpers::read_program("record").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_1";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         let mut address = [0_u8; 63];
         let address_string = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5zh";
@@ -224,6 +222,6 @@ mod gt_tests {
 
         // execute circuit
         let (_compiled_function_variables, _bytes_proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 }
