@@ -3,11 +3,17 @@
 mod add;
 pub use add::add;
 
+mod and;
+pub use and::and;
+
 mod cast;
 pub use cast::cast;
 
 mod div;
 pub use div::div;
+
+mod gt;
+pub use gt::gt;
 
 mod hash_psd2;
 pub use hash_psd2::hash_psd2;

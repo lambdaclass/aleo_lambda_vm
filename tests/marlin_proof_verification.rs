@@ -9,7 +9,7 @@ mod marlin_tests {
         build_program,
         jaleo::{
             Identifier, Program,
-            UserInputValueType::{U16, U8},
+            UserInputValueType::{Boolean, U16, U8},
         },
         verify_proof,
     };
@@ -169,6 +169,37 @@ mod marlin_tests {
     }
 
     #[test]
+    fn test_gt() {
+        let program_string = test_helpers::read_program("gt").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_10";
+        let function = program
+            .get_function(&Identifier::try_from(function_name).unwrap())
+            .unwrap();
+
+        /*
+            function hello_10:
+            input r0 as u8.public;
+            input r1 as u8.public;
+            gt r0 r1 into r2;
+            output r2 as u8.public;
+        */
+
+        let user_inputs = vec![U8(1), U8(3)];
+
+        // execute circuit
+        let (_function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        let public_inputs = user_inputs;
+        assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
+    }
+
+    #[test]
     fn test_div() {
         let program_string = test_helpers::read_program("div").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
@@ -198,5 +229,34 @@ mod marlin_tests {
             program_build.map.get(&function_identifier).unwrap();
         let public_inputs = user_inputs;
         assert!(verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap())
+    }
+
+    #[test]
+    fn test_and() {
+        let program_string = test_helpers::read_program("and").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_1";
+        let function = program
+            .get_function(&Identifier::try_from(function_name).unwrap())
+            .unwrap();
+        /*
+        function hello_1:
+            input r0 as boolean.public;
+            input r1 as boolean.public;
+            and r0 r1 into r2;
+            output r2 as boolean.public;
+        */
+
+        let user_inputs = vec![Boolean(true), Boolean(true)];
+
+        // execute circuit
+        let (_compiled_function_variables, proof) =
+            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
     }
 }
