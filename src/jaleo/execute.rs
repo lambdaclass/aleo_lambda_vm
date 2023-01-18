@@ -10,6 +10,7 @@ use ark_r1cs_std::R1CSVar;
 use indexmap::IndexMap;
 use log::debug;
 use simpleworks::marlin::serialization::serialize_proof;
+use snarkvm::prelude::{Scalar, Uniform};
 
 use crate::CircuitIOType::{
     SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
@@ -221,7 +222,10 @@ pub fn process_circuit_outputs(
                             primitive_entries,
                             Some(r.nonce),
                         );
-                        let encrypted_record = record.encrypt(&view_key)?;
+                        let rng = &mut rand::thread_rng();
+                        let randomizer = Scalar::rand(rng);
+
+                        let encrypted_record = record.encrypt(randomizer)?;
                         VariableType::EncryptedRecord(encrypted_record)
                     }
                     SimpleAddress(a) => {

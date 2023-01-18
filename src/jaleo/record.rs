@@ -4,10 +4,12 @@ use aes::{
     cipher::{BlockDecrypt, BlockEncrypt, KeyInit},
     Aes128,
 };
+use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
 use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
 use digest::generic_array::GenericArray;
+use rand::Rng;
 use serde::{
     de,
     ser::{Error, SerializeStruct},
@@ -15,43 +17,67 @@ use serde::{
 };
 use sha3::{Digest, Sha3_256};
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
-use std::fmt::Display;
+use snarkvm::prelude::{FromBits, Group, Scalar, Testnet3, ToBytes};
+use std::{fmt::Display, str::FromStr};
+
+/// AES IV/nonce length
+pub const AES_IV_LENGTH: usize = 16;
+/// AES tag length
+pub const AES_TAG_LENGTH: usize = 16;
+/// AES IV + tag length
+pub const AES_IV_PLUS_TAG_LENGTH: usize = AES_IV_LENGTH + AES_TAG_LENGTH;
+/// Empty bytes array
+pub const EMPTY_BYTES: [u8; 0] = [];
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct EncryptedRecord {
     pub commitment: String,
     pub ciphertext: String,
-    original_size: usize,
+    pub nonce: Group<Testnet3>,
 }
+
+/*
+    When someone creates a record for someone else, they have to generate a randomizer, which is a private key,
+    and its corresponding public key, the nonce. This way, they encrypt the record using the randomizer plus the address
+    of the record's owner. When the owner wants to decrypt, they use their view and the nonce (which is a published part of
+    the record) to decrypt.
+
+    So far, the only thing needed for encryption/decryption is the randomizer/nonce. Where do the transition public key and
+    the transition view key show up?
+
+    The transition view key is used to generate the randomizer for every output record in the transition. The way this is done is
+    simply hash(tvk || record_index), where the `record_index` is just the index of the output record in the list of output_records.
+
+    The transition public key seems to be used to derive the serial number for records later on, though I'm not entirely sure.
+
+    What we are going to do for now, is when someone generates a transaction, they just sample a random number as the randomizer.
+    This is probably not cryptographically secure, etc, but it'll work well for us. This way we can get rid of the whole transition
+    view key stuff.
+*/
 
 impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
-        let ciphertext_bytes = if let Ok(encrypted_record) = EncryptedRecord::try_from(
-            &(hex::decode(self.ciphertext.clone().trim_start_matches("record"))?.to_vec()),
-        ) {
-            // encrypted_record.ciphertext.as_bytes().to_vec()
-            hex::decode(encrypted_record.ciphertext)?
-        } else {
-            hex::decode(&self.ciphertext)?
-        };
-        let aes_key = Aes128::new_from_slice(
-            view_key
-                .to_string()
-                .as_bytes()
-                .get(..16)
-                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
-        )?;
-        let mut plaintext: Vec<u8> = Vec::new();
-        ciphertext_bytes.chunks_exact(16).for_each(|chunk| {
-            let mut block = GenericArray::clone_from_slice(chunk);
-            aes_key.decrypt_block(&mut block);
-            plaintext.extend_from_slice(&block);
-        });
+        let record_view_key = (**view_key * &self.nonce).to_x_coordinate();
 
-        let record =
-            serde_json::from_slice(plaintext.get(..self.original_size).ok_or_else(|| {
-                anyhow!("Error getting the original-size plaintext when decrypting a record")
-            })?)?;
+        let ciphertext = hex::decode(self.ciphertext)?;
+
+        let mut hasher = Sha3_256::new();
+        hasher.update(record_view_key.to_bytes_le()?);
+        let key = hasher.finalize().to_vec();
+
+        let key = GenericArray::from_slice(&key);
+        let aead = Aes256Gcm::new(key);
+
+        let iv = GenericArray::from_slice(&ciphertext[..AES_IV_LENGTH]);
+        let tag = GenericArray::from_slice(&ciphertext[AES_IV_LENGTH..AES_IV_PLUS_TAG_LENGTH]);
+
+        let mut plaintext = Vec::with_capacity(ciphertext.len() - AES_IV_PLUS_TAG_LENGTH);
+        plaintext.extend(&ciphertext[AES_IV_PLUS_TAG_LENGTH..]);
+
+        aead.decrypt_in_place_detached(iv, &EMPTY_BYTES, &mut plaintext, tag)
+            .unwrap();
+
+        let record = serde_json::from_slice(&plaintext)?;
         Ok(record)
     }
 
@@ -112,11 +138,7 @@ impl TryFrom<&Vec<u8>> for EncryptedRecord {
 
 impl Display for EncryptedRecord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}{}{:08x}",
-            self.commitment, self.ciphertext, self.original_size
-        )
+        write!(f, "{}", self.ciphertext)
     }
 }
 
@@ -242,38 +264,44 @@ impl Record {
         self.owner == *address
     }
 
-    pub fn encrypt(&self, view_key: &ViewKey) -> Result<EncryptedRecord> {
-        let aes_key = Aes128::new_from_slice(
-            view_key
-                .to_string()
-                .as_bytes()
-                .get(..16)
-                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
-        )?;
-        let mut encrypted_record_bytes: Vec<u8> = Vec::new();
-        let record_bytes = self.to_bytes()?;
+    pub fn encrypt(&self, randomizer: Scalar<Testnet3>) -> Result<EncryptedRecord> {
+        let address_string = String::from_utf8(self.owner.to_vec()).unwrap();
+        let address = Address::from_str(&address_string).unwrap();
+        let record_nonce = Group::generator() * randomizer;
 
-        record_bytes.chunks_exact(16).for_each(|chunk| {
-            let mut block = GenericArray::clone_from_slice(chunk);
-            aes_key.encrypt_block(&mut block);
-            encrypted_record_bytes.extend_from_slice(&block);
-        });
+        let record_view_key = (*address * randomizer).to_x_coordinate();
 
-        let mut extended_chunk = [0_u8; 16];
-        for (extended_chunk_byte, chunk_byte) in extended_chunk
-            .iter_mut()
-            .zip(record_bytes.chunks_exact(16).remainder())
-        {
-            *extended_chunk_byte = *chunk_byte;
-        }
-        let mut block = GenericArray::clone_from_slice(&extended_chunk);
-        aes_key.encrypt_block(&mut block);
-        encrypted_record_bytes.extend_from_slice(&block);
+        let mut hasher = Sha3_256::new();
+        hasher.update(record_view_key.to_bytes_le()?);
+        let key = hasher.finalize().to_vec();
+
+        let key = GenericArray::from_slice(&key);
+        let aead = Aes256Gcm::new(key);
+
+        let mut iv = [0u8; AES_IV_LENGTH];
+        thread_rng().fill(&mut iv);
+
+        let nonce = GenericArray::from_slice(&iv);
+
+        let message = self.to_bytes()?;
+        let mut out = Vec::with_capacity(message.len());
+        out.extend(message);
+
+        let ciphertext = {
+            let tag = aead
+                .encrypt_in_place_detached(nonce, &EMPTY_BYTES, &mut out)
+                .unwrap();
+            let mut output = Vec::with_capacity(AES_IV_PLUS_TAG_LENGTH + message.len());
+            output.extend(&iv);
+            output.extend(tag);
+            output.extend(out);
+            output
+        };
 
         Ok(EncryptedRecord {
             commitment: self.commitment()?,
-            ciphertext: hex::encode(encrypted_record_bytes),
-            original_size: record_bytes.len(),
+            ciphertext: hex::encode(ciphertext),
+            nonce: record_nonce,
         })
     }
 
