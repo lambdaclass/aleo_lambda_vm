@@ -132,6 +132,7 @@ mod compare_tests {
         operands
     }
 
+    #[clippy::allow(unwrap)]
     fn compare_assert(left_operand: &CircuitIOType, right_operand: &CircuitIOType, cs: ConstraintSystemRef, comparison_method: Comparison, expected_result: bool) {
         let result = compare(&sample_operands(left_operand.clone(), right_operand.clone()), cs,comparison_method).unwrap();
         let expected_result = match expected_result {
