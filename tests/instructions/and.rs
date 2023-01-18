@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod and_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+    use snarkvm::prelude::{Parser, Program, Testnet3};
     use vmtropy::jaleo::UserInputValueType::{Boolean, U16, U32, U64, U8};
 
     #[test]
@@ -9,9 +9,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_1";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_1:
@@ -25,7 +22,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -52,9 +49,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_2";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_2:
@@ -68,7 +62,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -95,9 +89,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_3";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_3:
@@ -111,7 +102,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -138,9 +129,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_4";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_4:
@@ -154,7 +142,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -181,9 +169,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_5";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_5:
@@ -197,7 +182,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -224,9 +209,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_6";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_6:
@@ -240,7 +222,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -267,9 +249,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_7";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_7:
@@ -283,7 +262,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -310,9 +289,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_8";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_8:
@@ -326,7 +302,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -353,9 +329,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_9";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_9:
@@ -369,7 +342,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -396,9 +369,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_10";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_10:
@@ -412,7 +382,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -439,9 +409,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_11";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_11:
@@ -455,7 +422,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -482,9 +449,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_12";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_12:
@@ -498,7 +462,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -525,9 +489,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_13";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_13:
@@ -541,7 +502,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -568,9 +529,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_14";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_14:
@@ -584,7 +542,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -611,9 +569,6 @@ mod and_tests {
         let program_string = test_helpers::read_program("and").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_15";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_15:
@@ -627,7 +582,7 @@ mod and_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in

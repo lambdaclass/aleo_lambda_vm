@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod hash_psd2_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
+    use snarkvm::prelude::{Parser, Program, Testnet3};
     use vmtropy::jaleo::UserInputValueType::{U16, U32, U64, U8};
 
     #[test]
@@ -9,9 +9,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_10";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_7:
@@ -24,7 +21,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -47,9 +44,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_11";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_8:
@@ -62,7 +56,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -85,9 +79,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_12";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_9:
@@ -100,7 +91,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -123,9 +114,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_1";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_1:
@@ -138,7 +126,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -153,9 +141,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_2";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_2:
@@ -168,7 +153,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -191,9 +176,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_3";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_3:
@@ -206,7 +188,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -229,9 +211,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_4";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_4:
@@ -244,7 +223,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -267,9 +246,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_5";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_5:
@@ -282,7 +258,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -305,9 +281,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_6";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_6:
@@ -320,7 +293,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -343,9 +316,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_7";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_7:
@@ -358,7 +328,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -381,9 +351,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_8";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_8:
@@ -396,7 +363,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -419,9 +386,6 @@ mod hash_psd2_tests {
         let program_string = test_helpers::read_program("hash_psd2").unwrap();
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
         let function_name = "hello_9";
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
         /*
         function hello_9:
@@ -434,7 +398,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
