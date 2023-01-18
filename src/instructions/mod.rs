@@ -12,8 +12,9 @@ pub use cast::cast;
 mod div;
 pub use div::div;
 
-mod gt;
-pub use gt::gt;
+mod compare;
+pub use compare::compare;
+pub use compare::Comparison;
 
 mod hash_psd2;
 pub use hash_psd2::hash_psd2;

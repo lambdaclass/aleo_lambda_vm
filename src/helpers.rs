@@ -557,6 +557,7 @@ pub(crate) fn process_outputs(
         let operands = process_operands(instruction.operands(), program_variables)?;
         let circuit_output = match instruction {
             Instruction::Add(_) => instructions::add(&operands)?,
+            Instruction::And(_) => instructions::and(&operands)?,
             Instruction::Cast(cast) => match cast.register_type() {
                 snarkvm::prelude::RegisterType::Record(record_identifier) => {
                     let aleo_record = program.get_record(record_identifier)?;
@@ -571,10 +572,28 @@ pub(crate) fn process_outputs(
                 _ => bail!("Cast is not supported for non-record types"),
             },
             Instruction::Div(_) => instructions::div(&operands, constraint_system.clone())?,
-            Instruction::GreaterThan(_) => instructions::gt(&operands, constraint_system.clone())?,
+            Instruction::GreaterThan(_) => instructions::compare(
+                &operands,
+                constraint_system.clone(),
+                instructions::Comparison::GreaterThan,
+            )?,
+            Instruction::GreaterThanOrEqual(_) => instructions::compare(
+                &operands,
+                constraint_system.clone(),
+                instructions::Comparison::GreaterThanOrEqual,
+            )?,
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
-            Instruction::And(_) => instructions::and(&operands)?,
+            Instruction::LessThan(_) => instructions::compare(
+                &operands,
+                constraint_system.clone(),
+                instructions::Comparison::LessThan,
+            )?,
+            Instruction::LessThanOrEqual(_) => instructions::compare(
+                &operands,
+                constraint_system.clone(),
+                instructions::Comparison::LessThanOrEqual,
+            )?,
             Instruction::Mul(_) => instructions::mul(&operands, constraint_system.clone())?,
             Instruction::Shl(_) => instructions::shl(&operands, constraint_system.clone())?,
             Instruction::Shr(_) => instructions::shr(&operands, constraint_system.clone())?,
