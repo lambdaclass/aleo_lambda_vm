@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Result};
 use ark_serialize::{CanonicalSerialize, Write};
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
-use snarkvm::prelude::{Identifier, Parser as AleoParser, Program, Testnet3};
+use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
 use std::fs;
 use std::path::PathBuf;
 use vmtropy::generate_universal_srs;
@@ -114,12 +114,8 @@ fn execute(
 
     let (_, program) = Program::<Testnet3>::parse(&program_str).map_err(|e| anyhow!("{}", e))?;
 
-    let function = program
-        .get_function(&Identifier::try_from(function_name).map_err(|e| anyhow!("{}", e))?)
-        .map_err(|e| anyhow!("{}", e))?;
-
     let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&program, &function, &inputs_copy)?;
+        vmtropy::execute_function(&program, function_name, &inputs_copy)?;
 
     for (register, value) in _compiled_function_variables {
         println!(

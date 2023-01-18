@@ -44,7 +44,8 @@ pub fn execution(
         .get_function(function_name)
         .map_err(|e| anyhow!("{}", e))?;
 
-    let (compiled_function_variables, proof) = crate::execute_function(program, &function, inputs)?;
+    let (compiled_function_variables, proof) =
+        crate::execute_function(program, &function.to_string(), inputs)?;
 
     let inputs = process_circuit_inputs(&function, &compiled_function_variables, private_key)?;
     let view_key = ViewKey::try_from(private_key)?;

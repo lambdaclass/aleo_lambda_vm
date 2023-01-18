@@ -1,4 +1,5 @@
 use crate::{jaleo::Identifier, FunctionKeys};
+use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
 use serde::{
     de,
@@ -9,10 +10,20 @@ use simpleworks::marlin::serialization::{
     deserialize_proving_key, deserialize_verifying_key, serialize_proving_key,
     serialize_verifying_key,
 };
-use std::fmt::Debug;
+use std::{fmt::Debug, str::FromStr};
 
 pub struct ProgramBuild {
     pub map: IndexMap<Identifier, FunctionKeys>,
+}
+
+impl ProgramBuild {
+    pub fn get(&self, function_name: &str) -> Result<&FunctionKeys> {
+        let identifier = Identifier::from_str(function_name)?;
+        Ok(self
+            .map
+            .get(&identifier)
+            .ok_or_else(|| anyhow!("Error parsing function name parameter"))?)
+    }
 }
 
 impl Serialize for ProgramBuild {
