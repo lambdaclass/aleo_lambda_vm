@@ -3,6 +3,9 @@
 mod add;
 pub use add::add;
 
+mod and;
+pub use and::and;
+
 mod cast;
 pub use cast::cast;
 
@@ -31,6 +34,3 @@ pub use sub::sub;
 
 mod ternary;
 pub use ternary::ternary;
-
-mod and;
-pub use and::and;
