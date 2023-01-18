@@ -160,7 +160,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -180,7 +180,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, false);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -199,7 +199,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, false);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -218,7 +218,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, true);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, true);
     }
 
     #[test]
@@ -237,7 +237,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, false);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -256,7 +256,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -275,7 +275,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, true);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, true);
     }
 
     #[test]
@@ -294,7 +294,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, false);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
@@ -313,7 +313,7 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
-        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThan, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
     }
 
     #[test]
