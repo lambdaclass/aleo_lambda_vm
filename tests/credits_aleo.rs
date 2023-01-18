@@ -16,9 +16,8 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("genesis").unwrap())
-            .unwrap();
+
+        let function_name = "genesis";
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let genesis_credits = 1_u64;
@@ -29,7 +28,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -77,9 +76,6 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("mint").unwrap())
-            .unwrap();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let credits_to_mint = 1_u64;
@@ -90,7 +86,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "mint", &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -138,9 +134,6 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("transfer").unwrap())
-            .unwrap();
 
         let (sender_address_string, sender_address_bytes) = test_helpers::address(0);
         let initial_balance = 1_u64;
@@ -159,7 +152,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "transfer", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r2", "r0.gates", "r3", "r0.owner", "r4", "r5"];
@@ -255,9 +248,6 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("combine").unwrap())
-            .unwrap();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let initial_balance = 1_u64;
@@ -281,7 +271,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "combine", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r1.gates", "r2", "r0.owner", "r3"];
@@ -373,9 +363,6 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("split").unwrap())
-            .unwrap();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let gates_of_existing_record = 2_u64;
@@ -393,7 +380,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "split", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r2", "r0.owner", "r3", "r4"];
@@ -482,9 +469,6 @@ mod credits_functions_tests {
         path.push("programs/credits.aleo");
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from("fee").unwrap())
-            .unwrap();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let initial_balance = 1_u64;
@@ -502,7 +486,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "fee", &user_inputs).unwrap();
 
         // Input record.
         let r0 = function_variables["r0"].as_ref().unwrap();

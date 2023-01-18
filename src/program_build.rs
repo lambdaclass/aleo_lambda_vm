@@ -19,10 +19,9 @@ pub struct ProgramBuild {
 impl ProgramBuild {
     pub fn get(&self, function_name: &str) -> Result<&FunctionKeys> {
         let identifier = Identifier::from_str(function_name)?;
-        Ok(self
-            .map
+        self.map
             .get(&identifier)
-            .ok_or_else(|| anyhow!("Error parsing function name parameter"))?)
+            .ok_or_else(|| anyhow!("Error getting function from program build"))
     }
 }
 

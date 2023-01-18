@@ -7,7 +7,7 @@ mod aleo_roulette_functions_tests {
     use ark_r1cs_std::R1CSVar;
     use ark_std::rand::thread_rng;
     use simpleworks::{gadgets::ConstraintF, marlin::MarlinProof};
-    use snarkvm::prelude::{Function, Parser, Testnet3};
+    use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{self, Identifier, Program, UserInputValueType};
 
     const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/aleo_roulette.aleo";
@@ -17,28 +17,22 @@ mod aleo_roulette_functions_tests {
     const MINT_CASINO_TOKEN_RECORD: &str = "mint_casino_token_record";
     const PSD_BITS_MOD: &str = "psd_bits_mod";
 
-    fn get_aleo_roulette_function(function_name: &str) -> (Program, Function<Testnet3>) {
+    fn get_aleo_roulette_program() -> Program {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push(ALEO_ROULETTE_PROGRAM_DIR);
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
-        (program, function)
+        program
     }
 
-    fn get_aleo_records_function(function_name: &str) -> (Program, Function<Testnet3>) {
+    fn get_aleo_records_program() -> Program {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.push(RECORDS_PROGRAM_DIR);
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::parse(&program_string).unwrap();
-        let function = program
-            .get_function(&Identifier::try_from(function_name).unwrap())
-            .unwrap();
 
-        (program, function)
+        program
     }
 
     fn assert_that_proof_for_function_execution_is_correct(
@@ -60,12 +54,12 @@ mod aleo_roulette_functions_tests {
 
     #[test]
     fn test_psd_hash() {
-        let (program, function) = get_aleo_roulette_function(PSD_HASH);
+        let program = get_aleo_roulette_program();
 
         let user_inputs = [jaleo::UserInputValueType::U32(0_u32)];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, PSD_HASH, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -93,7 +87,7 @@ mod aleo_roulette_functions_tests {
 
     #[test]
     fn test_mint_casino_token_record() {
-        let (program, function) = get_aleo_roulette_function(MINT_CASINO_TOKEN_RECORD);
+        let program = get_aleo_roulette_program();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let amount_to_mint = 1_u64;
@@ -104,7 +98,7 @@ mod aleo_roulette_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, MINT_CASINO_TOKEN_RECORD, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "0u64", "r2"];
         for (register, expected_register) in
@@ -152,7 +146,7 @@ mod aleo_roulette_functions_tests {
 
     #[test]
     fn test_make_bet() {
-        let (program, function) = get_aleo_roulette_function(MAKE_BET);
+        let program = get_aleo_roulette_program();
 
         let reward = 35_u64;
 
@@ -188,7 +182,7 @@ mod aleo_roulette_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, MAKE_BET, &user_inputs).unwrap();
 
         let expected_function_variables = vec![
             "r0",
@@ -343,7 +337,7 @@ mod aleo_roulette_functions_tests {
 
     #[test]
     fn test_psd_bits_mod() {
-        let (program, function) = get_aleo_roulette_function(PSD_BITS_MOD);
+        let program = get_aleo_roulette_program();
 
         let user_inputs = vec![
             jaleo::UserInputValueType::Boolean(false),
@@ -356,7 +350,7 @@ mod aleo_roulette_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, PSD_BITS_MOD, &user_inputs).unwrap();
 
         let expected_function_variables = vec![
             "r0", "r1", "r2", "r3", "r4", "r5", "r6", "1u16", "0u16", "r7", "2u16", "r8", "4u16",
@@ -519,7 +513,7 @@ mod aleo_roulette_functions_tests {
 
     #[test]
     fn test_records() {
-        let (program, function) = get_aleo_records_function("mint");
+        let program = get_aleo_records_program();
 
         let (address_string, address_bytes) = test_helpers::address(0);
         let amount_to_mint = 1_u64;
@@ -530,7 +524,7 @@ mod aleo_roulette_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            vmtropy::execute_function(&program, "mint", &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "0u64", "r2"];
         for (register, expected_register) in
