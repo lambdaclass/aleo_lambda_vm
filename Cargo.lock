@@ -3290,6 +3290,7 @@ dependencies = [
  "rand_chacha",
  "serde",
  "serde_json",
+ "sha2",
  "sha3",
  "simpleworks",
  "snarkvm",

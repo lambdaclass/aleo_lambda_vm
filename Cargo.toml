@@ -53,6 +53,7 @@ bincode = "1"
 
 aes = "0.8"
 hkdf = "0.12.3"
+sha2 = "0.10.6"
 
 [[example]]
 name = "sample-program"

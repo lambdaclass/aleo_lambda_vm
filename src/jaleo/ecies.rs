@@ -1,11 +1,23 @@
+use anyhow::{anyhow, Result};
 use ark_bls12_381::{Fr as ScalarField, G1Affine as GAffine};
 use ark_ec::{AffineCurve, ProjectiveCurve};
 use ark_std::UniformRand;
+use hkdf::Hkdf;
+use sha2::Sha256;
 
 type SecretKey = ScalarField;
 type PublicKey = GAffine;
 
 pub type AesKey = [u8; 32];
+pub const EMPTY_BYTES: [u8; 0] = [];
+
+fn hkdf_sha256(master: &[u8]) -> Result<AesKey> {
+    let h = Hkdf::<Sha256>::new(None, master);
+    let mut out = [0u8; 32];
+    h.expand(&EMPTY_BYTES, &mut out)
+        .map_err(|_| anyhow!("Invalid lenght"))?;
+    Ok(out)
+}
 
 pub fn generate_keypair() -> (SecretKey, PublicKey) {
     let mut rng = ark_std::rand::thread_rng();
