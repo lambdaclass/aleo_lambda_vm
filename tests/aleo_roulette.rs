@@ -10,7 +10,7 @@ mod aleo_roulette_functions_tests {
     use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{self, Identifier, Program, UserInputValueType};
 
-    const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/aleo_roulette.aleo";
+    const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/roulette.aleo";
     const RECORDS_PROGRAM_DIR: &str = "programs/records.aleo";
     const PSD_HASH: &str = "psd_hash";
     const MAKE_BET: &str = "make_bet";
