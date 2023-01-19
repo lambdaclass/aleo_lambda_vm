@@ -6,11 +6,17 @@ pub mod test_helpers {
     use ark_ff::UniformRand;
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
     use simpleworks::gadgets::ConstraintF;
-    use vmtropy::{helpers, jaleo, CircuitIOType, VMRecordEntriesMap};
+    use vmtropy::{
+        helpers,
+        jaleo::{self, Address, PrivateKey},
+        CircuitIOType, VMRecordEntriesMap,
+    };
 
     pub fn address(n: u64) -> (String, [u8; 63]) {
-        let primitive_address =
-            format!("aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z{n}");
+        let rng = &mut rand::thread_rng();
+        let private_key = PrivateKey::new(rng).unwrap();
+        let primitive_address = Address::try_from(private_key).unwrap().to_string();
+
         let address_bytes = helpers::to_address(primitive_address.clone());
         (primitive_address, address_bytes)
     }
