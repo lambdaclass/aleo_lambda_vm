@@ -138,7 +138,8 @@ mod credits_functions_tests {
         let (sender_address_string, sender_address_bytes) = test_helpers::address();
         let initial_balance = 1_u64;
         let amount_to_transfer = initial_balance;
-        let (receiver_address_string, receiver_address_bytes) = test_helpers::address();
+        let (receiver_address_string, receiver_address_bytes) =
+            (sender_address_string.clone(), sender_address_bytes.clone());
 
         let user_inputs = vec![
             test_helpers::input_record(
