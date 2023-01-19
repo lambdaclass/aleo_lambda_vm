@@ -23,6 +23,7 @@ pub(crate) mod helpers;
 
 mod is_eq;
 pub use is_eq::is_eq;
+pub use is_eq::is_neq;
 
 mod mul;
 pub use mul::mul;

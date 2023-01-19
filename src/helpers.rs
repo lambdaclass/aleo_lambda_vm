@@ -584,6 +584,7 @@ pub(crate) fn process_outputs(
             )?,
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
+            Instruction::IsNeq(_) => instructions::is_neq(&operands)?,
             Instruction::LessThan(_) => instructions::compare(
                 &operands,
                 constraint_system.clone(),
