@@ -39,7 +39,7 @@ after having run `cargo build --release`.
 
 ## Roadmap
 
-The VM does not currently support all data types and opcodes. A complete implementation will take around a month more of work. Below is a list of the instructions and data types missing.
+The VM does not currently support all data types and opcodes. A complete implementation will take around a month more of work. Hopefully it will be ready by the end of February 2023. Below is a list of the instructions and data types missing. 
 
 ### Missing data types
 
