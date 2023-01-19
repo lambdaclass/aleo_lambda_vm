@@ -111,7 +111,7 @@ mod is_eq_tests {
             ),
         };
 
-        assert!(cs.is_satisfied().unwrap());
+        assert!(cs.is_satisfied()?);
 
         assert!(matches!(result_eq, CircuitIOType::SimpleBoolean(_)));
         assert!(matches!(result_neq, CircuitIOType::SimpleBoolean(_)));
