@@ -201,7 +201,7 @@ mod credits_functions_tests {
         // Sender's address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
         assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
-        assert_eq!(r1.value().unwrap(), sender_address_string);
+        assert_eq!(r1.value().unwrap(), receiver_address_string);
 
         // Receiver's output record.
         let r4 = function_variables["r4"].as_ref().unwrap();
