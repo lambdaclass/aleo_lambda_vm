@@ -17,7 +17,7 @@ mod cast_tests {
             .get_function(&Identifier::try_from("mint").unwrap())
             .unwrap();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let amount_to_mint = 1_u64;
 
         let user_inputs = vec![

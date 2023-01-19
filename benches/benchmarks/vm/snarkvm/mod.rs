@@ -101,7 +101,7 @@ fn user_input_value_to_aleo_value(
             vmtropy::jaleo::UserInputValueType::U64(value) => {
                 Value::Plaintext(Plaintext::from(Literal::U64(Integer::new(*value))))
             }
-            vmtropy::jaleo::UserInputValueType::Record(record) => {
+            vmtropy::jaleo::UserInputValueType::Record(_record) => {
                 todo!()
             }
             _ => unreachable!("At least for the actual benchmarks"),
@@ -114,9 +114,9 @@ pub fn execute_function(
     function_name: &Identifier,
     inputs: &[vmtropy::jaleo::UserInputValueType],
     private_key: &PrivateKey,
-    universal_srs: &UniversalSRS,
-    constraint_system: ConstraintSystemRef,
-    rng: &mut StdRng,
+    _universal_srs: &UniversalSRS,
+    _constraint_system: ConstraintSystemRef,
+    _rng: &mut StdRng,
 ) -> Result<Arc<parking_lot::lock_api::RwLock<parking_lot::RawRwLock, Execution>>> {
     let rng = &mut rand::thread_rng();
 

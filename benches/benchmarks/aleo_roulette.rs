@@ -67,7 +67,7 @@ cfg_if::cfg_if! {
             let private_key = PrivateKey::new(rng).unwrap();
 
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let amount_to_mint = 1_u64;
             let inputs = vec![
                 jaleo::UserInputValueType::Address(address_bytes),
@@ -102,7 +102,7 @@ cfg_if::cfg_if! {
             let program = get_aleo_roulette_program();
             let function_name = Identifier::try_from(MAKE_BET).unwrap();
 
-            let (_casino_address_string, casino_address) = test_helpers::address(0);
+            let (_casino_address_string, casino_address) = test_helpers::address();
             let casino_token_record_gates = 0_u64;
             let casino_token_record_amount = 100_u64;
             let mut casino_token_record_data = jaleo::RecordEntriesMap::new();
@@ -118,7 +118,7 @@ cfg_if::cfg_if! {
                 data: casino_token_record_data,
                 nonce: casino_token_record_nonce,
             };
-            let (_player_address_string, player_address) = test_helpers::address(1);
+            let (_player_address_string, player_address) = test_helpers::address();
             let random_roulette_spin_result = 1_u8;
             let player_bet_number = random_roulette_spin_result; // Player wins.
             let player_bet_amount_of_tokens = 1_u64;

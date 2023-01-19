@@ -12,7 +12,7 @@ pub mod test_helpers {
         CircuitIOType, VMRecordEntriesMap,
     };
 
-    pub fn address(n: u64) -> (String, [u8; 63]) {
+    pub fn address() -> (String, [u8; 63]) {
         let rng = &mut rand::thread_rng();
         let private_key = PrivateKey::new(rng).unwrap();
         let primitive_address = Address::try_from(private_key).unwrap().to_string();

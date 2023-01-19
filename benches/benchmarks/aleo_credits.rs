@@ -32,12 +32,10 @@ cfg_if::cfg_if! {
 
             let private_key = PrivateKey::new(rng).unwrap();
 
-            let private_key = PrivateKey::new(rng).unwrap();
-
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(GENESIS).unwrap();
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let genesis_credits = 1_u64;
 
             let inputs = vec![
@@ -73,7 +71,7 @@ cfg_if::cfg_if! {
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(MINT).unwrap();
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let credits_to_mint = 1_u64;
 
             let inputs = vec![
@@ -109,10 +107,10 @@ cfg_if::cfg_if! {
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(TRANSFER).unwrap();
 
-            let (_sender_address_string, sender_address_bytes) = test_helpers::address(0);
+            let (_sender_address_string, sender_address_bytes) = test_helpers::address();
             let initial_balance = 1_u64;
             let amount_to_transfer = initial_balance;
-            let (_receiver_address_string, receiver_address_bytes) = test_helpers::address(0);
+            let (_receiver_address_string, receiver_address_bytes) = test_helpers::address();
 
             let inputs = vec![
                 test_helpers::input_record(
@@ -153,7 +151,7 @@ cfg_if::cfg_if! {
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(COMBINE).unwrap();
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let initial_balance = 1_u64;
 
             let first_record_nonce = test_helpers::sample_nonce();
@@ -202,7 +200,7 @@ cfg_if::cfg_if! {
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(SPLIT).unwrap();
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let gates_of_existing_record = 2_u64;
             let gates_for_new_record = 1_u64;
             let nonce = test_helpers::sample_nonce();
@@ -245,7 +243,7 @@ cfg_if::cfg_if! {
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(FEE).unwrap();
 
-            let (_address_string, address_bytes) = test_helpers::address(0);
+            let (_address_string, address_bytes) = test_helpers::address();
             let initial_balance = 1_u64;
             let fee = 1_u64;
             let nonce = test_helpers::sample_nonce();
