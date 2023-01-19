@@ -17,7 +17,7 @@ use serde::{
 };
 use sha3::{Digest, Sha3_256};
 use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
-use snarkvm::prelude::{FromBits, Group, Scalar, Testnet3, ToBytes};
+use snarkvm::prelude::{from_bits, FromBits, Group, Scalar, Testnet3, ToBytes};
 use std::{fmt::Display, str::FromStr};
 
 /// AES IV/nonce length
@@ -91,6 +91,24 @@ impl EncryptedRecord {
     }
 }
 
+impl FromStr for EncryptedRecord {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+
+        // let (x, y) = s
+        //     .strip_prefix('(')
+        //     .and_then(|s| s.strip_suffix(')'))
+        //     .and_then(|s| s.split_once(','))
+        //     .ok_or(ParsePointError)?;
+
+        // let x_fromstr = x.parse::<i32>().map_err(|_| ParsePointError)?;
+        // let y_fromstr = y.parse::<i32>().map_err(|_| ParsePointError)?;
+
+        // Ok(Point { x: x_fromstr, y: y_fromstr })
+    }
+}
+
 impl TryFrom<&Vec<u8>> for EncryptedRecord {
     type Error = anyhow::Error;
 
@@ -149,8 +167,7 @@ pub struct Record {
     #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
     pub data: RecordEntriesMap,
-    #[serde(deserialize_with = "deserialize_field_element")]
-    pub nonce: ConstraintF,
+    pub nonce: Group<Testnet3>,
 }
 
 fn deserialize_address<'de, D>(deserializer: D) -> Result<AddressBytes, D::Error>
@@ -170,16 +187,6 @@ where
     str::parse::<u64>(gates_value).map_err(de::Error::custom)
 }
 
-fn deserialize_field_element<'de, D>(deserializer: D) -> Result<ConstraintF, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let encoded_nonce = String::deserialize(deserializer)?;
-    let nonce_str = hex::decode(encoded_nonce).map_err(de::Error::custom)?;
-
-    simpleworks::fields::deserialize_field_element(nonce_str).map_err(de::Error::custom)
-}
-
 fn sha3_hash(input: &[u8]) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(input);
@@ -192,12 +199,14 @@ impl Record {
         owner: AddressBytes,
         gates: u64,
         data: RecordEntriesMap,
-        nonce: Option<ConstraintF>,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
         let nonce_value = if let Some(value) = nonce {
             value
         } else {
-            ConstraintF::rand(&mut thread_rng())
+            let rng = &mut rand::thread_rng();
+            let randomizer = Scalar::rand(rng);
+            Group::generator() * randomizer
         };
 
         Self {
@@ -212,12 +221,14 @@ impl Record {
         owner: String,
         gates: u64,
         data: RecordEntriesMap,
-        nonce: Option<ConstraintF>,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
         let nonce_value = if let Some(value) = nonce {
             value
         } else {
-            ConstraintF::rand(&mut thread_rng())
+            let rng = &mut rand::thread_rng();
+            let randomizer = Scalar::rand(rng);
+            Group::generator() * randomizer
         };
 
         let vm_address = crate::helpers::to_address(owner);
@@ -246,8 +257,9 @@ impl Record {
     // element.
     pub fn commitment(&self) -> Result<String> {
         let record_string = serde_json::to_string(self)?;
-        let mut record_bytes = serialize_field_element(self.nonce)?;
-        record_bytes.extend_from_slice(record_string.as_bytes());
+        let record_bytes = self.to_bytes()?;
+        // let mut record_bytes = serialize_field_element(self.nonce)?;
+        // record_bytes.extend_from_slice(record_string.as_bytes());
         Ok(sha3_hash(&record_bytes))
     }
 
@@ -298,9 +310,20 @@ impl Record {
             output
         };
 
+        let commitment_bytes = self.commitment()?.as_bytes();
+        let nonce_bytes = hex::encode(self.nonce.to_string()).as_bytes();
+
+        // commitment is 64 bytes in hex encoding
+        // nonce is ?? bytes
+        // let nonce = Group::<Testnet3>::from_str(&nonce_string)?;
+        let mut ciphertext_with_nonce_and_commitment = vec![];
+        ciphertext_with_nonce_and_commitment.extend_from_slice(commitment_bytes);
+        ciphertext_with_nonce_and_commitment.extend_from_slice(nonce_bytes);
+        ciphertext_with_nonce_and_commitment.extend_from_slice(&ciphertext);
+
         Ok(EncryptedRecord {
             commitment: self.commitment()?,
-            ciphertext: hex::encode(ciphertext),
+            ciphertext: hex::encode(ciphertext_with_nonce_and_commitment),
             nonce: record_nonce,
         })
     }
@@ -345,6 +368,7 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::rand::thread_rng;
     use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+    use snarkvm::prelude::Scalar;
 
     fn address(n: u64) -> (String, AddressBytes) {
         let mut address_bytes = [0_u8; 63];
@@ -439,7 +463,9 @@ mod tests {
         let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
         let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
         let view_key = ViewKey::try_from(&private_key).unwrap();
-        let encrypted_record = record.encrypt(&view_key).unwrap();
+        let rng = &mut rand::thread_rng();
+        let randomizer = Scalar::rand(rng);
+        let encrypted_record = record.encrypt(randomizer).unwrap();
 
         assert_eq!(encrypted_record.commitment, record.commitment().unwrap());
     }
@@ -450,7 +476,9 @@ mod tests {
         let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
         let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
         let view_key = ViewKey::try_from(&private_key).unwrap();
-        let encrypted_record = record.encrypt(&view_key).unwrap();
+        let rng = &mut rand::thread_rng();
+        let randomizer = Scalar::rand(rng);
+        let encrypted_record = record.encrypt(randomizer).unwrap();
         let decrypted_record = encrypted_record.decrypt(&view_key).unwrap();
 
         assert_eq!(decrypted_record, record);
