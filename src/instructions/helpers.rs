@@ -78,7 +78,7 @@ pub fn u8_add(augend: &UInt8Gadget, addend: &UInt8Gadget) -> Result<UInt8Gadget>
 mod tests {
     use super::add;
     use ark_r1cs_std::{prelude::Boolean, R1CSVar};
-    use simpleworks::gadgets::{ConstraintF};
+    use simpleworks::gadgets::ConstraintF;
 
     const U8_BITS: usize = 8;
     const U8_ONE: [Boolean<ConstraintF>; 8] = [
