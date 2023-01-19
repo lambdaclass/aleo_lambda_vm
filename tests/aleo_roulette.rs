@@ -10,7 +10,7 @@ mod aleo_roulette_functions_tests {
     use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{self, Identifier, Program, UserInputValueType};
 
-    const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/aleo_roulette.aleo";
+    const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/roulette.aleo";
     const RECORDS_PROGRAM_DIR: &str = "programs/records.aleo";
     const PSD_HASH: &str = "psd_hash";
     const MAKE_BET: &str = "make_bet";
@@ -89,7 +89,7 @@ mod aleo_roulette_functions_tests {
     fn test_mint_casino_token_record() {
         let program = get_aleo_roulette_program();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let amount_to_mint = 1_u64;
 
         let user_inputs = vec![
@@ -150,7 +150,7 @@ mod aleo_roulette_functions_tests {
 
         let reward = 35_u64;
 
-        let (casino_address_string, casino_address) = test_helpers::address(0);
+        let (casino_address_string, casino_address) = test_helpers::address();
         let casino_token_record_gates = 0_u64;
         let casino_token_record_amount = 100_u64;
         let mut casino_token_record_data = jaleo::RecordEntriesMap::new();
@@ -166,7 +166,7 @@ mod aleo_roulette_functions_tests {
             data: casino_token_record_data,
             nonce: casino_token_record_nonce,
         };
-        let (player_address_string, player_address) = test_helpers::address(1);
+        let (player_address_string, player_address) = test_helpers::address();
         let random_roulette_spin_result = 1_u8;
         let player_bet_number = random_roulette_spin_result; // Player wins.
         let player_bet_amount_of_tokens = 1_u64;
@@ -515,7 +515,7 @@ mod aleo_roulette_functions_tests {
     fn test_records() {
         let program = get_aleo_records_program();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let amount_to_mint = 1_u64;
 
         let user_inputs = vec![

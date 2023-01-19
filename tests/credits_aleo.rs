@@ -19,7 +19,7 @@ mod credits_functions_tests {
 
         let function_name = "genesis";
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let genesis_credits = 1_u64;
 
         let user_inputs = vec![
@@ -77,7 +77,7 @@ mod credits_functions_tests {
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let credits_to_mint = 1_u64;
 
         let user_inputs = vec![
@@ -135,10 +135,10 @@ mod credits_functions_tests {
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
-        let (sender_address_string, sender_address_bytes) = test_helpers::address(0);
+        let (sender_address_string, sender_address_bytes) = test_helpers::address();
         let initial_balance = 1_u64;
         let amount_to_transfer = initial_balance;
-        let (receiver_address_string, receiver_address_bytes) = test_helpers::address(0);
+        let (receiver_address_string, receiver_address_bytes) = test_helpers::address();
 
         let user_inputs = vec![
             test_helpers::input_record(
@@ -249,7 +249,7 @@ mod credits_functions_tests {
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let initial_balance = 1_u64;
 
         let first_record_nonce = test_helpers::sample_nonce();
@@ -364,7 +364,7 @@ mod credits_functions_tests {
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let gates_of_existing_record = 2_u64;
         let gates_for_new_record = 1_u64;
         let nonce = test_helpers::sample_nonce();
@@ -470,7 +470,7 @@ mod credits_functions_tests {
         let program_string = std::fs::read_to_string(path).unwrap_or_else(|_| "".to_owned());
         let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
 
-        let (address_string, address_bytes) = test_helpers::address(0);
+        let (address_string, address_bytes) = test_helpers::address();
         let initial_balance = 1_u64;
         let fee = 1_u64;
         let nonce = test_helpers::sample_nonce();
