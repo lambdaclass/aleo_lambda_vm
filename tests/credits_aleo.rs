@@ -138,8 +138,7 @@ mod credits_functions_tests {
         let (sender_address_string, sender_address_bytes) = test_helpers::address();
         let initial_balance = 1_u64;
         let amount_to_transfer = initial_balance;
-        let (receiver_address_string, receiver_address_bytes) =
-            (sender_address_string.clone(), sender_address_bytes);
+        let (receiver_address_string, receiver_address_bytes) = test_helpers::address();
 
         let user_inputs = vec![
             test_helpers::input_record(
@@ -202,7 +201,7 @@ mod credits_functions_tests {
         // Sender's address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
         assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
-        assert_eq!(r1.value().unwrap(), sender_address_string);
+        assert_eq!(r1.value().unwrap(), receiver_address_string);
 
         // Receiver's output record.
         let r4 = function_variables["r4"].as_ref().unwrap();
