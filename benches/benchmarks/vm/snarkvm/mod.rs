@@ -1,23 +1,19 @@
-/// Library for interfacing with the VM, and generating Transactions
-///
 use std::{ops::Deref, str::FromStr, sync::Arc};
-
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
-use log::debug;
 use parking_lot::{lock_api::RwLock, RawRwLock};
-use rand::rngs::ThreadRng;
+use rand::rngs::{ThreadRng, StdRng};
 use rand::SeedableRng;
-// use rand::{rngs::ThreadRng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
-use snarkvm::prelude::Parser;
+use simpleworks::marlin::{UniversalSRS, ConstraintSystemRef};
+use snarkvm::prelude::{Value, Boolean};
 use snarkvm::{
     circuit::AleoV0,
     console::types::string::Integer,
     prelude::{
-        Balance, CallStack, Environment, Itertools, Literal, Network, One, Owner, Plaintext,
-        Testnet3, ToBits, ToField, Uniform, I64,
+        Balance, CallStack, Literal, Network, Owner, Plaintext,
+        Testnet3, ToBits, Uniform,
     },
 };
 
@@ -26,7 +22,6 @@ mod stack;
 pub type Function = snarkvm::prelude::Function<Testnet3>;
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
-pub type UserInputValueType = snarkvm::prelude::Value<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
 pub type Ciphertext = snarkvm::prelude::Ciphertext<Testnet3>;
 pub type Record = snarkvm::prelude::Record<Testnet3, snarkvm::prelude::Plaintext<Testnet3>>;
@@ -59,158 +54,6 @@ pub struct ProgramBuild {
     pub map: IndexMap<Identifier, (ProvingKey, VerifyingKey)>,
 }
 
-/// Basic deployment validations
-pub fn verify_deployment(program: &Program, verifying_keys: VerifyingKeyMap) -> Result<()> {
-    // Ensure the deployment contains verifying keys.
-    let program_id = program.id();
-    ensure!(
-        !verifying_keys.map.is_empty(),
-        "No verifying keys present in the deployment for program '{program_id}'"
-    );
-
-    // Ensure the number of verifying keys matches the number of program functions.
-    if verifying_keys.map.len() != program.functions().len() {
-        bail!("The number of verifying keys does not match the number of program functions");
-    }
-
-    // Ensure the program functions are in the same order as the verifying keys.
-    for ((function_name, function), candidate_name) in
-        program.functions().iter().zip_eq(verifying_keys.map.keys())
-    {
-        // Ensure the function name is correct.
-        if function_name != function.name() {
-            bail!(
-                "The function key is '{function_name}', but the function name is '{}'",
-                function.name()
-            )
-        }
-        // Ensure the function name with the verifying key is correct.
-        if candidate_name != function.name() {
-            bail!(
-                "The verifier key is '{candidate_name}', but the function name is '{}'",
-                function.name()
-            )
-        }
-    }
-    Ok(())
-}
-
-pub fn verify_execution(transition: &Transition, verifying_keys: &VerifyingKeyMap) -> Result<()> {
-    // Verify each transition.
-    log::debug!(
-        "Verifying transition for {}/{}...",
-        transition.program_id(),
-        transition.function_name()
-    );
-
-    // this check also rules out coinbase executions (e.g. credits genesis function)
-    ensure!(
-        *transition.fee() >= 0,
-        "The execution fee is negative, cannot create credits"
-    );
-
-    // Ensure the transition ID is correct.
-    ensure!(
-        **transition.id() == transition.to_root()?,
-        "The transition ID is incorrect"
-    );
-    // Ensure the number of inputs is within the allowed range.
-    ensure!(
-        transition.inputs().len() <= Testnet3::MAX_INPUTS,
-        "Transition exceeded maximum number of inputs"
-    );
-    // Ensure the number of outputs is within the allowed range.
-    ensure!(
-        transition.outputs().len() <= Testnet3::MAX_INPUTS,
-        "Transition exceeded maximum number of outputs"
-    );
-    // Ensure each input is valid.
-    if transition
-        .inputs()
-        .iter()
-        .enumerate()
-        .any(|(index, input)| !input.verify(transition.tcm(), index))
-    {
-        bail!("Failed to verify a transition input")
-    }
-    // Ensure each output is valid.
-    let num_inputs = transition.inputs().len();
-    if transition
-        .outputs()
-        .iter()
-        .enumerate()
-        .any(|(index, output)| !output.verify(transition.tcm(), num_inputs + index))
-    {
-        bail!("Failed to verify a transition output")
-    }
-    // Compute the x- and y-coordinate of `tpk`.
-    let (tpk_x, tpk_y) = transition.tpk().to_xy_coordinate();
-    // [Inputs] Construct the verifier inputs to verify the proof.
-    let mut inputs = vec![
-        <Testnet3 as Environment>::Field::one(),
-        *tpk_x,
-        *tpk_y,
-        **transition.tcm(),
-    ];
-    // [Inputs] Extend the verifier inputs with the input IDs.
-    inputs.extend(
-        transition
-            .inputs()
-            .iter()
-            .flat_map(|input| input.verifier_inputs()),
-    );
-
-    // [Inputs] Extend the verifier inputs with the output IDs.
-    inputs.extend(
-        transition
-            .outputs()
-            .iter()
-            .flat_map(|output| output.verifier_inputs()),
-    );
-    // [Inputs] Extend the verifier inputs with the fee.
-    inputs.push(*I64::<Testnet3>::new(*transition.fee()).to_field()?);
-
-    log::debug!(
-        "Transition public inputs ({} elements): {:#?}",
-        inputs.len(),
-        inputs
-    );
-
-    // Retrieve the verifying key.
-    let verifying_key = verifying_keys
-        .map
-        .get(transition.function_name())
-        .ok_or_else(|| anyhow!("missing verifying key"))?;
-    // Ensure the proof is valid.
-    ensure!(
-        verifying_key.verify(transition.function_name(), &inputs, transition.proof()),
-        "Transition is invalid"
-    );
-    Ok(())
-}
-
-/// Generate proving and verifying keys for each function in the given program,
-/// and return them in a function name -> (proving key, verifying key) map.
-pub fn build_program(program_string: &str) -> Result<(Program, ProgramBuild)> {
-    let (_, program) = Program::parse(program_string).map_err(|e| anyhow!("{}", e))?;
-
-    let mut verifying_keys = IndexMap::new();
-
-    for function_name in program.functions().keys() {
-        let rng = &mut rand::thread_rng();
-        verifying_keys.insert(
-            *function_name,
-            synthesize_function_keys(&program, rng, function_name)?,
-        );
-    }
-
-    Ok((
-        program,
-        ProgramBuild {
-            map: verifying_keys,
-        },
-    ))
-}
 
 /// Generate proving and verifying keys for the given function.
 pub fn synthesize_function_keys(
@@ -236,27 +79,47 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
     Program::from_str(program_string)
 }
 
-pub fn execution(
-    program: Program,
-    function_name: Identifier,
-    inputs: &[UserInputValueType],
+fn user_input_value_to_aleo_value(values: &[vmtropy::jaleo::UserInputValueType]) -> Vec<Value<Testnet3>> {
+    values
+        .iter()
+        .map(|value| match value {
+            vmtropy::jaleo::UserInputValueType::Address(address) => {
+                let address = std::str::from_utf8(address).unwrap();
+                let address = Address::from_str(address).unwrap();
+                Value::Plaintext(Plaintext::from(Literal::Address(address)))
+            }
+            vmtropy::jaleo::UserInputValueType::Boolean(boolean) => {
+                Value::Plaintext(Plaintext::from(Literal::Boolean(Boolean::new(*boolean))))
+            }
+            vmtropy::jaleo::UserInputValueType::U8(value) => {
+                Value::Plaintext(Plaintext::from(Literal::U8(Integer::new(*value))))
+            }
+            vmtropy::jaleo::UserInputValueType::U16(value) => {
+                Value::Plaintext(Plaintext::from(Literal::U16(Integer::new(*value))))
+            }
+            vmtropy::jaleo::UserInputValueType::U32(value) => {
+                Value::Plaintext(Plaintext::from(Literal::U32(Integer::new(*value))))
+            }
+            vmtropy::jaleo::UserInputValueType::U64(value) => {
+                Value::Plaintext(Plaintext::from(Literal::U64(Integer::new(*value))))
+            }
+            vmtropy::jaleo::UserInputValueType::Record(record) => {
+                todo!()
+            }
+            _ => unreachable!("At least for the actual benchmarks"),
+        })
+        .collect()
+}
+
+pub fn execute_function(
+    program: &Program,
+    function_name: &Identifier,
+    inputs: &[vmtropy::jaleo::UserInputValueType],
     private_key: &PrivateKey,
-) -> Result<Vec<Transition>> {
-    ensure!(
-        !Program::is_coinbase(program.id(), &function_name),
-        "Coinbase functions cannot be called"
-    );
-
-    ensure!(
-        program.contains_function(&function_name),
-        "Function '{function_name}' does not exist."
-    );
-
-    debug!(
-        "executing program {} function {} inputs {:?}",
-        program, function_name, inputs
-    );
-
+    universal_srs: &UniversalSRS,
+    constraint_system: ConstraintSystemRef,
+    rng: &mut StdRng,
+) -> Result<Arc<parking_lot::lock_api::RwLock<parking_lot::RawRwLock, Execution>>> {
     let rng = &mut rand::thread_rng();
 
     let stack = stack::new_init(&program)?;
@@ -264,7 +127,7 @@ pub fn execution(
 
     stack.insert_proving_key(&function_name, proving_key)?;
 
-    let authorization = stack.authorize::<AleoV0, _>(private_key, function_name, inputs, rng)?;
+    let authorization = stack.authorize::<AleoV0, _>(private_key, *function_name, &user_input_value_to_aleo_value(inputs), rng)?;
     let execution: Arc<RwLock<RawRwLock, _>> = Arc::new(RwLock::new(Execution::new()));
 
     // Execute the circuit.
@@ -273,9 +136,7 @@ pub fn execution(
         rng,
     )?;
 
-    let execution = execution.read().clone();
-
-    Ok(execution.into_transitions().collect())
+    Ok(execution)
 }
 
 /// Extract the record gates (the minimal credits unit) as a u64 integer, instead of a snarkvm internal type.
