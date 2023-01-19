@@ -33,7 +33,7 @@ cfg_if::cfg_if! {
             let private_key = PrivateKey::new(rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(GENESIS).unwrap();
 
@@ -49,12 +49,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("genesis"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -69,7 +69,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(MINT).unwrap();
 
@@ -85,12 +85,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("mint"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -105,7 +105,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(TRANSFER).unwrap();
 
@@ -129,12 +129,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("transfer"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -149,7 +149,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(COMBINE).unwrap();
 
@@ -178,12 +178,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("combine"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -198,7 +198,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(SPLIT).unwrap();
 
@@ -221,12 +221,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("split"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -241,7 +241,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_credits_program();
             let function_name = Identifier::try_from(FEE).unwrap();
 
@@ -264,12 +264,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("fee"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })

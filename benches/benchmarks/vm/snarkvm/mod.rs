@@ -1,21 +1,18 @@
-use std::{ops::Deref, str::FromStr, sync::Arc};
 use anyhow::{anyhow, Result};
 use indexmap::IndexMap;
 use parking_lot::{lock_api::RwLock, RawRwLock};
-use rand::rngs::{ThreadRng, StdRng};
+use rand::rngs::{StdRng, ThreadRng};
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
-use simpleworks::marlin::{UniversalSRS, ConstraintSystemRef};
-use snarkvm::prelude::{Value, Boolean};
+use simpleworks::marlin::{ConstraintSystemRef, UniversalSRS};
+use snarkvm::prelude::{Boolean, Value};
 use snarkvm::{
     circuit::AleoV0,
     console::types::string::Integer,
-    prelude::{
-        Balance, CallStack, Literal, Network, Owner, Plaintext,
-        Testnet3, ToBits, Uniform,
-    },
+    prelude::{Balance, CallStack, Literal, Network, Owner, Plaintext, Testnet3, ToBits, Uniform},
 };
+use std::{ops::Deref, str::FromStr, sync::Arc};
 
 mod stack;
 
@@ -54,7 +51,6 @@ pub struct ProgramBuild {
     pub map: IndexMap<Identifier, (ProvingKey, VerifyingKey)>,
 }
 
-
 /// Generate proving and verifying keys for the given function.
 pub fn synthesize_function_keys(
     program: &Program,
@@ -79,7 +75,9 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
     Program::from_str(program_string)
 }
 
-fn user_input_value_to_aleo_value(values: &[vmtropy::jaleo::UserInputValueType]) -> Vec<Value<Testnet3>> {
+fn user_input_value_to_aleo_value(
+    values: &[vmtropy::jaleo::UserInputValueType],
+) -> Vec<Value<Testnet3>> {
     values
         .iter()
         .map(|value| match value {
@@ -127,7 +125,12 @@ pub fn execute_function(
 
     stack.insert_proving_key(&function_name, proving_key)?;
 
-    let authorization = stack.authorize::<AleoV0, _>(private_key, *function_name, &user_input_value_to_aleo_value(inputs), rng)?;
+    let authorization = stack.authorize::<AleoV0, _>(
+        private_key,
+        *function_name,
+        &user_input_value_to_aleo_value(inputs),
+        rng,
+    )?;
     let execution: Arc<RwLock<RawRwLock, _>> = Arc::new(RwLock::new(Execution::new()));
 
     // Execute the circuit.

@@ -29,24 +29,24 @@ cfg_if::cfg_if! {
 
             let rng = &mut simpleworks::marlin::generate_rand();
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
-            
+
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_roulette_program();
             let function_name = Identifier::try_from(PSD_HASH).unwrap();
-            
+
             let inputs = [jaleo::UserInputValueType::U32(0_u32)];
 
             group.sample_size(10);
             group.bench_function(BenchmarkId::from_parameter("psd_hash"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -60,12 +60,12 @@ cfg_if::cfg_if! {
             let rng = &mut simpleworks::marlin::generate_rand();
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
-            
-   
+
+
    let program = get_aleo_roulette_program();         let function_name = Identifier::try_from(MINT_CASINO_TOKEN_RECORD).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-   
+
 
             let (_address_string, address_bytes) = test_helpers::address(0);
             let amount_to_mint = 1_u64;
@@ -78,12 +78,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("mint_casino_token_record"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -96,9 +96,9 @@ cfg_if::cfg_if! {
 
             let rng = &mut simpleworks::marlin::generate_rand();
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
-            
+
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_roulette_program();
             let function_name = Identifier::try_from(MAKE_BET).unwrap();
 
@@ -137,12 +137,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("make_bet"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })
@@ -157,7 +157,7 @@ cfg_if::cfg_if! {
             let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng).unwrap();
 
             let private_key = PrivateKey::new(rng).unwrap();
-            
+
             let program = get_aleo_roulette_program();
             let function_name = Identifier::try_from(PSD_BITS_MOD).unwrap();
 
@@ -175,12 +175,12 @@ cfg_if::cfg_if! {
             group.bench_function(BenchmarkId::from_parameter("psd_bits_mod"), |b| {
                 b.iter(|| {
                     vm::execute_function(
-                        &program, 
-                        &function_name, 
-                        &inputs, 
+                        &program,
+                        &function_name,
+                        &inputs,
                         &private_key,
-                        universal_srs.as_ref(), 
-                        ConstraintSystem::<ConstraintF>::new_ref(), 
+                        universal_srs.as_ref(),
+                        ConstraintSystem::<ConstraintF>::new_ref(),
                         rng
                     ).unwrap()
                 })

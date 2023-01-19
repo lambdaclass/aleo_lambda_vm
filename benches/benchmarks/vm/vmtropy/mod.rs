@@ -1,8 +1,8 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use anyhow::{anyhow, Result};
 use rand::rngs::StdRng;
-use simpleworks::marlin::{UniversalSRS, ConstraintSystemRef, MarlinProof};
+use simpleworks::marlin::{ConstraintSystemRef, MarlinProof, UniversalSRS};
+use std::cell::RefCell;
+use std::rc::Rc;
 pub use vmtropy::build_program;
 pub use vmtropy::jaleo::{get_credits_key, mint_credits};
 pub use vmtropy::jaleo::{Itertools, UserInputValueType};
@@ -37,7 +37,8 @@ pub fn execute_function(
     rng: &mut StdRng,
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let function = program.get_function(function_name)?;
-    let mut function_variables = vmtropy::helpers::function_variables(&function, constraint_system.clone())?;
+    let mut function_variables =
+        vmtropy::helpers::function_variables(&function, constraint_system.clone())?;
     let (function_proving_key, _function_verifying_key) = vmtropy::build_function(
         program,
         &function,
