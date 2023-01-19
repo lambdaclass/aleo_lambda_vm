@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod gt_tests {
+mod compare_tests {
     use crate::helpers::test_helpers;
     use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::Parser;
@@ -9,8 +9,8 @@ mod gt_tests {
     };
 
     #[test]
-    fn test_gt_with_u16_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u16_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_1";
 
@@ -18,8 +18,8 @@ mod gt_tests {
         function hello_1:
             input r0 as u16.public;
             input r1 as u16.public;
-            gt r0 r1 into r2;
-            output r2 as u16.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u16.public;
         */
 
         let user_inputs = vec![U16(1), U16(1)];
@@ -30,8 +30,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u16_private_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u16_private_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_2";
 
@@ -39,8 +39,8 @@ mod gt_tests {
         function hello_2:
             input r0 as u16.private;
             input r1 as u16.private;
-            gt r0 r1 into r2;
-            output r2 as u16.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u16.private;
         */
 
         let user_inputs = vec![U16(1), U16(1)];
@@ -51,8 +51,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u16_private_and_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u16_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_3";
 
@@ -60,8 +60,8 @@ mod gt_tests {
         function hello_3:
             input r0 as u16.public;
             input r1 as u16.public;
-            gt r0 r1 into r2;
-            output r2 as u16.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u16.private;
         */
 
         let user_inputs = vec![U16(1), U16(1)];
@@ -72,8 +72,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u32_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u32_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_4";
 
@@ -81,8 +81,8 @@ mod gt_tests {
         function hello_4:
             input r0 as u32.public;
             input r1 as u32.public;
-            gt r0 r1 into r2;
-            output r2 as u32.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u32.public;
         */
 
         let user_inputs = vec![U32(1), U32(1)];
@@ -93,8 +93,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u32_private_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u32_private_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_5";
 
@@ -102,8 +102,8 @@ mod gt_tests {
         function hello_5:
             input r0 as u32.private;
             input r1 as u32.private;
-            gt r0 r1 into r2;
-            output r2 as u32.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u32.private;
         */
 
         let user_inputs = vec![U32(1), U32(1)];
@@ -114,8 +114,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u32_private_and_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u32_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_6";
 
@@ -123,8 +123,8 @@ mod gt_tests {
         function hello_6:
             input r0 as u32.public;
             input r1 as u32.public;
-            gt r0 r1 into r2;
-            output r2 as u32.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u32.private;
         */
 
         let user_inputs = vec![U32(1), U32(1)];
@@ -135,8 +135,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u64_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u64_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_7";
 
@@ -144,8 +144,8 @@ mod gt_tests {
         function hello_7:
             input r0 as u64.public;
             input r1 as u64.public;
-            gt r0 r1 into r2;
-            output r2 as u64.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u64.public;
         */
 
         let user_inputs = vec![U64(1), U64(1)];
@@ -156,8 +156,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u64_private_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u64_private_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_8";
 
@@ -165,8 +165,8 @@ mod gt_tests {
         function hello_8:
             input r0 as u64.private;
             input r1 as u64.private;
-            gt r0 r1 into r2;
-            output r2 as u64.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u64.private;
         */
 
         let user_inputs = vec![U64(1), U64(1)];
@@ -177,8 +177,8 @@ mod gt_tests {
     }
 
     #[test]
-    fn test_gt_with_u64_private_and_public_inputs() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn compare_with_u64_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_9";
 
@@ -186,8 +186,8 @@ mod gt_tests {
         function hello_9:
             input r0 as u64.public;
             input r1 as u64.public;
-            gt r0 r1 into r2;
-            output r2 as u64.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u64.private;
         */
 
         let user_inputs = vec![U64(1), U64(1)];

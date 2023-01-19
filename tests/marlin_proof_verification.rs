@@ -151,8 +151,8 @@ mod marlin_tests {
     }
 
     #[test]
-    fn test_gt() {
-        let program_string = test_helpers::read_program("gt").unwrap();
+    fn test_compare_functions() {
+        let program_string = test_helpers::read_program("compare").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_10";
 
@@ -160,8 +160,8 @@ mod marlin_tests {
             function hello_10:
             input r0 as u8.public;
             input r1 as u8.public;
-            gt r0 r1 into r2;
-            output r2 as u8.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as u8.public;
         */
         let user_inputs = vec![U8(1), U8(3)];
 
