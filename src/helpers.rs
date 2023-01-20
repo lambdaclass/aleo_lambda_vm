@@ -557,6 +557,8 @@ pub(crate) fn process_outputs(
         let operands = process_operands(instruction.operands(), program_variables)?;
         let circuit_output = match instruction {
             Instruction::Add(_) => instructions::add(&operands)?,
+            Instruction::AssertEq(_) => instructions::assert_eq(&operands)?,
+            Instruction::AssertNeq(_) => instructions::assert_neq(&operands)?,
             Instruction::And(_) => instructions::and(&operands)?,
             Instruction::Cast(cast) => match cast.register_type() {
                 snarkvm::prelude::RegisterType::Record(record_identifier) => {
