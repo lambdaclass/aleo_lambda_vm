@@ -1,44 +1,64 @@
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
-use ark_r1cs_std::{prelude::{EqGadget, Boolean}, R1CSVar};
+use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
 use indexmap::IndexMap;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
-use ark_r1cs_std::{
-    prelude::{AllocVar},
-};
-use simpleworks::{marlin::ConstraintSystemRef, gadgets::ConstraintF};
-pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>, constraint_system: ConstraintSystemRef) -> Result<CircuitIOType> {
-    let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;
-
+pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
         .as_slice()
     {
-        
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-             match right_operand.is_eq(left_operand)?.value() {
-                Ok(true) => Ok(true_witness),
-                _ => bail!("{} is not equal to {}", left_operand.value()?, right_operand.value()?),
+            match right_operand.is_eq(left_operand)?.value() {
+                Ok(true) => {
+                    left_operand.enforce_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is not equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
-            
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
-                 Ok(true) => Ok(true_witness),
-                 _ => bail!("{} is not equal to {}", left_operand.value()?, right_operand.value()?),
+                Ok(true) => {
+                    left_operand.enforce_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is not equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
-                 Ok(true) => Ok(true_witness),
-                 _ => bail!("{} is not equal to {}", left_operand.value()?, right_operand.value()?),
+                Ok(true) => {
+                    left_operand.enforce_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is not equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
-                 Ok(true) => Ok(true_witness),
-                 _ => bail!("{} is not equal to {}", left_operand.value()?, right_operand.value()?),
+                Ok(true) => {
+                    left_operand.enforce_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is not equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
         }
         [_, _] => bail!("assert.eq is not supported for the given types"),
@@ -46,9 +66,7 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>, constraint_system: 
     }
 }
 
-pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>, constraint_system: ConstraintSystemRef) -> Result<CircuitIOType> {
-    let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;
-
+pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
@@ -56,26 +74,54 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>, constraint_system:
     {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => Ok(true_witness),
-                _ => bail!("{} is equal to {}", left_operand.value()?, right_operand.value()?),
-           }
+                Ok(true) => {
+                    left_operand.enforce_not_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
+            }
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => Ok(true_witness),
-                _ => bail!("{} is equal to {}", left_operand.value()?, right_operand.value()?),
-           }
+                Ok(true) => {
+                    left_operand.enforce_not_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
+            }
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
-                 Ok(true) => Ok(true_witness),
-                 _ => bail!("{} is equal to {}", left_operand.value()?, right_operand.value()?),
+                Ok(true) => {
+                    left_operand.enforce_not_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
-                 Ok(true) => Ok(true_witness),
-                 _ => bail!("{} is equal to {}", left_operand.value()?, right_operand.value()?),
+                Ok(true) => {
+                    left_operand.enforce_not_equal(&right_operand)?;
+                    Ok(())
+                }
+                _ => bail!(
+                    "{} is equal to {}",
+                    left_operand.value()?,
+                    right_operand.value()?
+                ),
             }
         }
         [_, _] => bail!("assert.neq is not supported for the given types"),
@@ -85,16 +131,14 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>, constraint_system:
 
 #[cfg(test)]
 mod assert_tests {
-    use crate::{instructions::is_eq::is_eq, CircuitIOType};
+    use crate::CircuitIOType;
     use crate::{
         instructions::assert::assert_eq,
         instructions::assert::assert_neq,
-        CircuitIOType::{
-            SimpleAddress, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
-        },
+        CircuitIOType::{SimpleAddress, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8},
     };
     use anyhow::Result;
-    use ark_r1cs_std::prelude::{AllocVar};
+    use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::{
@@ -132,11 +176,11 @@ mod assert_tests {
         expect_on_eq: bool,
     ) -> Result<()> {
         if expect_on_eq {
-            assert!(assert_eq(operands, cs.clone()).is_ok());
-            assert!(assert_neq(operands, cs.clone()).is_err());
+            assert!(assert_eq(operands).is_ok());
+            assert!(assert_neq(operands).is_err());
         } else {
-            assert!(assert_eq(operands, cs.clone()).is_err());
-            assert!(assert_neq(operands, cs.clone()).is_ok());
+            assert!(assert_eq(operands).is_err());
+            assert!(assert_neq(operands).is_ok());
         }
 
         assert!(cs.is_satisfied()?);
@@ -293,15 +337,16 @@ mod assert_tests {
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let third_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_third_operand)).unwrap());
+        let third_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_third_operand)).unwrap(),
+        );
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.insert("r2".to_owned(), third_operand);
 
-        let result = assert_eq(&operands, cs).unwrap_err();
+        let result = assert_eq(&operands).unwrap_err();
 
-        assert_eq!(result.to_string(), "is.eq requires two operands");
+        assert_eq!(result.to_string(), "assert.eq requires two operands");
     }
 
     #[test]
@@ -313,14 +358,15 @@ mod assert_tests {
         let left_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
+        let right_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.remove("r1");
 
-        let result_neq = assert_neq(&operands, cs).unwrap_err();
-        let result = assert_eq(&operands, cs).unwrap_err();
+        let result_neq = assert_neq(&operands).unwrap_err();
+        let result = assert_eq(&operands).unwrap_err();
 
         assert!(result.to_string().contains("requires two operands"));
         assert!(result_neq.to_string().contains("requires two operands"));
@@ -335,10 +381,11 @@ mod assert_tests {
         let left_operand = SimpleAddress(
             AddressGadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand =
-            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
+        let right_operand = SimpleUInt64(
+            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
 
-        let result = is_eq(&sample_operands(
+        let result = assert_eq(&sample_operands(
             left_operand.clone(),
             right_operand.clone(),
         ))
@@ -349,7 +396,7 @@ mod assert_tests {
             "assert.eq is not supported for the given types"
         );
 
-        let result = assert_neq(&sample_operands(left_operand, right_operand), cs).unwrap_err();
+        let result = assert_neq(&sample_operands(left_operand, right_operand)).unwrap_err();
 
         assert_eq!(
             result.to_string(),
