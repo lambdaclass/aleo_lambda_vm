@@ -7,7 +7,7 @@ function hello_1:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u16;
     output r2 as u16.public;
     output r3 as u16.public;
 
@@ -16,9 +16,10 @@ function hello_2:
     input r1 as u16.private;
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
+    assert.eq r0 r1;
+    assert.neq r0 10u16;
     output r2 as u16.public;
     output r3 as u16.public;
-
 
 function hello_3:
     input r0 as u16.public;
@@ -26,7 +27,7 @@ function hello_3:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u16;
     output r2 as u16.public;
     output r3 as u16.public;
 
@@ -37,7 +38,7 @@ function hello_4:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u32;
     output r2 as u32.public;
     output r3 as u32.public;
 
@@ -47,7 +48,7 @@ function hello_5:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u32;
     output r2 as u32.private;
     output r3 as u32.private;
 
@@ -57,7 +58,7 @@ function hello_6:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u32;
     output r2 as u32.public;
     output r3 as u32.public;
 
@@ -67,7 +68,7 @@ function hello_7:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u64;
     output r2 as u64.public;
     output r3 as u64.public;
 
@@ -77,7 +78,7 @@ function hello_8:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u64;
     output r2 as u64.private;
     output r3 as u64.private;
 
@@ -87,7 +88,7 @@ function hello_9:
     is.eq r0 r1 into r2;
     is.neq r0 r1 into r3;
     assert.eq r0 r1;
-    assert.neq r0 10u8;
+    assert.neq r0 10u64;
     output r2 as u64.public;
     output r3 as u64.public;
 
