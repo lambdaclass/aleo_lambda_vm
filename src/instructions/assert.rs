@@ -12,7 +12,7 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
                 Ok(true) => {
-                    left_operand.enforce_equal(&right_operand)?;
+                    left_operand.enforce_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -25,7 +25,7 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
                 Ok(true) => {
-                    left_operand.enforce_equal(&right_operand)?;
+                    left_operand.enforce_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -38,7 +38,7 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
                 Ok(true) => {
-                    left_operand.enforce_equal(&right_operand)?;
+                    left_operand.enforce_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -51,7 +51,7 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             match right_operand.is_eq(left_operand)?.value() {
                 Ok(true) => {
-                    left_operand.enforce_equal(&right_operand)?;
+                    left_operand.enforce_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -75,7 +75,7 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
                 Ok(true) => {
-                    left_operand.enforce_not_equal(&right_operand)?;
+                    left_operand.enforce_not_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -88,7 +88,7 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
                 Ok(true) => {
-                    left_operand.enforce_not_equal(&right_operand)?;
+                    left_operand.enforce_not_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -101,7 +101,7 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
                 Ok(true) => {
-                    left_operand.enforce_not_equal(&right_operand)?;
+                    left_operand.enforce_not_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -114,7 +114,7 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             match right_operand.is_eq(left_operand)?.not().value() {
                 Ok(true) => {
-                    left_operand.enforce_not_equal(&right_operand)?;
+                    left_operand.enforce_not_equal(right_operand)?;
                     Ok(())
                 }
                 _ => bail!(
@@ -338,7 +338,7 @@ mod assert_tests {
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
         let third_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_third_operand)).unwrap(),
+            UInt64Gadget::new_witness(cs, || Ok(primitive_third_operand)).unwrap(),
         );
 
         let mut operands = sample_operands(left_operand, right_operand);
@@ -359,7 +359,7 @@ mod assert_tests {
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
         let right_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+            UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap(),
         );
 
         let mut operands = sample_operands(left_operand, right_operand);
@@ -382,7 +382,7 @@ mod assert_tests {
             AddressGadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
         let right_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+            UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap(),
         );
 
         let result = assert_eq(&sample_operands(
