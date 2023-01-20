@@ -1,9 +1,5 @@
 #[cfg(test)]
 mod add;
-//#[cfg(test)]
-//mod assert_eq;
-//#[cfg(test)]
-//mod assert_neq;
 #[cfg(test)]
 mod compare;
 #[cfg(test)]
