@@ -3,9 +3,12 @@ mod sub_tests {
     use crate::helpers::test_helpers;
     use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::Parser;
-    use vmtropy::jaleo::{
-        Identifier, Program, Record as JAleoRecord, RecordEntriesMap,
-        UserInputValueType::{Record, U16, U32, U64},
+    use vmtropy::{
+        helpers,
+        jaleo::{
+            Identifier, Program, Record as JAleoRecord, RecordEntriesMap,
+            UserInputValueType::{Record, U16, U32, U64},
+        },
     };
 
     #[test]
@@ -245,7 +248,7 @@ mod sub_tests {
                 owner: address,
                 gates: 0,
                 data: RecordEntriesMap::default(),
-                nonce: ConstraintF::default(),
+                nonce: Some(helpers::random_nonce()),
             }),
             U64(1),
         ];

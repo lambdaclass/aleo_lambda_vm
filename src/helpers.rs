@@ -3,7 +3,7 @@ use crate::{
         SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
         SimpleUInt64, SimpleUInt8,
     },
-    instructions,
+    instructions::{self},
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
     record::Record as VMRecord,
     CircuitIOType, SimpleFunctionVariables,
@@ -20,8 +20,8 @@ use simpleworks::{
     marlin::ConstraintSystemRef,
 };
 use snarkvm::prelude::{
-    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Register,
-    Testnet3, ValueType,
+    EntryType, Function, Group, Instruction, Literal, LiteralType, Operand, PlaintextType,
+    Register, Scalar, Testnet3, Uniform, ValueType,
 };
 
 pub fn to_address(primitive_address: String) -> [u8; 63] {
@@ -109,7 +109,7 @@ pub(crate) fn default_user_inputs(
                     owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
                     gates: u64::default(),
                     data: aleo_entries_to_vm_entries(aleo_record_entries)?,
-                    nonce: ConstraintF::default(),
+                    nonce: Some(random_nonce()),
                 })
             }
             // Constant Types
@@ -464,7 +464,7 @@ pub(crate) fn process_inputs(
                     owner: address,
                     gates,
                     data,
-                    nonce,
+                    nonce: _nonce,
                 }),
             ) => {
                 let mut entries_gadgets: IndexMap<String, CircuitIOType> = IndexMap::new();
@@ -510,7 +510,7 @@ pub(crate) fn process_inputs(
                         Ok(gates)
                     })?,
                     entries: entries_gadgets,
-                    nonce: *nonce,
+                    // nonce: *nonce,
                 })
             }
             (ValueType::Record(_), _) => {
@@ -707,4 +707,10 @@ pub fn process_operands(
         };
     }
     Ok(instruction_operands)
+}
+
+pub fn random_nonce() -> Group<Testnet3> {
+    let rng = &mut rand::thread_rng();
+    let randomizer = Scalar::rand(rng);
+    Group::generator() * randomizer
 }

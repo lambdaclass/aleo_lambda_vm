@@ -17,7 +17,8 @@ use simpleworks::{
     marlin::ConstraintSystemRef,
 };
 use snarkvm::prelude::{
-    EntryType, Identifier, Literal, LiteralType, Operand, PlaintextType, Register, Testnet3,
+    EntryType, Group, Identifier, Literal, LiteralType, Operand, PlaintextType, Register, Scalar,
+    Testnet3,
 };
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 
@@ -315,13 +316,10 @@ pub fn _cast(
                 }
             };
 
-            let nonce = ConstraintF::rand(&mut thread_rng());
-
             Ok(SimpleRecord(Record {
                 owner,
                 gates,
                 entries,
-                nonce,
             }))
         }
         [] | [_] => bail!("Cast is a two or more operands instruction"),

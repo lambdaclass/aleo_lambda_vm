@@ -120,7 +120,7 @@ pub fn process_circuit_inputs(
                             to_address(r.owner.value()?),
                             r.gates.value()?,
                             primitive_entries,
-                            Some(r.nonce),
+                            None,
                         );
                         VariableType::Record(Some(record.serial_number(private_key)?), record)
                     }
@@ -216,11 +216,11 @@ pub fn process_circuit_outputs(
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
-                        let record = Record::new(
+                        let mut record = Record::new(
                             to_address(r.owner.value()?),
                             r.gates.value()?,
                             primitive_entries,
-                            Some(r.nonce),
+                            None,
                         );
                         let rng = &mut rand::thread_rng();
                         let randomizer = Scalar::rand(rng);

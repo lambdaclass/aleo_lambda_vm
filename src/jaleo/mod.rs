@@ -6,9 +6,7 @@ use simpleworks::{
     marlin::{generate_rand, MarlinProof},
 };
 pub use snarkvm::prelude::Itertools;
-use snarkvm::prelude::Testnet3;
-
-mod ecies;
+use snarkvm::prelude::{Group, Scalar, Testnet3, Uniform};
 
 mod execute;
 pub use execute::{credits_execution, execution, process_circuit_inputs, process_circuit_outputs};
@@ -80,10 +78,13 @@ pub fn mint_credits(
         *address_byte = *owner_address_byte;
     }
 
-    let nonce = ConstraintF::from(seed);
-    let non_encrypted_record =
+    let rng = &mut rand::thread_rng();
+    let randomizer = Scalar::rand(rng);
+    let nonce = Group::generator() * randomizer;
+
+    let mut non_encrypted_record =
         Record::new(address, credits, RecordEntriesMap::default(), Some(nonce));
-    let encrypted_record = non_encrypted_record.encrypt(owner_view_key)?;
+    let encrypted_record = non_encrypted_record.encrypt(randomizer)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
 }
