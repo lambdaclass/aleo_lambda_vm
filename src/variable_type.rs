@@ -55,6 +55,7 @@ impl Display for VariableType {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::from_str;
     use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
 
     use crate::{
@@ -99,9 +100,10 @@ mod tests {
 
         let serialized_record_variable = serde_json::to_string(&record_variable).unwrap();
 
+        let nonce_as_string = nonce.to_string();
         assert_eq!(
             serialized_record_variable,
-            "{\"Record\":[null,{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{},\"nonce\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+            format!("{{\"Record\":[null,{{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{{}},\"nonce\":\"{nonce_as_string}\"}}]}}")
         );
     }
 
@@ -176,56 +178,56 @@ mod tests {
         );
     }
 
-    // #[test]
-    // fn test_deserialize_record_variable_type() {
-    //     let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-    //     let gates = 1;
-    //     let nonce = helpers::random_nonce();
-    //     let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
-    //     let serialized_record_variable = format!(
-    //         r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}]}}"#
-    //     );
+    #[test]
+    fn test_deserialize_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let gates = 1;
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
+        let serialized_record_variable = format!(
+            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{nonce_as_string}"}}]}}"#
+        );
 
-    //     let record_variable: VariableType =
-    //         serde_json::from_str(&serialized_record_variable).unwrap();
+        let record_variable: VariableType =
+            serde_json::from_str(&serialized_record_variable).unwrap();
 
-    //     assert_eq!(
-    //         record_variable,
-    //         VariableType::Record(
-    //             None,
-    //             Record::new(
-    //                 to_address(primitive_address.to_owned()),
-    //                 gates,
-    //                 RecordEntriesMap::default(),
-    //                 Some(nonce),
-    //             )
-    //         )
-    //     );
-    // }
+        assert_eq!(
+            record_variable,
+            VariableType::Record(
+                None,
+                Record::new(
+                    to_address(primitive_address.to_owned()),
+                    gates,
+                    RecordEntriesMap::default(),
+                    Some(nonce),
+                )
+            )
+        );
+    }
 
-    // #[test]
-    // fn test_cannot_deserialize_a_public_record_variable_type() {
-    //     let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-    //     let nonce = helpers::random_nonce();
-    //     let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
-    //     let serialized_public_record_variable = format!(
-    //         r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}"#,
-    //     );
+    #[test]
+    fn test_cannot_deserialize_a_public_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
+        let serialized_public_record_variable = format!(
+            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{nonce_as_string}"}}"#,
+        );
 
-    //     assert!(serde_json::from_str::<VariableType>(&serialized_public_record_variable).is_err());
-    // }
+        assert!(serde_json::from_str::<VariableType>(&serialized_public_record_variable).is_err());
+    }
 
-    // #[test]
-    // fn test_cannot_deserialize_a_private_record_variable_type() {
-    //     let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-    //     let nonce = helpers::random_nonce();
-    //     let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
-    //     let serialized_private_record_variable = format!(
-    //         r#"{{"Private":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{encoded_nonce}"}}"#,
-    //     );
+    #[test]
+    fn test_cannot_deserialize_a_private_record_variable_type() {
+        let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
+        let serialized_private_record_variable = format!(
+            r#"{{"Private":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{nonce_as_string}"}}"#,
+        );
 
-    //     assert!(serde_json::from_str::<VariableType>(&serialized_private_record_variable).is_err())
-    // }
+        assert!(serde_json::from_str::<VariableType>(&serialized_private_record_variable).is_err())
+    }
 
     #[test]
     fn test_bincode_serialization() {

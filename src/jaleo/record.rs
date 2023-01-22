@@ -365,21 +365,17 @@ impl Serialize for Record {
         state.serialize_field("gates", &format!("{}u64", self.gates))?;
         state.serialize_field("data", &self.data)?;
 
-        // let nonce = serialize_field_element(self.nonce).map_err(serde::ser::Error::custom)?;
-        let nonce = if let Some(nonce) = self.nonce {
-            nonce.to_string()
-        } else {
-            String::from("")
-        };
-
-        state.serialize_field("nonce", &nonce)?;
+        state.serialize_field("nonce", &self.nonce)?;
         state.end()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::jaleo::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
+    use crate::{
+        helpers,
+        jaleo::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey},
+    };
 
     use super::{decrypt_from_record_view_key, EncryptedRecord, Record};
     use ark_ff::UniformRand;
@@ -469,8 +465,18 @@ mod tests {
     #[test]
     fn test_record_uniqueness() {
         let (_owner_str, owner) = address(0);
-        let record1 = Record::new(owner, 0, RecordEntriesMap::default(), None);
-        let record2 = Record::new(owner, 0, RecordEntriesMap::default(), None);
+        let record1 = Record::new(
+            owner,
+            0,
+            RecordEntriesMap::default(),
+            Some(helpers::random_nonce()),
+        );
+        let record2 = Record::new(
+            owner,
+            0,
+            RecordEntriesMap::default(),
+            Some(helpers::random_nonce()),
+        );
 
         assert_ne!(record1.commitment().unwrap(), record2.commitment().unwrap());
     }
