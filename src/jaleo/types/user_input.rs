@@ -185,54 +185,54 @@ mod tests {
     };
     use snarkvm::prelude::{Group, Scalar};
 
-    // #[test]
-    // fn display_value() {
-    //     let v = UserInputValueType::U8(2);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, "2u8");
-    //     let v = UserInputValueType::U16(3);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, "3u16");
-    //     let v = UserInputValueType::U32(4);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, "4u32");
-    //     let v = UserInputValueType::U64(5);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, "5u64");
-    //     let v = UserInputValueType::U128(6);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, "6u128");
-    //     // Address
-    //     let mut address = [0_u8; 63];
-    //     let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
-    //     for (sender_address_byte, address_string_byte) in
-    //         address.iter_mut().zip(address_str.as_bytes())
-    //     {
-    //         *sender_address_byte = *address_string_byte;
-    //     }
-    //     let v = UserInputValueType::Address(address);
-    //     let out = format!("{v}");
-    //     assert_eq!(out, format!("\"{address_str}\""));
-    //     // Record
-    //     let mut address = [0_u8; 63];
-    //     let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
-    //     for (sender_address_byte, address_string_byte) in
-    //         address.iter_mut().zip(address_str.as_bytes())
-    //     {
-    //         *sender_address_byte = *address_string_byte;
-    //     }
-    //     let gates = 1_u64;
-    //     let nonce = helpers::random_nonce();
+    #[test]
+    fn display_value() {
+        let v = UserInputValueType::U8(2);
+        let out = format!("{v}");
+        assert_eq!(out, "2u8");
+        let v = UserInputValueType::U16(3);
+        let out = format!("{v}");
+        assert_eq!(out, "3u16");
+        let v = UserInputValueType::U32(4);
+        let out = format!("{v}");
+        assert_eq!(out, "4u32");
+        let v = UserInputValueType::U64(5);
+        let out = format!("{v}");
+        assert_eq!(out, "5u64");
+        let v = UserInputValueType::U128(6);
+        let out = format!("{v}");
+        assert_eq!(out, "6u128");
+        // Address
+        let mut address = [0_u8; 63];
+        let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
+        for (sender_address_byte, address_string_byte) in
+            address.iter_mut().zip(address_str.as_bytes())
+        {
+            *sender_address_byte = *address_string_byte;
+        }
+        let v = UserInputValueType::Address(address);
+        let out = format!("{v}");
+        assert_eq!(out, format!("\"{address_str}\""));
+        // Record
+        let mut address = [0_u8; 63];
+        let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
+        for (sender_address_byte, address_string_byte) in
+            address.iter_mut().zip(address_str.as_bytes())
+        {
+            *sender_address_byte = *address_string_byte;
+        }
+        let gates = 1_u64;
+        let nonce = helpers::random_nonce();
 
-    //     let v = UserInputValueType::Record(Record {
-    //         owner: address,
-    //         gates,
-    //         data: RecordEntriesMap::default(),
-    //         nonce,
-    //     });
-    //     let out = format!("{v}");
-    //     assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
-    // }
+        let v = UserInputValueType::Record(Record {
+            owner: address,
+            gates,
+            data: RecordEntriesMap::default(),
+            nonce: Some(nonce),
+        });
+        let out = format!("{v}");
+        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", nonce.to_string()));
+    }
 
     /* Deserialize Tests */
 
@@ -361,56 +361,56 @@ mod tests {
         assert_eq!(v, format!("\"{data}\""));
     }
 
-    // #[test]
-    // fn test_serialize_record_without_entries() {
-    //     let mut address = [0_u8; 63];
-    //     let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
-    //     for (sender_address_byte, address_string_byte) in
-    //         address.iter_mut().zip(address_str.as_bytes())
-    //     {
-    //         *sender_address_byte = *address_string_byte;
-    //     }
+    #[test]
+    fn test_serialize_record_without_entries() {
+        let mut address = [0_u8; 63];
+        let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
+        for (sender_address_byte, address_string_byte) in
+            address.iter_mut().zip(address_str.as_bytes())
+        {
+            *sender_address_byte = *address_string_byte;
+        }
 
-    //     let nonce = helpers::random_nonce();
+        let nonce = helpers::random_nonce();
 
-    //     let data = UserInputValueType::Record(Record {
-    //         owner: address,
-    //         gates: 0,
-    //         data: RecordEntriesMap::default(),
-    //         nonce,
-    //     });
+        let data = UserInputValueType::Record(Record {
+            owner: address,
+            gates: 0,
+            data: RecordEntriesMap::default(),
+            nonce: Some(nonce),
+        });
 
-    //     let v = serde_json::to_string(&data).unwrap();
+        let v = serde_json::to_string(&data).unwrap();
 
-    //     assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
-    // }
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", nonce.to_string()));
+    }
 
-    // #[test]
-    // fn test_serialize_record_with_entries() {
-    //     let mut address = [0_u8; 63];
-    //     let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
-    //     for (sender_address_byte, address_string_byte) in
-    //         address.iter_mut().zip(address_str.as_bytes())
-    //     {
-    //         *sender_address_byte = *address_string_byte;
-    //     }
-    //     let mut data = RecordEntriesMap::new();
-    //     data.insert("amount".to_owned(), UserInputValueType::U64(0));
-    //     let rng = &mut rand::thread_rng();
-    //     let randomizer = Scalar::rand(rng);
-    //     let nonce = Group::generator() * randomizer;
+    #[test]
+    fn test_serialize_record_with_entries() {
+        let mut address = [0_u8; 63];
+        let address_str = "aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m";
+        for (sender_address_byte, address_string_byte) in
+            address.iter_mut().zip(address_str.as_bytes())
+        {
+            *sender_address_byte = *address_string_byte;
+        }
+        let mut data = RecordEntriesMap::new();
+        data.insert("amount".to_owned(), UserInputValueType::U64(0));
+        let rng = &mut rand::thread_rng();
+        let randomizer = Scalar::rand(rng);
+        let nonce = Group::generator() * randomizer;
 
-    //     let data = UserInputValueType::Record(Record {
-    //         owner: address,
-    //         gates: 0,
-    //         data,
-    //         nonce,
-    //     });
+        let data = UserInputValueType::Record(Record {
+            owner: address,
+            gates: 0,
+            data,
+            nonce: Some(nonce),
+        });
 
-    //     let v = serde_json::to_string(&data).unwrap();
+        let v = serde_json::to_string(&data).unwrap();
 
-    //     assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
-    // }
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", nonce.to_string()));
+    }
 
     #[test]
     fn test_bincode_serialization() {
