@@ -406,40 +406,41 @@ mod tests {
         assert!(record.commitment().is_ok());
     }
 
-    // #[test]
-    // fn test_serialize_record() {
-    //     let (address_string, address) = address(0);
-    //     let gates = 0_u64;
-    //     let data = RecordEntriesMap::default();
-    //     let record = Record::new(address, gates, data, None);
-    //     let nonce = serialize_field_element(record.nonce).unwrap();
+    #[test]
+    fn test_serialize_record() {
+        let (address_string, address) = address(0);
+        let gates = 0_u64;
+        let data = RecordEntriesMap::default();
+        let nonce = helpers::random_nonce();
+        let record = Record::new(address, gates, data, Some(nonce));
 
-    //     let record_string = serde_json::to_string(&record).unwrap();
+        let record_string = serde_json::to_string(&record).unwrap();
+        let nonce_as_string = nonce.to_string();
 
-    //     assert_eq!(
-    //         record_string,
-    //         format!(
-    //             "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{}\"}}",
-    //             hex::encode(nonce),
-    //         )
-    //     );
-    // }
+        assert_eq!(
+            record_string,
+            format!(
+                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{}\"}}",
+                nonce_as_string,
+            )
+        );
+    }
 
-    // #[test]
-    // fn test_deserialize_record() {
-    //     let address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-    //     let nonce = ConstraintF::rand(&mut thread_rng());
-    //     let encoded_nonce = &hex::encode(serialize_field_element(nonce).unwrap());
-    //     let record_str = &format!(
-    //         r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{encoded_nonce}"}}"#
-    //     );
-    //     let record: Record = serde_json::from_str(record_str).unwrap();
+    #[test]
+    fn test_deserialize_record() {
+        let address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
+        let record_str = &format!(
+            r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{nonce_as_string}"}}"#
+        );
+        let record: Record = serde_json::from_str(record_str).unwrap();
 
-    //     assert_eq!(record.owner, address.as_bytes());
-    //     assert_eq!(record.gates, 0);
-    //     assert_eq!(record.data, RecordEntriesMap::default());
-    //     assert_eq!(record.nonce, nonce);
-    // }
+        assert_eq!(record.owner, address.as_bytes());
+        assert_eq!(record.gates, 0);
+        assert_eq!(record.data, RecordEntriesMap::default());
+        assert_eq!(record.nonce, Some(nonce));
+    }
 
     #[test]
     fn test_bincode_serialization() {
