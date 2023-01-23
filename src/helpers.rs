@@ -609,7 +609,7 @@ pub(crate) fn process_outputs(
             Instruction::Nand(_) => instructions::nand(&operands)?,
             Instruction::Or(_) => instructions::or(&operands)?,
             Instruction::Xor(_) => instructions::xor(&operands)?,
-            Instruction::Nor(_) => instructions::nor(&operands)?,
+            Instruction::Nor(_) => instructions::nor(&operands, constraint_system.clone())?,
             Instruction::Mul(_) => instructions::mul(&operands, constraint_system.clone())?,
             Instruction::Shl(_) => instructions::shl(&operands, constraint_system.clone())?,
             Instruction::Shr(_) => instructions::shr(&operands, constraint_system.clone())?,
