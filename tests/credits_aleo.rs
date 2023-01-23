@@ -6,7 +6,6 @@ mod credits_functions_tests {
 
     use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
     use ark_r1cs_std::R1CSVar;
-    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
     use vmtropy::{helpers, jaleo, VMRecordEntriesMap};
 

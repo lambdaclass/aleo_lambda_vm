@@ -58,9 +58,6 @@ impl Display for VariableType {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::from_str;
-    use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
-
     use crate::{
         helpers::{self, to_address},
         jaleo::{Record, RecordEntriesMap, UserInputValueType},

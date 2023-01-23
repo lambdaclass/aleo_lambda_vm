@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use serde::ser::Error;
 use serde::Deserialize;
 use simpleworks::gadgets::traits::ToFieldElements;
-use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+use simpleworks::gadgets::ConstraintF;
 use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
@@ -180,9 +180,6 @@ mod tests {
 
     use super::UserInputValueType;
     use ark_ff::UniformRand;
-    use simpleworks::{
-        fields::serialize_field_element, gadgets::ConstraintF, marlin::generate_rand,
-    };
     use snarkvm::prelude::{Group, Scalar};
 
     #[test]
@@ -231,7 +228,7 @@ mod tests {
             nonce: Some(nonce),
         });
         let out = format!("{v}");
-        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", nonce.to_string()));
+        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", nonce));
     }
 
     /* Deserialize Tests */
@@ -382,7 +379,7 @@ mod tests {
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", nonce.to_string()));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", nonce));
     }
 
     #[test]
@@ -409,7 +406,7 @@ mod tests {
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", nonce.to_string()));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", nonce));
     }
 
     #[test]

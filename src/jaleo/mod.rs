@@ -6,7 +6,7 @@ use simpleworks::{
     marlin::{generate_rand, MarlinProof},
 };
 pub use snarkvm::prelude::Itertools;
-use snarkvm::prelude::{Group, Scalar, Testnet3, Uniform};
+use snarkvm::prelude::{Scalar, Testnet3, Uniform};
 
 mod execute;
 pub use execute::{credits_execution, execution, process_circuit_inputs, process_circuit_outputs};

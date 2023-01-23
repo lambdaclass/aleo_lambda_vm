@@ -3,10 +3,8 @@ mod helpers;
 #[cfg(test)]
 mod aleo_roulette_functions_tests {
     use crate::helpers::test_helpers;
-    use ark_ff::UniformRand;
     use ark_r1cs_std::R1CSVar;
-    use ark_std::rand::thread_rng;
-    use simpleworks::{gadgets::ConstraintF, marlin::MarlinProof};
+    use simpleworks::marlin::MarlinProof;
     use snarkvm::prelude::{Function, Parser, Testnet3};
     use vmtropy::{
         helpers,

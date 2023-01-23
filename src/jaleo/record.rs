@@ -1,8 +1,5 @@
 use super::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
-use crate::{
-    helpers::{self},
-    record,
-};
+use crate::helpers::{self};
 use aes::cipher::KeyInit;
 use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
@@ -54,12 +51,19 @@ pub struct EncryptedRecord {
 
 impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
-        let record_view_key = (**view_key * &self.nonce).to_x_coordinate();
+        let record_view_key = (**view_key * self.nonce).to_x_coordinate();
 
+        let ciphertext = hex::decode(
+            self.ciphertext
+                .get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+        )?;
         // The first six bytes are the "record" string, the next 32 the nonce.
-        let ciphertext = hex::decode(&self.ciphertext[6..])?[32..].to_vec();
+        let ciphertext = ciphertext
+            .get(32..)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?;
 
-        decrypt_from_record_view_key(&record_view_key, &ciphertext)
+        decrypt_from_record_view_key(&record_view_key, ciphertext)
     }
 
     pub fn is_owner(&self, address: &Address, view_key: &ViewKey) -> bool {
@@ -73,14 +77,22 @@ impl EncryptedRecord {
 
     pub fn decrypt_from_ciphertext(view_key: &ViewKey, ciphertext: &str) -> Result<Record> {
         // The first six bytes are the "record" string
-        let decoded = hex::decode(&ciphertext[6..])?;
-        let nonce_bytes = decoded[..32].to_vec();
-        let ciphertext = decoded[32..].to_vec();
+        let decoded = hex::decode(
+            ciphertext
+                .get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+        )?;
+        let nonce_bytes = decoded
+            .get(..32)
+            .ok_or_else(|| anyhow!("Out of bounds when getting nonce from ciphertext"))?;
+        let ciphertext = decoded
+            .get(32..)
+            .ok_or_else(|| anyhow!("Out of bounds when getting ciphertext"))?;
 
-        let nonce = Group::<Testnet3>::from_bytes_le(&nonce_bytes)?;
-        let record_view_key = (**view_key * &nonce).to_x_coordinate();
+        let nonce = Group::<Testnet3>::from_bytes_le(nonce_bytes)?;
+        let record_view_key = (**view_key * nonce).to_x_coordinate();
 
-        decrypt_from_record_view_key(&record_view_key, &ciphertext)
+        decrypt_from_record_view_key(&record_view_key, ciphertext)
     }
 }
 
@@ -95,11 +107,23 @@ fn decrypt_from_record_view_key(
     let key = GenericArray::from_slice(&key);
     let aead = Aes256Gcm::new(key);
 
-    let iv = GenericArray::from_slice(&ciphertext[..AES_IV_LENGTH]);
-    let tag = GenericArray::from_slice(&ciphertext[AES_IV_LENGTH..AES_IV_PLUS_TAG_LENGTH]);
+    let iv = GenericArray::from_slice(
+        ciphertext
+            .get(..AES_IV_LENGTH)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
+    let tag = GenericArray::from_slice(
+        ciphertext
+            .get(AES_IV_LENGTH..AES_IV_PLUS_TAG_LENGTH)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
 
     let mut plaintext = Vec::with_capacity(ciphertext.len() - AES_IV_PLUS_TAG_LENGTH);
-    plaintext.extend(&ciphertext[AES_IV_PLUS_TAG_LENGTH..]);
+    plaintext.extend(
+        ciphertext
+            .get(AES_IV_PLUS_TAG_LENGTH..)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
 
     aead.decrypt_in_place_detached(iv, &EMPTY_BYTES, &mut plaintext, tag)
         .map_err(|e| anyhow!("{}", e))?;
@@ -113,17 +137,19 @@ impl FromStr for EncryptedRecord {
 
     fn from_str(s: &str) -> Result<Self> {
         // The first six bytes are the "record" string.
-        let record_as_bytes = hex::decode(&s[6..])?;
-        let nonce_bytes = record_as_bytes[..32].to_vec();
-        let nonce = Group::<Testnet3>::from_bytes_le(&nonce_bytes)?;
+        let record_as_bytes = hex::decode(
+            s.get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing the record"))?,
+        )?;
+        let nonce_bytes = record_as_bytes
+            .get(..32)
+            .ok_or_else(|| anyhow!("Out of bounds when accessing the record nonce"))?;
+        let nonce = Group::<Testnet3>::from_bytes_le(nonce_bytes)?;
 
         let mut ciphertext = "record".to_owned();
         ciphertext.push_str(&hex::encode(record_as_bytes));
 
-        Ok(Self {
-            ciphertext: ciphertext,
-            nonce: nonce,
-        })
+        Ok(Self { ciphertext, nonce })
     }
 }
 
@@ -238,8 +264,8 @@ impl Record {
     /// Encrypting takes a mutable reference because the act of encrypting is what decides the nonce
     /// of the record which was previously None, so we mutate it.
     pub fn encrypt(&mut self, randomizer: Scalar<Testnet3>) -> Result<EncryptedRecord> {
-        let address_string = String::from_utf8(self.owner.to_vec()).unwrap();
-        let address = Address::from_str(&address_string).unwrap();
+        let address_string = String::from_utf8(self.owner.to_vec())?;
+        let address = Address::from_str(&address_string)?;
         let record_nonce = Testnet3::g_scalar_multiply(&randomizer);
         self.nonce = Some(record_nonce);
 
@@ -252,7 +278,7 @@ impl Record {
         let key = GenericArray::from_slice(&key);
         let aead = Aes256Gcm::new(key);
 
-        let mut iv = [0u8; AES_IV_LENGTH];
+        let mut iv = [0_u8; AES_IV_LENGTH];
         thread_rng().fill(&mut iv);
 
         let nonce = GenericArray::from_slice(&iv);
@@ -265,9 +291,9 @@ impl Record {
         let ciphertext = {
             let tag = aead
                 .encrypt_in_place_detached(nonce, &EMPTY_BYTES, &mut out)
-                .unwrap();
+                .map_err(|e| anyhow!("{}", e))?;
             let mut output = Vec::with_capacity(AES_IV_PLUS_TAG_LENGTH + message_length);
-            output.extend(&iv);
+            output.extend(iv);
             output.extend(tag);
             output.extend(out);
             output
@@ -283,7 +309,7 @@ impl Record {
         ciphertext.push_str(&hex::encode(ciphertext_with_nonce));
 
         Ok(EncryptedRecord {
-            ciphertext: ciphertext,
+            ciphertext,
             nonce: record_nonce,
         })
     }
@@ -326,11 +352,9 @@ mod tests {
         jaleo::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey},
     };
 
-    use super::{decrypt_from_record_view_key, EncryptedRecord, Record};
+    use super::{EncryptedRecord, Record};
     use ark_ff::UniformRand;
-    use ark_std::rand::thread_rng;
     use indexmap::IndexMap;
-    use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
     use snarkvm::prelude::Scalar;
 
     fn address(n: u64) -> (String, AddressBytes) {

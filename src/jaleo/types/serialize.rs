@@ -2,7 +2,6 @@ use super::UserInputValueType;
 use crate::jaleo::Record as JAleoRecord;
 use anyhow::Result;
 use serde::{ser::SerializeStruct, Serialize};
-use simpleworks::fields::serialize_field_element;
 
 impl Serialize for UserInputValueType {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

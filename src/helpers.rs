@@ -464,7 +464,7 @@ pub(crate) fn process_inputs(
                     owner: address,
                     gates,
                     data,
-                    nonce: nonce,
+                    nonce,
                 }),
             ) => {
                 let mut entries_gadgets: IndexMap<String, CircuitIOType> = IndexMap::new();

@@ -2,12 +2,10 @@ use std::str::FromStr;
 
 use crate::{circuit_io_type::CircuitIOType, helpers, record::Record, VMRecordEntriesMap};
 use anyhow::{anyhow, bail, Result};
-use ark_ff::UniformRand;
 use ark_r1cs_std::{
     prelude::{AllocVar, Boolean},
     R1CSVar,
 };
-use ark_std::rand::thread_rng;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
@@ -17,8 +15,7 @@ use simpleworks::{
     marlin::ConstraintSystemRef,
 };
 use snarkvm::prelude::{
-    EntryType, Group, Identifier, Literal, LiteralType, Operand, PlaintextType, Register, Scalar,
-    Testnet3,
+    EntryType, Identifier, Literal, LiteralType, Operand, PlaintextType, Register, Testnet3,
 };
 pub use CircuitIOType::{SimpleAddress, SimpleRecord, SimpleUInt64};
 

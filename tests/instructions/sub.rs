@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod sub_tests {
     use crate::helpers::test_helpers;
-    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::Parser;
     use vmtropy::{
         helpers,
