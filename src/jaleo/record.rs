@@ -56,8 +56,8 @@ impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
         let record_view_key = (**view_key * &self.nonce).to_x_coordinate();
 
-        // The first 32 bytes are the record's nonce.
-        let ciphertext = hex::decode(&self.ciphertext)?[32..].to_vec();
+        // The first six bytes are the "record" string, the next 32 the nonce.
+        let ciphertext = hex::decode(&self.ciphertext[6..])?[32..].to_vec();
 
         decrypt_from_record_view_key(&record_view_key, &ciphertext)
     }
@@ -72,7 +72,8 @@ impl EncryptedRecord {
     }
 
     pub fn decrypt_from_ciphertext(view_key: &ViewKey, ciphertext: &str) -> Result<Record> {
-        let decoded = hex::decode(&ciphertext)?;
+        // The first six bytes are the "record" string
+        let decoded = hex::decode(&ciphertext[6..])?;
         let nonce_bytes = decoded[..32].to_vec();
         let ciphertext = decoded[32..].to_vec();
 
@@ -111,12 +112,16 @@ impl FromStr for EncryptedRecord {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        let record_as_bytes = hex::decode(&s)?;
+        // The first six bytes are the "record" string.
+        let record_as_bytes = hex::decode(&s[6..])?;
         let nonce_bytes = record_as_bytes[..32].to_vec();
         let nonce = Group::<Testnet3>::from_bytes_le(&nonce_bytes)?;
 
+        let mut ciphertext = "record".to_owned();
+        ciphertext.push_str(&hex::encode(record_as_bytes));
+
         Ok(Self {
-            ciphertext: hex::encode(record_as_bytes),
+            ciphertext: ciphertext,
             nonce: nonce,
         })
     }
@@ -274,8 +279,11 @@ impl Record {
         ciphertext_with_nonce.extend_from_slice(&nonce_bytes);
         ciphertext_with_nonce.extend_from_slice(&ciphertext);
 
+        let mut ciphertext = "record".to_owned();
+        ciphertext.push_str(&hex::encode(ciphertext_with_nonce));
+
         Ok(EncryptedRecord {
-            ciphertext: hex::encode(ciphertext_with_nonce),
+            ciphertext: ciphertext,
             nonce: record_nonce,
         })
     }
