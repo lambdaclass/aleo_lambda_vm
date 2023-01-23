@@ -226,7 +226,11 @@ pub fn process_circuit_outputs(
                         let randomizer = Scalar::rand(rng);
 
                         let encrypted_record = record.encrypt(randomizer)?;
-                        VariableType::EncryptedRecord(encrypted_record)
+                        // NOTE: ORDER HERE IS EXTREMELY IMPORTANT
+                        // The commitment MUST be calculated after encryption, otherwise
+                        // the nonce is not set and the commitment turns out wrong.
+                        let commitment = record.commitment()?;
+                        VariableType::EncryptedRecord((commitment, encrypted_record))
                     }
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];

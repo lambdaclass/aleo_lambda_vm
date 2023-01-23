@@ -14,7 +14,8 @@ pub enum VariableType {
     /// The serial number, and the record.
     // The serial number is an option because output records don't have serial numbers.
     Record(Option<Field>, Record),
-    EncryptedRecord(EncryptedRecord),
+    /// The commitment along with the encrypted record itself
+    EncryptedRecord((String, EncryptedRecord)),
 }
 
 impl VariableType {
@@ -48,7 +49,9 @@ impl Display for VariableType {
         match self {
             VariableType::Public(v) | VariableType::Private(v) => UserInputValueType::fmt(v, f),
             VariableType::Record(_, v) => Record::fmt(v, f),
-            VariableType::EncryptedRecord(v) => EncryptedRecord::fmt(v, f),
+            VariableType::EncryptedRecord((_commitment, encrypted_record)) => {
+                EncryptedRecord::fmt(encrypted_record, f)
+            }
         }
     }
 }

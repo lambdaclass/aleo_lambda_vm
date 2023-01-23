@@ -1,5 +1,8 @@
 use super::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
-use crate::helpers::{self};
+use crate::{
+    helpers::{self},
+    record,
+};
 use aes::cipher::KeyInit;
 use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
@@ -26,7 +29,6 @@ pub const EMPTY_BYTES: [u8; 0] = [];
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct EncryptedRecord {
-    pub commitment: String,
     pub ciphertext: String,
     pub nonce: Group<Testnet3>,
 }
@@ -99,7 +101,7 @@ fn decrypt_from_record_view_key(
     plaintext.extend(&ciphertext[AES_IV_PLUS_TAG_LENGTH..]);
 
     aead.decrypt_in_place_detached(iv, &EMPTY_BYTES, &mut plaintext, tag)
-        .unwrap();
+        .map_err(|e| anyhow!("{}", e))?;
 
     let record = serde_json::from_slice(&plaintext)?;
     Ok(record)
@@ -109,73 +111,16 @@ impl FromStr for EncryptedRecord {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self> {
-        // let mut ciphertext_with_nonce = vec![];
-        // ciphertext_with_nonce.extend_from_slice(nonce_bytes);
-        // ciphertext_with_nonce.extend_from_slice(&ciphertext);
+        let record_as_bytes = hex::decode(&s)?;
+        let nonce_bytes = record_as_bytes[..32].to_vec();
+        let nonce = Group::<Testnet3>::from_bytes_le(&nonce_bytes)?;
 
         Ok(Self {
-            commitment: String::from(""),
-            ciphertext: String::from(""),
-            nonce: helpers::random_nonce(),
+            ciphertext: hex::encode(record_as_bytes),
+            nonce: nonce,
         })
-
-        // let (x, y) = s
-        //     .strip_prefix('(')
-        //     .and_then(|s| s.strip_suffix(')'))
-        //     .and_then(|s| s.split_once(','))
-        //     .ok_or(ParsePointError)?;
-
-        // let x_fromstr = x.parse::<i32>().map_err(|_| ParsePointError)?;
-        // let y_fromstr = y.parse::<i32>().map_err(|_| ParsePointError)?;
-
-        // Ok(Point { x: x_fromstr, y: y_fromstr })
     }
 }
-
-// impl TryFrom<&Vec<u8>> for EncryptedRecord {
-//     type Error = anyhow::Error;
-
-//     fn try_from(bytes: &Vec<u8>) -> Result<Self, Self::Error> {
-//         let commitment_bytes = bytes
-//             .get(..64)
-//             .ok_or_else(|| anyhow!("Error getting the commitment"))?;
-//         let mut ciphertext_bytes = vec![];
-
-//         let number_of_blocks = (bytes.len() - 64) / 16;
-//         for i in 0..number_of_blocks {
-//             for j in 0..16 {
-//                 ciphertext_bytes.push(
-//                     *bytes
-//                         .get(64 + i * 16 + j)
-//                         .ok_or_else(|| anyhow!("Error getting the ciphertext"))?,
-//                 );
-//             }
-//         }
-
-//         let mut original_size_bytes: [u8; 8] = [0; 8];
-//         for i in 0..8 {
-//             *original_size_bytes
-//                 .get_mut(i)
-//                 .ok_or_else(|| anyhow!("Error storing original size byte"))? = *bytes
-//                 .get(bytes.len() - 8 + i)
-//                 .ok_or_else(|| anyhow!("Error getting original size"))?;
-//         }
-
-//         let commitment = String::from_utf8(commitment_bytes.to_vec())?;
-//         let mut ciphertext = String::from_utf8(ciphertext_bytes.to_vec())?;
-
-//         let original_size =
-//             usize::from_str_radix(&String::from_utf8(original_size_bytes.to_vec())?, 16)?;
-
-//         ciphertext.push_str(&hex::encode(format!("{original_size:08x}")));
-
-//         Ok(Self {
-//             commitment,
-//             ciphertext,
-//             original_size,
-//         })
-//     }
-// }
 
 impl Display for EncryptedRecord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -268,10 +213,7 @@ impl Record {
     // In the future it should be using a hash function that returns a field
     // element.
     pub fn commitment(&self) -> Result<String> {
-        let record_string = serde_json::to_string(self)?;
         let record_bytes = self.to_bytes()?;
-        // let mut record_bytes = serialize_field_element(self.nonce)?;
-        // record_bytes.extend_from_slice(record_string.as_bytes());
         Ok(sha3_hash(&record_bytes))
     }
 
@@ -333,7 +275,6 @@ impl Record {
         ciphertext_with_nonce.extend_from_slice(&ciphertext);
 
         Ok(EncryptedRecord {
-            commitment: self.commitment()?,
             ciphertext: hex::encode(ciphertext_with_nonce),
             nonce: record_nonce,
         })
