@@ -1,18 +1,28 @@
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Ok, Result};
 pub use ark_r1cs_std::boolean::AllocatedBool;
+use ark_r1cs_std::{
+    prelude::{AllocVar, Boolean},
+    R1CSVar,
+};
 use indexmap::IndexMap;
-use simpleworks::gadgets::traits::BitwiseOperationGadget;
+use simpleworks::{gadgets::traits::BitwiseOperationGadget, marlin::ConstraintSystemRef};
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-pub fn nor(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn nor(
+    operands: &IndexMap<String, CircuitIOType>,
+    constraint_system: ConstraintSystemRef,
+) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
         .as_slice()
     {
         [SimpleBoolean(left_operand), SimpleBoolean(right_operand)] => {
-            let result = left_operand.or(right_operand)?.not();
+            let a = AllocatedBool::new_witness(constraint_system.clone(), || left_operand.value())?;
+            let b = AllocatedBool::new_witness(constraint_system, || right_operand.value())?;
+            let result = AllocatedBool::nor(&a, &b)?;
+            let result = Boolean::from(result);
             Ok(SimpleBoolean(result))
         }
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
@@ -70,7 +80,11 @@ mod nor_unit_tests {
     ) {
         assert!(constraint_system.is_satisfied().unwrap());
 
-        let result = nor(&sample_operands(first_operand, second_operand)).unwrap();
+        let result = nor(
+            &sample_operands(first_operand, second_operand),
+            constraint_system,
+        )
+        .unwrap();
         assert_eq!(result.value().unwrap(), expected_result.value().unwrap())
     }
 
