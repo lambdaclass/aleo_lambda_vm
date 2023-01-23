@@ -3,7 +3,7 @@ use crate::{
         SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
         SimpleUInt64, SimpleUInt8,
     },
-    instructions,
+    instructions::{self},
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
     record::Record as VMRecord,
     CircuitIOType, SimpleFunctionVariables,
@@ -20,8 +20,8 @@ use simpleworks::{
     marlin::ConstraintSystemRef,
 };
 use snarkvm::prelude::{
-    EntryType, Function, Instruction, Literal, LiteralType, Operand, PlaintextType, Register,
-    Testnet3, ValueType,
+    EntryType, Function, Group, Instruction, Literal, LiteralType, Operand, PlaintextType,
+    Register, Scalar, Testnet3, Uniform, ValueType,
 };
 
 pub fn to_address(primitive_address: String) -> [u8; 63] {
@@ -109,7 +109,7 @@ pub(crate) fn default_user_inputs(
                     owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
                     gates: u64::default(),
                     data: aleo_entries_to_vm_entries(aleo_record_entries)?,
-                    nonce: ConstraintF::default(),
+                    nonce: Some(random_nonce()),
                 })
             }
             // Constant Types
@@ -528,7 +528,9 @@ pub(crate) fn process_inputs(
 }
 
 /// Executes the given function's instructions, adding the necessary constraints for each one and filling in
-/// all the variables in the given `program_variables` index map.
+/// all the variables in the given `program_variables` index map. Instructions such as `asserts` do not have
+/// outputs and while they add constraints to ensure the values are as expected, they don't modify the program
+/// variables.
 ///
 /// # Parameters
 /// - `function` - function to be analyzed.
@@ -557,6 +559,15 @@ pub(crate) fn process_outputs(
         let operands = process_operands(instruction.operands(), program_variables)?;
         let circuit_output = match instruction {
             Instruction::Add(_) => instructions::add(&operands)?,
+            // because asserts don't really have outputs, continue the loop on asserts
+            Instruction::AssertEq(_) => {
+                instructions::assert_eq(&operands)?;
+                continue;
+            }
+            Instruction::AssertNeq(_) => {
+                instructions::assert_neq(&operands)?;
+                continue;
+            }
             Instruction::And(_) => instructions::and(&operands)?,
             Instruction::Cast(cast) => match cast.register_type() {
                 snarkvm::prelude::RegisterType::Record(record_identifier) => {
@@ -733,4 +744,10 @@ pub fn process_operands(
         };
     }
     Ok(instruction_operands)
+}
+
+pub fn random_nonce() -> Group<Testnet3> {
+    let rng = &mut rand::thread_rng();
+    let randomizer = Scalar::rand(rng);
+    Group::generator() * randomizer
 }

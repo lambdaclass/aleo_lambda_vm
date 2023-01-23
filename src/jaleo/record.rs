@@ -1,58 +1,69 @@
 use super::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
 use crate::helpers::{self};
-use aes::{
-    cipher::{BlockDecrypt, BlockEncrypt, KeyInit},
-    Aes128,
-};
+use aes::cipher::KeyInit;
+use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
-use ark_ff::UniformRand;
 use ark_std::rand::thread_rng;
 use digest::generic_array::GenericArray;
+use rand::Rng;
 use serde::{
     de,
     ser::{Error, SerializeStruct},
     Deserialize, Serialize,
 };
 use sha3::{Digest, Sha3_256};
-use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
-use std::fmt::Display;
+use snarkvm::prelude::{Field, FromBytes, Group, Network, Scalar, Testnet3, ToBytes};
+use std::{fmt::Display, str::FromStr};
+
+/// AES IV/nonce length
+pub const AES_IV_LENGTH: usize = 12;
+/// AES tag length
+pub const AES_TAG_LENGTH: usize = 16;
+/// AES IV + tag length
+pub const AES_IV_PLUS_TAG_LENGTH: usize = AES_IV_LENGTH + AES_TAG_LENGTH;
+/// Empty bytes array
+pub const EMPTY_BYTES: [u8; 0] = [];
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct EncryptedRecord {
-    pub commitment: String,
     pub ciphertext: String,
-    original_size: usize,
+    pub nonce: Group<Testnet3>,
 }
+
+/*
+    When someone creates a record for someone else, they have to generate a randomizer, which is a private key,
+    and its corresponding public key, the nonce. This way, they encrypt the record using the randomizer plus the address
+    of the record's owner. When the owner wants to decrypt, they use their view and the nonce (which is a published part of
+    the record) to decrypt.
+
+    So far, the only thing needed for encryption/decryption is the randomizer/nonce. Where do the transition public key and
+    the transition view key show up?
+
+    The transition view key is used to generate the randomizer for every output record in the transition. The way this is done is
+    simply hash(tvk || record_index), where the `record_index` is just the index of the output record in the list of output_records.
+
+    The transition public key seems to be used to derive the serial number for records later on, though I'm not entirely sure.
+
+    What we are going to do for now, is when someone generates a transaction, they just sample a random number as the randomizer.
+    This is probably not cryptographically secure, etc, but it'll work well for us. This way we can get rid of the whole transition
+    view key stuff.
+*/
 
 impl EncryptedRecord {
     pub fn decrypt(&self, view_key: &ViewKey) -> Result<Record> {
-        let ciphertext_bytes = if let Ok(encrypted_record) = EncryptedRecord::try_from(
-            &(hex::decode(self.ciphertext.clone().trim_start_matches("record"))?.to_vec()),
-        ) {
-            // encrypted_record.ciphertext.as_bytes().to_vec()
-            hex::decode(encrypted_record.ciphertext)?
-        } else {
-            hex::decode(&self.ciphertext)?
-        };
-        let aes_key = Aes128::new_from_slice(
-            view_key
-                .to_string()
-                .as_bytes()
-                .get(..16)
-                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
-        )?;
-        let mut plaintext: Vec<u8> = Vec::new();
-        ciphertext_bytes.chunks_exact(16).for_each(|chunk| {
-            let mut block = GenericArray::clone_from_slice(chunk);
-            aes_key.decrypt_block(&mut block);
-            plaintext.extend_from_slice(&block);
-        });
+        let record_view_key = (**view_key * self.nonce).to_x_coordinate();
 
-        let record =
-            serde_json::from_slice(plaintext.get(..self.original_size).ok_or_else(|| {
-                anyhow!("Error getting the original-size plaintext when decrypting a record")
-            })?)?;
-        Ok(record)
+        let ciphertext = hex::decode(
+            self.ciphertext
+                .get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+        )?;
+        // The first six bytes are the "record" string, the next 32 the nonce.
+        let ciphertext = ciphertext
+            .get(32..)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?;
+
+        decrypt_from_record_view_key(&record_view_key, ciphertext)
     }
 
     pub fn is_owner(&self, address: &Address, view_key: &ViewKey) -> bool {
@@ -63,60 +74,88 @@ impl EncryptedRecord {
 
         false
     }
+
+    pub fn decrypt_from_ciphertext(view_key: &ViewKey, ciphertext: &str) -> Result<Record> {
+        // The first six bytes are the "record" string
+        let decoded = hex::decode(
+            ciphertext
+                .get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+        )?;
+        let nonce_bytes = decoded
+            .get(..32)
+            .ok_or_else(|| anyhow!("Out of bounds when getting nonce from ciphertext"))?;
+        let ciphertext = decoded
+            .get(32..)
+            .ok_or_else(|| anyhow!("Out of bounds when getting ciphertext"))?;
+
+        let nonce = Group::<Testnet3>::from_bytes_le(nonce_bytes)?;
+        let record_view_key = (**view_key * nonce).to_x_coordinate();
+
+        decrypt_from_record_view_key(&record_view_key, ciphertext)
+    }
 }
 
-impl TryFrom<&Vec<u8>> for EncryptedRecord {
-    type Error = anyhow::Error;
+fn decrypt_from_record_view_key(
+    record_view_key: &Field<Testnet3>,
+    ciphertext: &[u8],
+) -> Result<Record> {
+    let mut hasher = Sha3_256::new();
+    hasher.update(record_view_key.to_bytes_le()?);
+    let key = hasher.finalize().to_vec();
 
-    fn try_from(bytes: &Vec<u8>) -> Result<Self, Self::Error> {
-        let commitment_bytes = bytes
-            .get(..64)
-            .ok_or_else(|| anyhow!("Error getting the commitment"))?;
-        let mut ciphertext_bytes = vec![];
+    let key = GenericArray::from_slice(&key);
+    let aead = Aes256Gcm::new(key);
 
-        let number_of_blocks = (bytes.len() - 64) / 16;
-        for i in 0..number_of_blocks {
-            for j in 0..16 {
-                ciphertext_bytes.push(
-                    *bytes
-                        .get(64 + i * 16 + j)
-                        .ok_or_else(|| anyhow!("Error getting the ciphertext"))?,
-                );
-            }
-        }
+    let iv = GenericArray::from_slice(
+        ciphertext
+            .get(..AES_IV_LENGTH)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
+    let tag = GenericArray::from_slice(
+        ciphertext
+            .get(AES_IV_LENGTH..AES_IV_PLUS_TAG_LENGTH)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
 
-        let mut original_size_bytes: [u8; 8] = [0; 8];
-        for i in 0..8 {
-            *original_size_bytes
-                .get_mut(i)
-                .ok_or_else(|| anyhow!("Error storing original size byte"))? = *bytes
-                .get(bytes.len() - 8 + i)
-                .ok_or_else(|| anyhow!("Error getting original size"))?;
-        }
+    let mut plaintext = Vec::with_capacity(ciphertext.len() - AES_IV_PLUS_TAG_LENGTH);
+    plaintext.extend(
+        ciphertext
+            .get(AES_IV_PLUS_TAG_LENGTH..)
+            .ok_or_else(|| anyhow!("Out of bounds when slicing ciphertext"))?,
+    );
 
-        let commitment = String::from_utf8(commitment_bytes.to_vec())?;
-        let mut ciphertext = String::from_utf8(ciphertext_bytes.to_vec())?;
+    aead.decrypt_in_place_detached(iv, &EMPTY_BYTES, &mut plaintext, tag)
+        .map_err(|e| anyhow!("{}", e))?;
 
-        let original_size =
-            usize::from_str_radix(&String::from_utf8(original_size_bytes.to_vec())?, 16)?;
+    let record = serde_json::from_slice(&plaintext)?;
+    Ok(record)
+}
 
-        ciphertext.push_str(&hex::encode(format!("{original_size:08x}")));
+impl FromStr for EncryptedRecord {
+    type Err = anyhow::Error;
 
-        Ok(Self {
-            commitment,
-            ciphertext,
-            original_size,
-        })
+    fn from_str(s: &str) -> Result<Self> {
+        // The first six bytes are the "record" string.
+        let record_as_bytes = hex::decode(
+            s.get(6..)
+                .ok_or_else(|| anyhow!("Out of bounds when slicing the record"))?,
+        )?;
+        let nonce_bytes = record_as_bytes
+            .get(..32)
+            .ok_or_else(|| anyhow!("Out of bounds when accessing the record nonce"))?;
+        let nonce = Group::<Testnet3>::from_bytes_le(nonce_bytes)?;
+
+        let mut ciphertext = "record".to_owned();
+        ciphertext.push_str(&hex::encode(record_as_bytes));
+
+        Ok(Self { ciphertext, nonce })
     }
 }
 
 impl Display for EncryptedRecord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}{}{:08x}",
-            self.commitment, self.ciphertext, self.original_size
-        )
+        write!(f, "{}", self.ciphertext)
     }
 }
 
@@ -127,8 +166,12 @@ pub struct Record {
     #[serde(deserialize_with = "deserialize_gates")]
     pub gates: u64,
     pub data: RecordEntriesMap,
-    #[serde(deserialize_with = "deserialize_field_element")]
-    pub nonce: ConstraintF,
+    // The reason the nonce is optional is that it gets decided once someone
+    // encrypts the record for the first time, because its value is completely tied to
+    // the randomizer that is used for encryption (the nonce is just g^randomizer).
+    // Because of this, when someone calls `Record::new`, they don't know the nonce,
+    // they will know it after calling `encrypt` with a randomizer.
+    pub nonce: Option<Group<Testnet3>>,
 }
 
 fn deserialize_address<'de, D>(deserializer: D) -> Result<AddressBytes, D::Error>
@@ -148,16 +191,6 @@ where
     str::parse::<u64>(gates_value).map_err(de::Error::custom)
 }
 
-fn deserialize_field_element<'de, D>(deserializer: D) -> Result<ConstraintF, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let encoded_nonce = String::deserialize(deserializer)?;
-    let nonce_str = hex::decode(encoded_nonce).map_err(de::Error::custom)?;
-
-    simpleworks::fields::deserialize_field_element(nonce_str).map_err(de::Error::custom)
-}
-
 fn sha3_hash(input: &[u8]) -> String {
     let mut hasher = Sha3_256::new();
     hasher.update(input);
@@ -170,19 +203,13 @@ impl Record {
         owner: AddressBytes,
         gates: u64,
         data: RecordEntriesMap,
-        nonce: Option<ConstraintF>,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
-        let nonce_value = if let Some(value) = nonce {
-            value
-        } else {
-            ConstraintF::rand(&mut thread_rng())
-        };
-
         Self {
             owner,
             gates,
             data,
-            nonce: nonce_value,
+            nonce,
         }
     }
 
@@ -190,21 +217,15 @@ impl Record {
         owner: String,
         gates: u64,
         data: RecordEntriesMap,
-        nonce: Option<ConstraintF>,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
-        let nonce_value = if let Some(value) = nonce {
-            value
-        } else {
-            ConstraintF::rand(&mut thread_rng())
-        };
-
         let vm_address = crate::helpers::to_address(owner);
 
         Self {
             owner: vm_address,
             gates,
             data,
-            nonce: nonce_value,
+            nonce,
         }
     }
 
@@ -223,9 +244,7 @@ impl Record {
     // In the future it should be using a hash function that returns a field
     // element.
     pub fn commitment(&self) -> Result<String> {
-        let record_string = serde_json::to_string(self)?;
-        let mut record_bytes = serialize_field_element(self.nonce)?;
-        record_bytes.extend_from_slice(record_string.as_bytes());
+        let record_bytes = self.to_bytes()?;
         Ok(sha3_hash(&record_bytes))
     }
 
@@ -242,38 +261,56 @@ impl Record {
         self.owner == *address
     }
 
-    pub fn encrypt(&self, view_key: &ViewKey) -> Result<EncryptedRecord> {
-        let aes_key = Aes128::new_from_slice(
-            view_key
-                .to_string()
-                .as_bytes()
-                .get(..16)
-                .ok_or_else(|| anyhow!("Error getting view key first 16 bytes"))?,
-        )?;
-        let mut encrypted_record_bytes: Vec<u8> = Vec::new();
-        let record_bytes = self.to_bytes()?;
+    /// Encrypting takes a mutable reference because the act of encrypting is what decides the nonce
+    /// of the record which was previously None, so we mutate it.
+    pub fn encrypt(&mut self, randomizer: Scalar<Testnet3>) -> Result<EncryptedRecord> {
+        let address_string = String::from_utf8(self.owner.to_vec())?;
+        let address = Address::from_str(&address_string)?;
+        let record_nonce = Testnet3::g_scalar_multiply(&randomizer);
+        self.nonce = Some(record_nonce);
 
-        record_bytes.chunks_exact(16).for_each(|chunk| {
-            let mut block = GenericArray::clone_from_slice(chunk);
-            aes_key.encrypt_block(&mut block);
-            encrypted_record_bytes.extend_from_slice(&block);
-        });
+        let record_view_key = (*address * randomizer).to_x_coordinate();
 
-        let mut extended_chunk = [0_u8; 16];
-        for (extended_chunk_byte, chunk_byte) in extended_chunk
-            .iter_mut()
-            .zip(record_bytes.chunks_exact(16).remainder())
-        {
-            *extended_chunk_byte = *chunk_byte;
-        }
-        let mut block = GenericArray::clone_from_slice(&extended_chunk);
-        aes_key.encrypt_block(&mut block);
-        encrypted_record_bytes.extend_from_slice(&block);
+        let mut hasher = Sha3_256::new();
+        hasher.update(record_view_key.to_bytes_le()?);
+        let key = hasher.finalize().to_vec();
+
+        let key = GenericArray::from_slice(&key);
+        let aead = Aes256Gcm::new(key);
+
+        let mut iv = [0_u8; AES_IV_LENGTH];
+        thread_rng().fill(&mut iv);
+
+        let nonce = GenericArray::from_slice(&iv);
+
+        let message = serde_json::to_vec(self)?;
+        let message_length = message.len();
+        let mut out = Vec::with_capacity(message_length);
+        out.extend(message);
+
+        let ciphertext = {
+            let tag = aead
+                .encrypt_in_place_detached(nonce, &EMPTY_BYTES, &mut out)
+                .map_err(|e| anyhow!("{}", e))?;
+            let mut output = Vec::with_capacity(AES_IV_PLUS_TAG_LENGTH + message_length);
+            output.extend(iv);
+            output.extend(tag);
+            output.extend(out);
+            output
+        };
+
+        let nonce_bytes = record_nonce.to_bytes_le()?;
+
+        let mut ciphertext_with_nonce = vec![];
+        ciphertext_with_nonce.extend_from_slice(&nonce_bytes);
+        ciphertext_with_nonce.extend_from_slice(&ciphertext);
+
+        let mut ciphertext = "record".to_owned();
+        ciphertext.push_str(&hex::encode(ciphertext_with_nonce));
 
         Ok(EncryptedRecord {
-            commitment: self.commitment()?,
-            ciphertext: hex::encode(encrypted_record_bytes),
-            original_size: record_bytes.len(),
+            ciphertext,
+            nonce: record_nonce,
         })
     }
 
@@ -303,20 +340,22 @@ impl Serialize for Record {
         state.serialize_field("gates", &format!("{}u64", self.gates))?;
         state.serialize_field("data", &self.data)?;
 
-        let nonce = serialize_field_element(self.nonce).map_err(serde::ser::Error::custom)?;
-        state.serialize_field("nonce", &hex::encode(nonce))?;
+        state.serialize_field("nonce", &self.nonce)?;
         state.end()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::jaleo::{AddressBytes, PrivateKey, RecordEntriesMap, ViewKey};
+    use crate::{
+        helpers,
+        jaleo::{Address, AddressBytes, PrivateKey, RecordEntriesMap, ViewKey},
+    };
 
-    use super::Record;
+    use super::{EncryptedRecord, Record};
     use ark_ff::UniformRand;
-    use ark_std::rand::thread_rng;
-    use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+    use indexmap::IndexMap;
+    use snarkvm::prelude::Scalar;
 
     fn address(n: u64) -> (String, AddressBytes) {
         let mut address_bytes = [0_u8; 63];
@@ -345,16 +384,17 @@ mod tests {
         let (address_string, address) = address(0);
         let gates = 0_u64;
         let data = RecordEntriesMap::default();
-        let record = Record::new(address, gates, data, None);
-        let nonce = serialize_field_element(record.nonce).unwrap();
+        let nonce = helpers::random_nonce();
+        let record = Record::new(address, gates, data, Some(nonce));
 
         let record_string = serde_json::to_string(&record).unwrap();
+        let nonce_as_string = nonce.to_string();
 
         assert_eq!(
             record_string,
             format!(
                 "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{}\"}}",
-                hex::encode(nonce),
+                nonce_as_string,
             )
         );
     }
@@ -362,17 +402,17 @@ mod tests {
     #[test]
     fn test_deserialize_record() {
         let address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-        let nonce = ConstraintF::rand(&mut thread_rng());
-        let encoded_nonce = &hex::encode(serialize_field_element(nonce).unwrap());
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
         let record_str = &format!(
-            r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{encoded_nonce}"}}"#
+            r#"{{"owner": "{address}","gates": "0u64","data": {{}},"nonce": "{nonce_as_string}"}}"#
         );
         let record: Record = serde_json::from_str(record_str).unwrap();
 
         assert_eq!(record.owner, address.as_bytes());
         assert_eq!(record.gates, 0);
         assert_eq!(record.data, RecordEntriesMap::default());
-        assert_eq!(record.nonce, nonce);
+        assert_eq!(record.nonce, Some(nonce));
     }
 
     #[test]
@@ -399,32 +439,65 @@ mod tests {
     #[test]
     fn test_record_uniqueness() {
         let (_owner_str, owner) = address(0);
-        let record1 = Record::new(owner, 0, RecordEntriesMap::default(), None);
-        let record2 = Record::new(owner, 0, RecordEntriesMap::default(), None);
+        let record1 = Record::new(
+            owner,
+            0,
+            RecordEntriesMap::default(),
+            Some(helpers::random_nonce()),
+        );
+        let record2 = Record::new(
+            owner,
+            0,
+            RecordEntriesMap::default(),
+            Some(helpers::random_nonce()),
+        );
 
         assert_ne!(record1.commitment().unwrap(), record2.commitment().unwrap());
     }
 
     #[test]
-    fn test_record_encryption() {
-        let (_owner_str, owner) = address(0);
-        let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
-        let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
+    fn test_record_encryption_and_decryption() {
+        let rng = &mut rand::thread_rng();
+        let private_key = PrivateKey::new(rng).unwrap();
         let view_key = ViewKey::try_from(&private_key).unwrap();
-        let encrypted_record = record.encrypt(&view_key).unwrap();
+        let address = Address::try_from(&view_key).unwrap();
 
-        assert_eq!(encrypted_record.commitment, record.commitment().unwrap());
+        let address_string = address.to_string();
+        let mut address = [0_u8; 63];
+        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+
+        let mut record = Record::new(address, 1, IndexMap::new(), None);
+        let randomizer = Scalar::rand(rng);
+
+        let encrypted = record.encrypt(randomizer).unwrap();
+        let decrypted = encrypted.decrypt(&view_key).unwrap();
+        assert_eq!(decrypted, record);
     }
 
     #[test]
-    fn test_record_decryption() {
-        let (_owner_str, owner) = address(0);
-        let record = Record::new(owner, 0, RecordEntriesMap::default(), None);
-        let private_key = PrivateKey::new(&mut thread_rng()).unwrap();
+    fn test_record_decryption_from_ciphertext() {
+        let rng = &mut rand::thread_rng();
+        let private_key = PrivateKey::new(rng).unwrap();
         let view_key = ViewKey::try_from(&private_key).unwrap();
-        let encrypted_record = record.encrypt(&view_key).unwrap();
-        let decrypted_record = encrypted_record.decrypt(&view_key).unwrap();
+        let address = Address::try_from(&view_key).unwrap();
 
-        assert_eq!(decrypted_record, record);
+        let address_string = address.to_string();
+        let mut address = [0_u8; 63];
+        for (address_byte, address_string_byte) in address.iter_mut().zip(address_string.as_bytes())
+        {
+            *address_byte = *address_string_byte;
+        }
+
+        let mut record = Record::new(address, 1, IndexMap::new(), None);
+        let randomizer = Scalar::rand(rng);
+
+        let encrypted = record.encrypt(randomizer).unwrap();
+        let ciphertext = encrypted.ciphertext;
+        let decrypted = EncryptedRecord::decrypt_from_ciphertext(&view_key, &ciphertext).unwrap();
+
+        assert_eq!(decrypted, record);
     }
 }

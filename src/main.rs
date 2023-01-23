@@ -44,6 +44,7 @@ fn main() -> Result<()> {
                         .get_one::<String>("from")
                         .ok_or_else(|| anyhow!("Error parsing program_string parameter"))?
                         .to_string();
+                    #[allow(deprecated)]
                     let inputs: Vec<String> = execute_cmd
                         .get_occurrences("inputs")
                         .ok_or_else(|| anyhow!("Error parsing input parameters"))?

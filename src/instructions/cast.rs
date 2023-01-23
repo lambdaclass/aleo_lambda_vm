@@ -2,12 +2,10 @@ use std::str::FromStr;
 
 use crate::{circuit_io_type::CircuitIOType, helpers, record::Record, VMRecordEntriesMap};
 use anyhow::{anyhow, bail, Result};
-use ark_ff::UniformRand;
 use ark_r1cs_std::{
     prelude::{AllocVar, Boolean},
     R1CSVar,
 };
-use ark_std::rand::thread_rng;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
@@ -315,13 +313,11 @@ pub fn _cast(
                 }
             };
 
-            let nonce = ConstraintF::rand(&mut thread_rng());
-
             Ok(SimpleRecord(Record {
                 owner,
                 gates,
                 entries,
-                nonce,
+                nonce: None,
             }))
         }
         [] | [_] => bail!("Cast is a two or more operands instruction"),

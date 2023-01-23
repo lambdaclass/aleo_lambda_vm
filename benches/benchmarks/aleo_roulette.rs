@@ -8,6 +8,7 @@ cfg_if::cfg_if! {
         use simpleworks::gadgets::ConstraintF;
         use snarkvm::prelude::Parser;
         use vmtropy::jaleo;
+        use vmtropy::helpers::random_nonce;
 
         const ALEO_ROULETTE_PROGRAM: &str = "programs/roulette.aleo";
         const PSD_HASH: &str = "psd_hash";
@@ -110,13 +111,13 @@ cfg_if::cfg_if! {
                 "amount".to_owned(),
                 vmtropy::jaleo::UserInputValueType::U64(casino_token_record_amount),
             );
-            let casino_token_record_nonce = ConstraintF::rand(&mut thread_rng());
+            let casino_token_record_nonce = random_nonce();
 
             let casino_token_record = jaleo::Record {
                 owner: casino_address,
                 gates: casino_token_record_gates,
                 data: casino_token_record_data,
-                nonce: casino_token_record_nonce,
+                nonce: Some(casino_token_record_nonce),
             };
             let (_player_address_string, player_address) = test_helpers::address();
             let random_roulette_spin_result = 1_u8;

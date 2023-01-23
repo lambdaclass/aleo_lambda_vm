@@ -6,6 +6,7 @@ cfg_if::cfg_if! {
         use simpleworks::gadgets::ConstraintF;
         use snarkvm::prelude::Parser;
         use vmtropy::jaleo;
+        use vmtropy::helpers::random_nonce;
 
         const ALEO_CREDITS_PROGRAM: &str = "programs/credits.aleo";
         const GENESIS: &str = "genesis";
@@ -117,7 +118,7 @@ cfg_if::cfg_if! {
                     sender_address_bytes,
                     initial_balance,
                     jaleo::RecordEntriesMap::default(),
-                    ConstraintF::default(),
+                    random_nonce(),
                 ),
                 jaleo::UserInputValueType::Address(receiver_address_bytes),
                 jaleo::UserInputValueType::U64(amount_to_transfer),

@@ -3,9 +3,8 @@
 #[allow(dead_code)]
 pub mod test_helpers {
     use anyhow::Result;
-    use ark_ff::UniformRand;
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
-    use simpleworks::gadgets::ConstraintF;
+    use snarkvm::prelude::{Group, Testnet3};
     use vmtropy::{
         helpers,
         jaleo::{self, Address, PrivateKey},
@@ -32,18 +31,18 @@ pub mod test_helpers {
         owner: jaleo::AddressBytes,
         gates: u64,
         data: jaleo::RecordEntriesMap,
-        nonce: ConstraintF,
+        nonce: Group<Testnet3>,
     ) -> jaleo::UserInputValueType {
         jaleo::UserInputValueType::Record(jaleo::Record {
             owner,
             gates,
             data,
-            nonce,
+            nonce: Some(nonce),
         })
     }
 
-    pub fn sample_nonce() -> ConstraintF {
-        ConstraintF::rand(&mut ark_std::rand::thread_rng())
+    pub fn sample_nonce() -> Group<Testnet3> {
+        helpers::random_nonce()
     }
 
     pub fn vm_record_entries_are_equal(

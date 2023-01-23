@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use serde::ser::Error;
 use serde::Deserialize;
 use simpleworks::gadgets::traits::ToFieldElements;
-use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
+use simpleworks::gadgets::ConstraintF;
 use std::str::FromStr;
 use std::{convert::TryFrom, fmt};
 
@@ -126,13 +126,18 @@ impl fmt::Display for UserInputValueType {
                 data,
                 nonce,
             }) => {
+                let formatted_nonce = if let Some(nonce_value) = nonce {
+                    nonce_value.to_string()
+                } else {
+                    String::from("")
+                };
                 write!(
                     f,
                     "{{\"owner\":\"{}\",\"gates\":\"{}u64\",\"entries\":{},\"nonce\":\"{}\"}}",
                     helpers::bytes_to_string(owner).map_err(fmt::Error::custom)?,
                     gates,
                     hashmap_to_string(data).map_err(fmt::Error::custom)?,
-                    hex::encode(serialize_field_element(*nonce).map_err(fmt::Error::custom)?)
+                    formatted_nonce,
                 )
             }
             UserInputValueType::Boolean(b) => write!(f, "{b}"),
@@ -168,13 +173,14 @@ impl ToFieldElements<ConstraintF> for UserInputValueType {
 
 #[cfg(test)]
 mod tests {
-    use crate::jaleo::{Record, RecordEntriesMap};
+    use crate::{
+        helpers,
+        jaleo::{Record, RecordEntriesMap},
+    };
 
     use super::UserInputValueType;
     use ark_ff::UniformRand;
-    use simpleworks::{
-        fields::serialize_field_element, gadgets::ConstraintF, marlin::generate_rand,
-    };
+    use snarkvm::prelude::{Group, Scalar};
 
     #[test]
     fn display_value() {
@@ -213,15 +219,16 @@ mod tests {
             *sender_address_byte = *address_string_byte;
         }
         let gates = 1_u64;
-        let nonce = ConstraintF::rand(&mut generate_rand());
+        let nonce = helpers::random_nonce();
+
         let v = UserInputValueType::Record(Record {
             owner: address,
             gates,
             data: RecordEntriesMap::default(),
-            nonce,
+            nonce: Some(nonce),
         });
         let out = format!("{v}");
-        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", nonce));
     }
 
     /* Deserialize Tests */
@@ -360,17 +367,19 @@ mod tests {
         {
             *sender_address_byte = *address_string_byte;
         }
-        let nonce = ConstraintF::rand(&mut generate_rand());
+
+        let nonce = helpers::random_nonce();
+
         let data = UserInputValueType::Record(Record {
             owner: address,
             gates: 0,
             data: RecordEntriesMap::default(),
-            nonce,
+            nonce: Some(nonce),
         });
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", nonce));
     }
 
     #[test]
@@ -384,17 +393,20 @@ mod tests {
         }
         let mut data = RecordEntriesMap::new();
         data.insert("amount".to_owned(), UserInputValueType::U64(0));
-        let nonce = ConstraintF::rand(&mut generate_rand());
+        let rng = &mut rand::thread_rng();
+        let randomizer = Scalar::rand(rng);
+        let nonce = Group::generator() * randomizer;
+
         let data = UserInputValueType::Record(Record {
             owner: address,
             gates: 0,
             data,
-            nonce,
+            nonce: Some(nonce),
         });
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", hex::encode(serialize_field_element(nonce).unwrap())));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", nonce));
     }
 
     #[test]
