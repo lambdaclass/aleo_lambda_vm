@@ -69,17 +69,10 @@ mod marlin_tests {
     }
 
     #[test]
-    fn test_is_eq() {
-        let program_string = test_helpers::read_program("is_eq").unwrap();
+    fn is_and_assert_eq_neq() {
+        let program_string = test_helpers::read_program("is_eq_neq").unwrap();
         let (_, program) = Program::parse(&program_string).unwrap();
         let function_name = "hello_10";
-
-        /*
-        function hello_7:            input r0 as u8.public;
-            input r1 as u8.public;
-            is.eq r0 r1 into r2;
-            output r2 as u8.public;
-        */
 
         let user_inputs = vec![U8(1), U8(1)];
 

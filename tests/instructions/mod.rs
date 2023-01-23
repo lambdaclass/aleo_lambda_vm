@@ -7,7 +7,7 @@ mod div;
 #[cfg(test)]
 mod hash_psd2;
 #[cfg(test)]
-mod is_eq;
+mod is_eq_neq;
 #[cfg(test)]
 mod mul;
 #[cfg(test)]

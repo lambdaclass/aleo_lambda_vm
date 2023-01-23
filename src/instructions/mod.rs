@@ -21,6 +21,10 @@ pub use hash_psd2::hash_psd2;
 
 pub(crate) mod helpers;
 
+mod assert;
+pub use assert::assert_eq;
+pub use assert::assert_neq;
+
 mod is_eq;
 pub use is_eq::is_eq;
 pub use is_eq::is_neq;

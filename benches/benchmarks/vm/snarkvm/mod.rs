@@ -120,10 +120,10 @@ pub fn execute_function(
 ) -> Result<Arc<parking_lot::lock_api::RwLock<parking_lot::RawRwLock, Execution>>> {
     let rng = &mut rand::thread_rng();
 
-    let stack = stack::new_init(&program)?;
-    let (proving_key, _verifying_key) = synthesize_function_keys(&program, rng, &function_name)?;
+    let stack = stack::new_init(program)?;
+    let (proving_key, _verifying_key) = synthesize_function_keys(program, rng, function_name)?;
 
-    stack.insert_proving_key(&function_name, proving_key)?;
+    stack.insert_proving_key(function_name, proving_key)?;
 
     let authorization = stack.authorize::<AleoV0, _>(
         private_key,
