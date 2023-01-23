@@ -2,7 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use ark_r1cs_std::R1CSVar;
 use indexmap::IndexMap;
-use simpleworks::{gadgets::traits::BitShiftGadget, marlin::ConstraintSystemRef};
+use simpleworks::{gadgets::traits::BitwiseOperationGadget, marlin::ConstraintSystemRef};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn shr(

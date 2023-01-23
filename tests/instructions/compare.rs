@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod compare_tests {
     use crate::helpers::test_helpers;
-    use simpleworks::gadgets::ConstraintF;
     use snarkvm::prelude::Parser;
-    use vmtropy::jaleo::{
-        Program, Record as JAleoRecord, RecordEntriesMap,
-        UserInputValueType::{Record, U16, U32, U64},
+    use vmtropy::{
+        helpers::random_nonce,
+        jaleo::{
+            Program, Record as JAleoRecord, RecordEntriesMap,
+            UserInputValueType::{Record, U16, U32, U64},
+        },
     };
 
     #[test]
@@ -215,7 +217,7 @@ mod compare_tests {
                 owner: address,
                 gates: 0,
                 data: RecordEntriesMap::default(),
-                nonce: ConstraintF::default(),
+                nonce: Some(random_nonce()),
             }),
             U64(1),
         ];

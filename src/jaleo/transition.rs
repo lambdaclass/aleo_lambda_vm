@@ -27,13 +27,13 @@ pub struct Transition {
 }
 
 impl Transition {
-    pub fn output_records(&self) -> Vec<EncryptedRecord> {
+    pub fn output_records(&self) -> Vec<(String, EncryptedRecord)> {
         self.outputs
             .clone()
             .into_iter()
             .filter_map(|o| {
-                if let VariableType::EncryptedRecord(encrypted_record) = o {
-                    Some(encrypted_record)
+                if let VariableType::EncryptedRecord((commitment, encrypted_record)) = o {
+                    Some((commitment, encrypted_record))
                 } else {
                     None
                 }

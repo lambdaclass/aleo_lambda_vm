@@ -52,6 +52,10 @@ sha3 = "0.10"
 bincode = "1"
 
 aes = "0.8"
+hkdf = "0.12.3"
+sha2 = "0.10.6"
+rand = "0.8.5"
+aes-gcm = "0.10.1"
 
 [[example]]
 name = "sample-program"

@@ -1,4 +1,4 @@
-use super::{credits, Function, Identifier, PrivateKey, Program, Transition, ViewKey};
+use super::{credits, Function, Identifier, PrivateKey, Program, Transition};
 use crate::{
     helpers::to_address,
     jaleo::{program_is_coinbase, Record, UserInputValueType},
@@ -10,6 +10,7 @@ use ark_r1cs_std::R1CSVar;
 use indexmap::IndexMap;
 use log::debug;
 use simpleworks::marlin::serialization::serialize_proof;
+use snarkvm::prelude::{Scalar, Uniform};
 
 use crate::CircuitIOType::{
     SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
@@ -48,8 +49,7 @@ pub fn execution(
         crate::execute_function(program, &function.to_string(), inputs)?;
 
     let inputs = process_circuit_inputs(&function, &compiled_function_variables, private_key)?;
-    let view_key = ViewKey::try_from(private_key)?;
-    let outputs = process_circuit_outputs(&function, &compiled_function_variables, view_key)?;
+    let outputs = process_circuit_outputs(&function, &compiled_function_variables)?;
 
     let bytes_proof = serialize_proof(proof)?;
     let encoded_proof = hex::encode(bytes_proof);
@@ -120,7 +120,7 @@ pub fn process_circuit_inputs(
                             to_address(r.owner.value()?),
                             r.gates.value()?,
                             primitive_entries,
-                            Some(r.nonce),
+                            r.nonce,
                         );
                         VariableType::Record(Some(record.serial_number(private_key)?), record)
                     }
@@ -178,7 +178,6 @@ pub fn process_circuit_inputs(
 pub fn process_circuit_outputs(
     function: &Function,
     program_variables: &SimpleFunctionVariables,
-    view_key: ViewKey,
 ) -> Result<CircuitOutputType> {
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
@@ -216,14 +215,21 @@ pub fn process_circuit_outputs(
                             };
                             primitive_entries.insert(k, primitive_value);
                         }
-                        let record = Record::new(
+                        let mut record = Record::new(
                             to_address(r.owner.value()?),
                             r.gates.value()?,
                             primitive_entries,
-                            Some(r.nonce),
+                            None,
                         );
-                        let encrypted_record = record.encrypt(&view_key)?;
-                        VariableType::EncryptedRecord(encrypted_record)
+                        let rng = &mut rand::thread_rng();
+                        let randomizer = Scalar::rand(rng);
+
+                        let encrypted_record = record.encrypt(randomizer)?;
+                        // NOTE: ORDER HERE IS EXTREMELY IMPORTANT
+                        // The commitment MUST be calculated after encryption, otherwise
+                        // the nonce is not set and the commitment turns out wrong.
+                        let commitment = record.commitment()?;
+                        VariableType::EncryptedRecord((commitment, encrypted_record))
                     }
                     SimpleAddress(a) => {
                         let mut primitive_bytes = [0_u8; 63];

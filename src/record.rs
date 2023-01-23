@@ -3,7 +3,7 @@ use crate::CircuitIOType;
 use super::{AddressGadget, UInt64Gadget};
 use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
 use indexmap::IndexMap;
-use simpleworks::gadgets::ConstraintF;
+use snarkvm::prelude::{Group, Testnet3};
 
 pub type VMRecordEntriesMap = IndexMap<String, CircuitIOType>;
 
@@ -13,7 +13,7 @@ pub struct Record {
     pub gates: UInt64Gadget,
     // custom fields
     pub entries: VMRecordEntriesMap,
-    pub nonce: ConstraintF,
+    pub nonce: Option<Group<Testnet3>>,
 }
 
 impl Record {
@@ -21,7 +21,7 @@ impl Record {
         owner: AddressGadget,
         gates: UInt64Gadget,
         entries: VMRecordEntriesMap,
-        nonce: ConstraintF,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
         Self {
             owner,
@@ -80,7 +80,7 @@ impl PartialEq for Record {
         }
         self.owner.value() == other.owner.value()
             && self.gates.value() == other.gates.value()
-            && self.nonce == other.nonce
+            // && self.nonce == other.nonce
             && entries_are_equal
     }
 }

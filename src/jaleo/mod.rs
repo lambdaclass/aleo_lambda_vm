@@ -1,12 +1,13 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
+use rand::SeedableRng;
 use simpleworks::{
     gadgets::ConstraintF,
     marlin::{generate_rand, MarlinProof},
 };
 pub use snarkvm::prelude::Itertools;
-use snarkvm::prelude::Testnet3;
+use snarkvm::prelude::{Scalar, Testnet3, Uniform};
 
 mod execute;
 pub use execute::{credits_execution, execution, process_circuit_inputs, process_circuit_outputs};
@@ -66,22 +67,27 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 /// Generate a credits record of the given amount for the given owner,
 /// by using the given seed to deterministically generate a nonce.
 pub fn mint_credits(
-    owner_view_key: &ViewKey,
+    owner_address: &Address,
     credits: u64,
     seed: u64,
 ) -> Result<(Field, EncryptedRecord)> {
-    // TODO have someone verify/audit this, probably it's unsafe or breaks cryptographic assumptions
-
     let mut address = [0_u8; 63];
-    let owner_address = Address::try_from(owner_view_key)?.to_string();
-    for (address_byte, owner_address_byte) in address.iter_mut().zip(owner_address.as_bytes()) {
+    for (address_byte, owner_address_byte) in
+        address.iter_mut().zip(owner_address.to_string().as_bytes())
+    {
         *address_byte = *owner_address_byte;
     }
 
-    let nonce = ConstraintF::from(seed);
-    let non_encrypted_record =
-        Record::new(address, credits, RecordEntriesMap::default(), Some(nonce));
-    let encrypted_record = non_encrypted_record.encrypt(owner_view_key)?;
+    let mut seed_bytes: [u8; 32] = [0; 32];
+    for (index, byte) in seed_bytes.iter_mut().enumerate() {
+        *byte = ((seed >> index) & 1).try_into()?;
+    }
+
+    let rng = &mut rand::rngs::StdRng::from_seed(seed_bytes);
+    let randomizer = Scalar::rand(rng);
+
+    let mut non_encrypted_record = Record::new(address, credits, RecordEntriesMap::default(), None);
+    let encrypted_record = non_encrypted_record.encrypt(randomizer)?;
 
     Ok((non_encrypted_record.commitment()?, encrypted_record))
 }

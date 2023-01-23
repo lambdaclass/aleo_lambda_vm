@@ -8,7 +8,7 @@ pub mod test_helpers {
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::gadgets::ConstraintF;
-    use snarkvm::prelude::{LiteralType, Parser, PlaintextType, ValueType};
+    use snarkvm::prelude::{Group, LiteralType, Parser, PlaintextType, Testnet3, ValueType};
     use vmtropy::{
         build_function,
         helpers::{self, aleo_entries_to_vm_entries},
@@ -36,13 +36,13 @@ pub mod test_helpers {
         owner: jaleo::AddressBytes,
         gates: u64,
         data: jaleo::RecordEntriesMap,
-        nonce: ConstraintF,
+        nonce: Group<Testnet3>,
     ) -> jaleo::UserInputValueType {
         jaleo::UserInputValueType::Record(jaleo::Record {
             owner,
             gates,
             data,
-            nonce,
+            nonce: Some(nonce),
         })
     }
 
@@ -205,7 +205,7 @@ pub mod test_helpers {
                         owner: *b"aleo11111111111111111111111111111111111111111111111111111111111",
                         gates: u64::default(),
                         data: aleo_entries_to_vm_entries(aleo_record_entries)?,
-                        nonce: ConstraintF::default(),
+                        nonce: Some(helpers::random_nonce()),
                     })
                 }
                 // Constant Types

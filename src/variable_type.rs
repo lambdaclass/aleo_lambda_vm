@@ -14,7 +14,8 @@ pub enum VariableType {
     /// The serial number, and the record.
     // The serial number is an option because output records don't have serial numbers.
     Record(Option<Field>, Record),
-    EncryptedRecord(EncryptedRecord),
+    /// The commitment along with the encrypted record itself
+    EncryptedRecord((String, EncryptedRecord)),
 }
 
 impl VariableType {
@@ -48,17 +49,17 @@ impl Display for VariableType {
         match self {
             VariableType::Public(v) | VariableType::Private(v) => UserInputValueType::fmt(v, f),
             VariableType::Record(_, v) => Record::fmt(v, f),
-            VariableType::EncryptedRecord(v) => EncryptedRecord::fmt(v, f),
+            VariableType::EncryptedRecord((_commitment, encrypted_record)) => {
+                EncryptedRecord::fmt(encrypted_record, f)
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use simpleworks::{fields::serialize_field_element, gadgets::ConstraintF};
-
     use crate::{
-        helpers::to_address,
+        helpers::{self, to_address},
         jaleo::{Record, RecordEntriesMap, UserInputValueType},
         VariableType,
     };
@@ -86,7 +87,7 @@ mod tests {
         let primitive_address =
             "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
         let gates = 1;
-        let nonce = ConstraintF::default();
+        let nonce = helpers::random_nonce();
         let record_variable = VariableType::Record(
             None,
             Record::new(
@@ -99,9 +100,10 @@ mod tests {
 
         let serialized_record_variable = serde_json::to_string(&record_variable).unwrap();
 
+        let nonce_as_string = nonce.to_string();
         assert_eq!(
             serialized_record_variable,
-            "{\"Record\":[null,{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{},\"nonce\":\"0000000000000000000000000000000000000000000000000000000000000000\"}]}"
+            format!("{{\"Record\":[null,{{\"owner\":\"aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0\",\"gates\":\"1u64\",\"data\":{{}},\"nonce\":\"{nonce_as_string}\"}}]}}")
         );
     }
 
@@ -111,7 +113,7 @@ mod tests {
         let primitive_address =
             "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
         let gates = 1;
-        let nonce = ConstraintF::default();
+        let nonce = helpers::random_nonce();
         let public_record_variable = VariableType::Public(UserInputValueType::Record(Record::new(
             to_address(primitive_address),
             gates,
@@ -133,7 +135,7 @@ mod tests {
         let primitive_address =
             "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
         let gates = 1;
-        let nonce = ConstraintF::default();
+        let nonce = helpers::random_nonce();
         let private_record_variable =
             VariableType::Private(UserInputValueType::Record(Record::new(
                 to_address(primitive_address),
@@ -180,10 +182,10 @@ mod tests {
     fn test_deserialize_record_variable_type() {
         let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
         let gates = 1;
-        let nonce = ConstraintF::default();
-        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
         let serialized_record_variable = format!(
-            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}]}}"#
+            r#"{{"Record":[null,{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{nonce_as_string}"}}]}}"#
         );
 
         let record_variable: VariableType =
@@ -206,10 +208,10 @@ mod tests {
     #[test]
     fn test_cannot_deserialize_a_public_record_variable_type() {
         let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-        let nonce = ConstraintF::default();
-        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
         let serialized_public_record_variable = format!(
-            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{encoded_nonce}"}}"#,
+            r#"{{"Public":{{"owner":"{primitive_address}","gates":"1u64","data":{{}},"nonce":"{nonce_as_string}"}}"#,
         );
 
         assert!(serde_json::from_str::<VariableType>(&serialized_public_record_variable).is_err());
@@ -218,10 +220,10 @@ mod tests {
     #[test]
     fn test_cannot_deserialize_a_private_record_variable_type() {
         let primitive_address = "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0";
-        let nonce = ConstraintF::default();
-        let encoded_nonce = hex::encode(serialize_field_element(nonce).unwrap());
+        let nonce = helpers::random_nonce();
+        let nonce_as_string = nonce.to_string();
         let serialized_private_record_variable = format!(
-            r#"{{"Private":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{encoded_nonce}"}}"#,
+            r#"{{"Private":{{"owner":"{primitive_address}","gates":"1u64","entries":{{}},"nonce":"{nonce_as_string}"}}"#,
         );
 
         assert!(serde_json::from_str::<VariableType>(&serialized_private_record_variable).is_err())
@@ -234,7 +236,7 @@ mod tests {
         let primitive_address =
             "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
         let gates = 1;
-        let nonce = ConstraintF::default();
+        let nonce = helpers::random_nonce();
         let record_variable = VariableType::Record(
             None,
             Record::new(
@@ -257,7 +259,7 @@ mod tests {
         let primitive_address =
             "aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z0".to_owned();
         let gates = 1;
-        let nonce = ConstraintF::default();
+        let nonce = helpers::random_nonce();
         let record_variable = VariableType::Record(
             None,
             Record::new(
