@@ -337,9 +337,8 @@ mod assert_tests {
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let third_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs, || Ok(primitive_third_operand)).unwrap(),
-        );
+        let third_operand =
+            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_third_operand)).unwrap());
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.insert("r2".to_owned(), third_operand);
@@ -358,9 +357,8 @@ mod assert_tests {
         let left_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap(),
-        );
+        let right_operand =
+            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
 
         let mut operands = sample_operands(left_operand, right_operand);
         operands.remove("r1");
@@ -381,9 +379,8 @@ mod assert_tests {
         let left_operand = SimpleAddress(
             AddressGadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
         );
-        let right_operand = SimpleUInt64(
-            UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap(),
-        );
+        let right_operand =
+            SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
 
         let result = assert_eq(&sample_operands(
             left_operand.clone(),

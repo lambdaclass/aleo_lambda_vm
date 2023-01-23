@@ -27,7 +27,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u8", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -47,7 +48,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -71,7 +72,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u8", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -91,7 +93,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -115,7 +117,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u8", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -135,7 +138,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -159,7 +162,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u16", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -187,7 +191,7 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u16", "r4", "r2", "r3"];
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -207,7 +211,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -231,7 +235,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u16", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -251,7 +256,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -275,7 +280,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u32", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -295,7 +301,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -319,7 +325,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u32", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -339,7 +346,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -363,7 +370,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u32", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -383,7 +391,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -407,7 +415,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u64", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -427,7 +436,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -451,7 +460,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u64", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -471,7 +481,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 
@@ -495,7 +505,8 @@ mod is_eq_tests {
         let (function_variables, _proof) =
             vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
 
-        let expected_function_variables = vec!["r0", "r1", "r2", "r3"];
+        let expected_function_variables = vec!["r0", "r1", "1u64", "r4", "r2", "r3"];
+
         for (register, expected_register) in
             function_variables.keys().zip(expected_function_variables)
         {
@@ -515,7 +526,7 @@ mod is_eq_tests {
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r3.value().unwrap(), "false".to_owned());
     }
 }
