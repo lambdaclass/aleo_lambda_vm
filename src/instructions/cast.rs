@@ -320,6 +320,7 @@ pub fn _cast(
                 owner,
                 gates,
                 entries,
+                nonce: None,
             }))
         }
         [] | [_] => bail!("Cast is a two or more operands instruction"),

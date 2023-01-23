@@ -3,6 +3,7 @@ use crate::CircuitIOType;
 use super::{AddressGadget, UInt64Gadget};
 use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
 use indexmap::IndexMap;
+use snarkvm::prelude::{Group, Testnet3};
 
 pub type VMRecordEntriesMap = IndexMap<String, CircuitIOType>;
 
@@ -12,7 +13,7 @@ pub struct Record {
     pub gates: UInt64Gadget,
     // custom fields
     pub entries: VMRecordEntriesMap,
-    // pub nonce: Group<Testnet3>,
+    pub nonce: Option<Group<Testnet3>>,
 }
 
 impl Record {
@@ -20,13 +21,13 @@ impl Record {
         owner: AddressGadget,
         gates: UInt64Gadget,
         entries: VMRecordEntriesMap,
-        // nonce: Group<Testnet3>,
+        nonce: Option<Group<Testnet3>>,
     ) -> Self {
         Self {
             owner,
             gates,
             entries,
-            // nonce,
+            nonce,
         }
     }
 }

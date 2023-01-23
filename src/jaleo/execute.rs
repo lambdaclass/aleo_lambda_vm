@@ -120,7 +120,7 @@ pub fn process_circuit_inputs(
                             to_address(r.owner.value()?),
                             r.gates.value()?,
                             primitive_entries,
-                            None,
+                            r.nonce,
                         );
                         VariableType::Record(Some(record.serial_number(private_key)?), record)
                     }

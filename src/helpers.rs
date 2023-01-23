@@ -464,7 +464,7 @@ pub(crate) fn process_inputs(
                     owner: address,
                     gates,
                     data,
-                    nonce: _nonce,
+                    nonce: nonce,
                 }),
             ) => {
                 let mut entries_gadgets: IndexMap<String, CircuitIOType> = IndexMap::new();
@@ -510,7 +510,7 @@ pub(crate) fn process_inputs(
                         Ok(gates)
                     })?,
                     entries: entries_gadgets,
-                    // nonce: *nonce,
+                    nonce: *nonce,
                 })
             }
             (ValueType::Record(_), _) => {
