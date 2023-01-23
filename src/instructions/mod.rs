@@ -28,6 +28,15 @@ pub use is_eq::is_neq;
 mod mul;
 pub use mul::mul;
 
+mod nand;
+pub use nand::nand;
+
+mod nor;
+pub use nor::nor;
+
+mod or;
+pub use or::or;
+
 mod shl;
 pub use shl::shl;
 
@@ -39,3 +48,6 @@ pub use sub::sub;
 
 mod ternary;
 pub use ternary::ternary;
+
+mod xor;
+pub use xor::xor;
