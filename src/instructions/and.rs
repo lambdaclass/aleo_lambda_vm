@@ -1,8 +1,7 @@
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Ok, Result};
-use ark_r1cs_std::ToBitsGadget;
 use indexmap::IndexMap;
-use simpleworks::gadgets::{UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget};
+use simpleworks::gadgets::traits::BitwiseOperationGadget;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn and(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
@@ -16,60 +15,20 @@ pub fn and(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             Ok(SimpleBoolean(result))
         }
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            let left_operand_raw_bits = left_operand.to_bits_le()?;
-            let right_operand_raw_bits = right_operand.to_bits_le()?;
-            let mut result = Vec::new();
-            for (left_operand_bit, right_operand_bit) in left_operand_raw_bits
-                .iter()
-                .zip(right_operand_raw_bits.iter())
-            {
-                let operation_result = left_operand_bit.and(right_operand_bit)?;
-                result.push(operation_result);
-            }
-            let new_value = UInt8Gadget::from_bits_le(&result);
-            Ok(SimpleUInt8(new_value))
+            let result = left_operand.and(right_operand.clone())?;
+            Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            let left_operand_raw_bits = left_operand.to_bits_le();
-            let right_operand_raw_bits = right_operand.to_bits_le();
-            let mut result = Vec::new();
-            for (left_operand_bit, right_operand_bit) in left_operand_raw_bits
-                .iter()
-                .zip(right_operand_raw_bits.iter())
-            {
-                let operation_result = left_operand_bit.and(right_operand_bit)?;
-                result.push(operation_result);
-            }
-            let new_value = UInt16Gadget::from_bits_le(&result);
-            Ok(SimpleUInt16(new_value))
+            let result = left_operand.and(right_operand.clone())?;
+            Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            let left_operand_raw_bits = left_operand.to_bits_le();
-            let right_operand_raw_bits = right_operand.to_bits_le();
-            let mut result = Vec::new();
-            for (left_operand_bit, right_operand_bit) in left_operand_raw_bits
-                .iter()
-                .zip(right_operand_raw_bits.iter())
-            {
-                let operation_result = left_operand_bit.and(right_operand_bit)?;
-                result.push(operation_result);
-            }
-            let new_value = UInt32Gadget::from_bits_le(&result);
-            Ok(SimpleUInt32(new_value))
+            let result = left_operand.and(right_operand.clone())?;
+            Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            let left_operand_raw_bits = left_operand.to_bits_le();
-            let right_operand_raw_bits = right_operand.to_bits_le();
-            let mut result = Vec::new();
-            for (left_operand_bit, right_operand_bit) in left_operand_raw_bits
-                .iter()
-                .zip(right_operand_raw_bits.iter())
-            {
-                let operation_result = left_operand_bit.and(right_operand_bit)?;
-                result.push(operation_result);
-            }
-            let new_value = UInt64Gadget::from_bits_le(&result);
-            Ok(SimpleUInt64(new_value))
+            let result = left_operand.and(right_operand.clone())?;
+            Ok(SimpleUInt64(result))
         }
         [_, _] => bail!("and is not supported for the given types"),
         [..] => bail!("and requires two operands"),
