@@ -34,16 +34,16 @@ pub fn is_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOTyp
         .as_slice()
     {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+            Ok(SimpleBoolean(right_operand.is_neq(left_operand)?))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
         }
         [_, _] => bail!("is.neq is not supported for the given types"),
         [..] => bail!("is.neq requires two operands"),

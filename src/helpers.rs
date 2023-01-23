@@ -528,7 +528,9 @@ pub(crate) fn process_inputs(
 }
 
 /// Executes the given function's instructions, adding the necessary constraints for each one and filling in
-/// all the variables in the given `program_variables` index map.
+/// all the variables in the given `program_variables` index map. Instructions such as `asserts` do not have
+/// outputs and while they add constraints to ensure the values are as expected, they don't modify the program
+/// variables.
 ///
 /// # Parameters
 /// - `function` - function to be analyzed.
@@ -557,8 +559,7 @@ pub(crate) fn process_outputs(
         let operands = process_operands(instruction.operands(), program_variables)?;
         let circuit_output = match instruction {
             Instruction::Add(_) => instructions::add(&operands)?,
-            // because asserts don't really have outputs, continue the loop
-            // TODO: this should probably be an Option
+            // because asserts don't really have outputs, continue the loop on asserts
             Instruction::AssertEq(_) => {
                 instructions::assert_eq(&operands)?;
                 continue;

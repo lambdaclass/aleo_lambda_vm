@@ -1,7 +1,10 @@
+use std::fmt::Display;
+
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
 use indexmap::IndexMap;
+use simpleworks::gadgets::ConstraintF;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
     match operands
@@ -10,56 +13,16 @@ pub fn assert_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         .as_slice()
     {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.value() {
-                Ok(true) => {
-                    left_operand.enforce_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is not equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_equal(left_operand, right_operand)
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.value() {
-                Ok(true) => {
-                    left_operand.enforce_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is not equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_equal(left_operand, right_operand)
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.value() {
-                Ok(true) => {
-                    left_operand.enforce_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is not equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_equal(left_operand, right_operand)
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.value() {
-                Ok(true) => {
-                    left_operand.enforce_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is not equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_equal(left_operand, right_operand)
         }
         [_, _] => bail!("assert.eq is not supported for the given types"),
         [..] => bail!("assert.eq requires two operands"),
@@ -73,59 +36,69 @@ pub fn assert_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<()> {
         .as_slice()
     {
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => {
-                    left_operand.enforce_not_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_not_equal(left_operand, right_operand)
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => {
-                    left_operand.enforce_not_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_not_equal(left_operand, right_operand)
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => {
-                    left_operand.enforce_not_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_not_equal(left_operand, right_operand)
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            match right_operand.is_eq(left_operand)?.not().value() {
-                Ok(true) => {
-                    left_operand.enforce_not_equal(right_operand)?;
-                    Ok(())
-                }
-                _ => bail!(
-                    "{} is equal to {}",
-                    left_operand.value()?,
-                    right_operand.value()?
-                ),
-            }
+            assert_and_enforce_not_equal(left_operand, right_operand)
         }
         [_, _] => bail!("assert.neq is not supported for the given types"),
         [..] => bail!("assert.neq requires two operands"),
+    }
+}
+
+fn assert_and_enforce_equal<T: EqGadget<ConstraintF> + R1CSVar<ConstraintF>>(
+    left_operand: &T,
+    right_operand: &T,
+) -> Result<()>
+where
+    T::Value: Display,
+{
+    match right_operand.is_eq(left_operand)?.value() {
+        Ok(true) => {
+            left_operand.enforce_equal(right_operand)?;
+            Ok(())
+        }
+        Ok(false) => bail!(
+            "{} is not equal to {}",
+            left_operand.value()?,
+            right_operand.value()?
+        ),
+        Err(s) => bail!(
+            "Error getting value from assert.eq {} {}: {s}",
+            left_operand.value()?,
+            right_operand.value()?
+        ),
+    }
+}
+
+fn assert_and_enforce_not_equal<T: EqGadget<ConstraintF> + R1CSVar<ConstraintF>>(
+    left_operand: &T,
+    right_operand: &T,
+) -> Result<()>
+where
+    T::Value: Display,
+{
+    match right_operand.is_neq(left_operand)?.value() {
+        Ok(true) => {
+            left_operand.enforce_not_equal(right_operand)?;
+            Ok(())
+        }
+        Ok(false) => bail!(
+            "{} is not equal to {}",
+            left_operand.value()?,
+            right_operand.value()?
+        ),
+        Err(s) => bail!(
+            "Error getting value from assert.eq {} {}: {s}",
+            left_operand.value()?,
+            right_operand.value()?
+        ),
     }
 }
 
