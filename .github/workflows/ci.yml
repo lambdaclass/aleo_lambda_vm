@@ -1,5 +1,9 @@
-name: VMtropy build checks
+name: Aleo Lambda VM build checks
 on: push
+concurrency: 
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   clippy:
     runs-on: [self-hosted, nomad]
@@ -10,7 +14,7 @@ jobs:
             toolchain: 1.66.1
             components: clippy
       - run: apt install -y clang libclang1 libssl-dev
-      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: make clippy
   format:
     runs-on: [self-hosted, nomad]
     steps:

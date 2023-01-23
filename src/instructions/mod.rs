@@ -3,11 +3,18 @@
 mod add;
 pub use add::add;
 
+mod and;
+pub use and::and;
+
 mod cast;
 pub use cast::cast;
 
 mod div;
 pub use div::div;
+
+mod compare;
+pub use compare::compare;
+pub use compare::Comparison;
 
 mod hash_psd2;
 pub use hash_psd2::hash_psd2;
@@ -16,6 +23,7 @@ pub(crate) mod helpers;
 
 mod is_eq;
 pub use is_eq::is_eq;
+pub use is_eq::is_neq;
 
 mod mul;
 pub use mul::mul;

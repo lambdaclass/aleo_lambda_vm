@@ -12,13 +12,15 @@ pub mod test_helpers {
     use vmtropy::{
         build_function,
         helpers::{self, aleo_entries_to_vm_entries},
-        jaleo::{self, Identifier, Program, Record, UserInputValueType},
+        jaleo::{self, Address, Identifier, PrivateKey, Program, Record, UserInputValueType},
         CircuitIOType, ProgramBuild, VMRecordEntriesMap,
     };
 
-    pub fn address(n: u64) -> (String, [u8; 63]) {
-        let primitive_address =
-            format!("aleo1sk339wl3ch4ee5k3y6f6yrmvs9w63yfsmrs9w0wwkx5a9pgjqggqlkx5z{n}");
+    pub fn address() -> (String, [u8; 63]) {
+        let rng = &mut rand::thread_rng();
+        let private_key = PrivateKey::new(rng).unwrap();
+        let primitive_address = Address::try_from(private_key).unwrap().to_string();
+
         let address_bytes = helpers::to_address(primitive_address.clone());
         (primitive_address, address_bytes)
     }

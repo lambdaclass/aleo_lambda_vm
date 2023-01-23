@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use ark_r1cs_std::{prelude::AllocVar, select::CondSelectGadget, ToBitsGadget};
 use indexmap::IndexMap;
 use simpleworks::{
-    gadgets::{traits::BitShiftGadget, UInt8Gadget},
+    gadgets::{traits::BitwiseOperationGadget, UInt8Gadget},
     marlin::ConstraintSystemRef,
 };
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};

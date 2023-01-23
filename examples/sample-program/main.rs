@@ -1,33 +1,18 @@
-use ark_serialize::CanonicalSerialize;
-use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-use vmtropy::jaleo::UserInputValueType::U32;
+use vmtropy::jaleo::UserInputValueType::U16;
 
 fn main() {
-    let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.push("examples/sample-program/sample.aleo");
-    let program_string = std::fs::read_to_string(path).unwrap();
-    let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
-    let function = program
-        .get_function(&Identifier::try_from("hello").unwrap())
-        .unwrap();
+    use vmtropy::{build_program, execute_function};
 
-    let user_inputs = vec![U32(2), U32(1)];
+    // Parse the program
+    let program_string = std::fs::read_to_string("./programs/add/main.aleo").unwrap();
+    let (program, build) = build_program(&program_string).unwrap();
+    let function = String::from("hello_1");
+    // Declare the inputs (it is the same for public or private)
+    let user_inputs = vec![U16(1), U16(1)];
 
-    // Run the `hello` function defined in the `sample.aleo` program
-    let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+    // Execute the function
+    let (_function_variables, proof) = execute_function(&program, &function, &user_inputs).unwrap();
+    let (_proving_key, verifying_key) = build.get(&function).unwrap();
 
-    // for (register, value) in outputs {
-    //     println!(
-    //         "Output register {} has value {}",
-    //         register,
-    //         value.value().unwrap()
-    //     );
-    // }
-
-    let mut bytes_proof = Vec::new();
-    match proof.serialize(&mut bytes_proof) {
-        Ok(_) => println!("Proof of execution: \n0x{}", hex::encode(bytes_proof)),
-        Err(_) => println!("⚠️ Error serializing proof"),
-    }
+    assert!(vmtropy::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
 }

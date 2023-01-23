@@ -59,3 +59,40 @@ aes-gcm = "0.10.1"
 
 [[example]]
 name = "sample-program"
+
+[profile.bench]
+opt-level = 3
+debug = false
+rpath = false
+lto = "thin"
+incremental = true
+debug-assertions = false
+
+[dev-dependencies]
+rand = "0.8"
+parking_lot = "0.12"
+cfg-if = "1"
+
+[dev-dependencies.criterion]
+version = "0.4"
+features = ["async_futures"]
+
+[dev-dependencies.pprof]
+version = "0.11"
+features = ["criterion", "flamegraph", "frame-pointer"]
+default-features = false
+
+[[bench]]
+name = "benchmark_aleo_roulette"
+harness = false
+
+[[bench]]
+name = "benchmark_aleo_credits"
+harness = false
+
+[features]
+snarkvm_backend_flamegraph = ["benchmark_flamegraph"]
+snarkvm_backend = []
+vmtropy_backend_flamegraph = ["benchmark_flamegraph"]
+vmtropy_backend = []
+benchmark_flamegraph = []

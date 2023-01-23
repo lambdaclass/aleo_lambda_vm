@@ -4,7 +4,6 @@ use ark_r1cs_std::prelude::EqGadget;
 use indexmap::IndexMap;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-// Aleo instructions support the addition of two numbers and not for UInt8.
 pub fn is_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .values()
@@ -28,19 +27,48 @@ pub fn is_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType
     }
 }
 
+pub fn is_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+    match operands
+        .values()
+        .collect::<Vec<&CircuitIOType>>()
+        .as_slice()
+    {
+        [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+        }
+        [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+        }
+        [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+        }
+        [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?.not()))
+        }
+        [_, _] => bail!("is.neq is not supported for the given types"),
+        [..] => bail!("is.neq requires two operands"),
+    }
+}
+
 #[cfg(test)]
 mod is_eq_tests {
-    use crate::CircuitIOType::{
-        SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    use crate::{instructions::is_eq::is_eq, CircuitIOType};
+    use crate::{
+        instructions::is_eq::is_neq,
+        CircuitIOType::{
+            SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        },
     };
+    use anyhow::Result;
     use ark_r1cs_std::prelude::{AllocVar, Boolean};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
-    use simpleworks::gadgets::{
-        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    use simpleworks::{
+        gadgets::{
+            AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        },
+        marlin::ConstraintSystemRef,
     };
-
-    use crate::{instructions::is_eq::is_eq, CircuitIOType};
 
     fn address(n: u64) -> (String, [u8; 63]) {
         let mut address_bytes = [0_u8; 63];
@@ -64,6 +92,35 @@ mod is_eq_tests {
         operands
     }
 
+    fn assert_equality_instructions(
+        operands: &IndexMap<String, CircuitIOType>,
+        cs: ConstraintSystemRef,
+        expect_on_eq: bool,
+    ) -> Result<()> {
+        let result_eq = is_eq(operands)?;
+        let result_neq = is_neq(operands)?;
+
+        let (expect_eq, expect_neq) = match expect_on_eq {
+            true => (
+                SimpleBoolean(Boolean::<ConstraintF>::TRUE),
+                SimpleBoolean(Boolean::<ConstraintF>::FALSE),
+            ),
+            false => (
+                SimpleBoolean(Boolean::<ConstraintF>::FALSE),
+                SimpleBoolean(Boolean::<ConstraintF>::TRUE),
+            ),
+        };
+
+        assert!(cs.is_satisfied()?);
+
+        assert!(matches!(result_eq, CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(result_neq, CircuitIOType::SimpleBoolean(_)));
+
+        assert_eq!(result_eq.value()?, expect_eq.value()?);
+        assert_eq!(result_neq.value()?, expect_neq.value()?);
+        Ok(())
+    }
+
     #[test]
     fn test_u8_is_eq_is_true() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
@@ -76,13 +133,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt8(
             UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::TRUE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, true)
+            .unwrap();
     }
 
     #[test]
@@ -97,13 +150,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt8(
             UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::FALSE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
+            .unwrap();
     }
 
     #[test]
@@ -118,13 +167,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt16(
             UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::TRUE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, true)
+            .unwrap();
     }
 
     #[test]
@@ -139,13 +184,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt16(
             UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::FALSE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
+            .unwrap();
     }
 
     #[test]
@@ -160,13 +201,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt32(
             UInt32Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::TRUE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, true)
+            .unwrap();
     }
 
     #[test]
@@ -181,13 +218,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt32(
             UInt32Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::FALSE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
+            .unwrap();
     }
 
     #[test]
@@ -202,13 +235,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::TRUE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, true)
+            .unwrap();
     }
 
     #[test]
@@ -223,13 +252,9 @@ mod is_eq_tests {
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
-        let expected_result = SimpleBoolean(Boolean::<ConstraintF>::FALSE);
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert!(matches!(result, CircuitIOType::SimpleBoolean(_)));
-        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
+            .unwrap();
     }
 
     #[test]
@@ -271,9 +296,11 @@ mod is_eq_tests {
         let mut operands = sample_operands(left_operand, right_operand);
         operands.remove("r1");
 
+        let result_neq = is_neq(&operands).unwrap_err();
         let result = is_eq(&operands).unwrap_err();
 
-        assert_eq!(result.to_string(), "is.eq requires two operands");
+        assert!(result.to_string().contains("requires two operands"));
+        assert!(result_neq.to_string().contains("requires two operands"));
     }
 
     #[test]
@@ -288,11 +315,22 @@ mod is_eq_tests {
         let right_operand =
             SimpleUInt64(UInt64Gadget::new_witness(cs, || Ok(primitive_right_operand)).unwrap());
 
-        let result = is_eq(&sample_operands(left_operand, right_operand)).unwrap_err();
+        let result = is_eq(&sample_operands(
+            left_operand.clone(),
+            right_operand.clone(),
+        ))
+        .unwrap_err();
 
         assert_eq!(
             result.to_string(),
             "is.eq is not supported for the given types"
+        );
+
+        let result = is_neq(&sample_operands(left_operand, right_operand)).unwrap_err();
+
+        assert_eq!(
+            result.to_string(),
+            "is.neq is not supported for the given types"
         );
     }
 }

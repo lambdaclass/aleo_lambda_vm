@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod add;
 #[cfg(test)]
+mod compare;
+#[cfg(test)]
 mod div;
 #[cfg(test)]
 mod hash_psd2;

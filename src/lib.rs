@@ -35,7 +35,7 @@
 use anyhow::{anyhow, bail, Result};
 use ark_relations::r1cs::{ConstraintSystem, ConstraintSystemRef};
 use indexmap::IndexMap;
-use jaleo::UserInputValueType;
+use jaleo::{Identifier, UserInputValueType};
 pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
 use simpleworks::{
     gadgets::{
@@ -81,17 +81,18 @@ pub type FunctionKeys = (ProvingKey, VerifyingKey);
 ///
 pub fn execute_function(
     program: &Program<Testnet3>,
-    function: &Function<Testnet3>,
+    function_name: &str,
     user_inputs: &[UserInputValueType],
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let rng = &mut simpleworks::marlin::generate_rand();
     let universal_srs = simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, rng)?;
     let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+    let function = program.get_function(&Identifier::try_from(function_name)?)?;
 
-    let mut function_variables = helpers::function_variables(function, constraint_system.clone())?;
+    let mut function_variables = helpers::function_variables(&function, constraint_system.clone())?;
     let (function_proving_key, _function_verifying_key) = build_function(
         program,
-        function,
+        &function,
         user_inputs,
         constraint_system.clone(),
         &universal_srs,
