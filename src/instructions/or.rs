@@ -4,39 +4,39 @@ use indexmap::IndexMap;
 use simpleworks::gadgets::traits::BitwiseOperationGadget;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
-pub fn and(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
+pub fn or(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
         .values()
         .collect::<Vec<&CircuitIOType>>()
         .as_slice()
     {
         [SimpleBoolean(left_operand), SimpleBoolean(right_operand)] => {
-            let result = left_operand.and(right_operand)?;
+            let result = left_operand.or(right_operand)?;
             Ok(SimpleBoolean(result))
         }
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            let result = left_operand.and(right_operand.clone())?;
+            let result = left_operand.or(right_operand.clone())?;
             Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            let result = left_operand.and(right_operand.clone())?;
+            let result = left_operand.or(right_operand.clone())?;
             Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            let result = left_operand.and(right_operand.clone())?;
+            let result = left_operand.or(right_operand.clone())?;
             Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            let result = left_operand.and(right_operand.clone())?;
+            let result = left_operand.or(right_operand.clone())?;
             Ok(SimpleUInt64(result))
         }
-        [_, _] => bail!("and is not supported for the given types"),
-        [..] => bail!("and requires two operands"),
+        [_, _] => bail!("or is not supported for the given types"),
+        [..] => bail!("or requires two operands"),
     }
 }
 
 #[cfg(test)]
-mod and_unit_tests {
+mod or_unit_tests {
     use crate::CircuitIOType::{
         self, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
     };
@@ -48,7 +48,7 @@ mod and_unit_tests {
         marlin::ConstraintSystemRef,
     };
 
-    use super::and;
+    use super::or;
 
     fn sample_operands(
         first_operand: CircuitIOType,
@@ -69,7 +69,7 @@ mod and_unit_tests {
     ) {
         assert!(constraint_system.is_satisfied().unwrap());
 
-        let result = and(&sample_operands(first_operand, second_operand)).unwrap();
+        let result = or(&sample_operands(first_operand, second_operand)).unwrap();
         assert_eq!(result.value().unwrap(), expected_result.value().unwrap())
     }
 
@@ -107,17 +107,17 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_booleans_with_one_false_and_one_true_operand_should_be_false() {
+    fn test_booleans_with_one_false_and_one_true_operand_should_be_true() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let primitive_operand = false;
-        let other_primitive_operand = true;
+        let false_primitive_operand = false;
+        let true_primitive_operand = true;
 
-        let operand =
-            SimpleBoolean(Boolean::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
-        let another_operand = SimpleBoolean(
-            Boolean::new_witness(cs.clone(), || Ok(other_primitive_operand)).unwrap(),
+        let operand = SimpleBoolean(
+            Boolean::new_witness(cs.clone(), || Ok(false_primitive_operand)).unwrap(),
         );
-        let expected_result = operand.clone();
+        let another_operand =
+            SimpleBoolean(Boolean::new_witness(cs.clone(), || Ok(true_primitive_operand)).unwrap());
+        let expected_result = another_operand.clone();
 
         assert_that_and_with_two_operands_result_is_correct(
             cs,
@@ -128,7 +128,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u8_and_with_zero_should_return_zero() {
+    fn test_u8_or_with_zero_should_return_zero() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 0_u8;
 
@@ -145,7 +145,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u8_and_with_max_value_return_same_value() {
+    fn test_u8_or_with_max_value_return_same_value() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = u8::MAX;
 
@@ -162,11 +162,11 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u8_and_with_two_numbers_return_correct_new_number() {
+    fn test_u8_or_with_two_numbers_return_correct_new_number() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 10_u8; // 00001010
         let other_primitive_operand = 7_u8; // 00000111
-        let primitive_result = 2_u8; //00000010
+        let primitive_result = 15_u8; // 00001111
 
         let operand =
             SimpleUInt8(UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
@@ -185,7 +185,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u16_and_with_zero_should_return_zero() {
+    fn test_u16_or_with_zero_should_return_zero() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 0_u16;
 
@@ -202,7 +202,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u16_and_with_max_value_return_same_value() {
+    fn test_u16_or_with_max_value_return_same_value() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = u16::MAX;
 
@@ -219,11 +219,11 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u16_and_with_two_numbers_return_correct_new_number() {
+    fn test_u16_or_with_two_numbers_return_correct_new_number() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 10_u16; // 0...00001010
         let other_primitive_operand = 7_u16; // 0...00000111
-        let primitive_result = 2_u16; // 0...00000010
+        let primitive_result = 15_u16; // 0...00001111
 
         let operand =
             SimpleUInt16(UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
@@ -242,7 +242,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u32_and_with_zero_should_return_zero() {
+    fn test_u32_or_with_zero_should_return_zero() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 0_u32;
 
@@ -259,7 +259,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u32_and_with_max_value_return_same_value() {
+    fn test_u32_or_with_max_value_return_same_value() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = u32::MAX;
 
@@ -276,11 +276,11 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u32_and_with_two_numbers_return_correct_new_number() {
+    fn test_u32_or_with_two_numbers_return_correct_new_number() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 10_u32; // 0...00001010
         let other_primitive_operand = 7_u32; // 0...00000111
-        let primitive_result = 2_u32; // 0...00000010
+        let primitive_result = 15_u32; // 0...00001111
 
         let operand =
             SimpleUInt32(UInt32Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
@@ -299,7 +299,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u64_and_with_zero_should_return_zero() {
+    fn test_u64_or_with_zero_should_return_zero() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 0_u64;
 
@@ -316,7 +316,7 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u64_and_with_max_value_return_same_value() {
+    fn test_u64_or_with_max_value_return_same_value() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = u64::MAX;
 
@@ -333,11 +333,11 @@ mod and_unit_tests {
     }
 
     #[test]
-    fn test_u64_and_with_two_numbers_return_correct_new_number() {
+    fn test_u64_or_with_two_numbers_return_correct_new_number() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_operand = 10_u64; // 0...00001010
         let other_primitive_operand = 7_u64; // 0...00000111
-        let primitive_result = 2_u64; // 0...00000010
+        let primitive_result = 15_u64; // 0...00001111
 
         let operand =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());

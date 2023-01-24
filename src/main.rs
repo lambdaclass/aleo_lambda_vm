@@ -46,9 +46,10 @@ fn main() -> Result<()> {
                         .to_string();
                     #[allow(deprecated)]
                     let inputs: Vec<String> = execute_cmd
-                        .grouped_values_of("inputs")
+                        .get_occurrences("inputs")
                         .ok_or_else(|| anyhow!("Error parsing input parameters"))?
-                        .collect::<Vec<Vec<&str>>>()
+                        .map(Iterator::collect)
+                        .collect::<Vec<Vec<&String>>>()
                         .get(0)
                         .ok_or_else(|| anyhow!("Error parsing input parameters"))?
                         .iter()

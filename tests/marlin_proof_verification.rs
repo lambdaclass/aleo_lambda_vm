@@ -223,4 +223,108 @@ mod marlin_tests {
             program_build.map.get(&function_identifier).unwrap();
         assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
     }
+
+    #[test]
+    fn test_nand() {
+        let program_string = test_helpers::read_program("nand").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_1";
+
+        /*
+        function hello_1:
+            input r0 as boolean.public;
+            input r1 as boolean.public;
+            nand r0 r1 into r2;
+            output r2 as boolean.public;
+        */
+
+        let user_inputs = vec![Boolean(true), Boolean(true)];
+
+        // execute circuit
+        let (_compiled_function_variables, proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
+    }
+
+    #[test]
+    fn test_nor() {
+        let program_string = test_helpers::read_program("nor").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_1";
+
+        /*
+        function hello_1:
+            input r0 as boolean.public;
+            input r1 as boolean.public;
+            nor r0 r1 into r2;
+            output r2 as boolean.public;
+        */
+
+        let user_inputs = vec![Boolean(true), Boolean(true)];
+
+        // execute circuit
+        let (_compiled_function_variables, proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
+    }
+
+    #[test]
+    fn test_or() {
+        let program_string = test_helpers::read_program("or").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_1";
+
+        /*
+        function hello_1:
+            input r0 as boolean.public;
+            input r1 as boolean.public;
+            or r0 r1 into r2;
+            output r2 as boolean.public;
+        */
+
+        let user_inputs = vec![Boolean(true), Boolean(true)];
+
+        // execute circuit
+        let (_compiled_function_variables, proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
+    }
+
+    #[test]
+    fn test_xor() {
+        let program_string = test_helpers::read_program("xor").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_1";
+
+        /*
+        function hello_1:
+            input r0 as boolean.public;
+            input r1 as boolean.public;
+            xor r0 r1 into r2;
+            output r2 as boolean.public;
+        */
+
+        let user_inputs = vec![Boolean(true), Boolean(true)];
+
+        // execute circuit
+        let (_compiled_function_variables, proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+        let (_program, program_build) = build_program(&program_string).unwrap();
+        let function_identifier = Identifier::from_str(function_name).unwrap();
+        let (_function_proving_key, function_verifying_key) =
+            program_build.map.get(&function_identifier).unwrap();
+        assert!(verify_proof(function_verifying_key.clone(), &user_inputs, &proof).unwrap())
+    }
 }

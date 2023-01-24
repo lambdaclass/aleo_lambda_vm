@@ -11,6 +11,12 @@ mod is_eq_neq;
 #[cfg(test)]
 mod mul;
 #[cfg(test)]
+mod nand;
+#[cfg(test)]
+mod nor;
+#[cfg(test)]
+mod or;
+#[cfg(test)]
 mod shl;
 #[cfg(test)]
 mod shr;
@@ -18,3 +24,5 @@ mod shr;
 mod sub;
 #[cfg(test)]
 mod ternary;
+#[cfg(test)]
+mod xor;
