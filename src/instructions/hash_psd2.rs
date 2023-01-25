@@ -4,7 +4,7 @@ use ark_r1cs_std::{alloc::AllocVar, R1CSVar, ToBytesGadget};
 use indexmap::IndexMap;
 use simpleworks::{gadgets::FieldGadget, hash};
 pub use CircuitIOType::{
-    SimpleAddress, SimpleField, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleField, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
 
 // TODO: Generate constraints. Use the Poseidon hash gadget.
@@ -46,6 +46,14 @@ pub fn hash_psd2(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIO
                 Ok(output)
             })?))
         }
+        [SimpleInt8(value)] => {
+            let input = value.to_bytes()?.value()?;
+            let output = hash::poseidon2_hash(&input)?;
+
+            Ok(SimpleField(FieldGadget::new_witness(value.cs(), || {
+                Ok(output)
+            })?))
+        }
         [SimpleAddress(address)] => {
             let input = address.to_bytes()?.value()?;
             let output = hash::poseidon2_hash(&input)?;
@@ -65,14 +73,15 @@ mod hash_psd2_unit_tests {
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::gadgets::{
-        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        AddressGadget, ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+        UInt8Gadget,
     };
 
     use crate::{
         instructions::hash_psd2::hash_psd2,
         CircuitIOType::{
-            self, SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-            SimpleUInt8,
+            self, SimpleAddress, SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32,
+            SimpleUInt64, SimpleUInt8,
         },
     };
 
@@ -138,6 +147,21 @@ mod hash_psd2_unit_tests {
         let input = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_input_value)).unwrap(),
         );
+
+        let output = hash_psd2(&sample_hash_operands(input.clone())).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert!(matches!(output, CircuitIOType::SimpleField(_)));
+        assert_ne!(output.value().unwrap(), input.value().unwrap())
+    }
+
+    #[test]
+    fn test_i8_hash_psd2() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_input_value = 0x01_i8;
+
+        let input =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_input_value)).unwrap());
 
         let output = hash_psd2(&sample_hash_operands(input.clone())).unwrap();
 
