@@ -44,6 +44,12 @@ impl PartialEq for Record {
                             Err(_) => false,
                         }
                     }
+                    (CircuitIOType::SimpleInt8(self_v), CircuitIOType::SimpleInt8(other_v)) => {
+                        match self_v.is_eq(other_v) {
+                            Ok(v) => v.value().unwrap_or(false),
+                            Err(_) => false,
+                        }
+                    }
                     (CircuitIOType::SimpleUInt16(self_v), CircuitIOType::SimpleUInt16(other_v)) => {
                         match self_v.is_eq(other_v) {
                             Ok(v) => v.value().unwrap_or(false),
