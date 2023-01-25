@@ -13,7 +13,9 @@ use ark_r1cs_std::{
 use ark_relations::r1cs::SynthesisError;
 use indexmap::IndexMap;
 use simpleworks::marlin::ConstraintSystemRef;
-pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{
+    SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
 
 pub enum Comparison {
     GreaterThan,
@@ -58,6 +60,12 @@ pub fn compare(
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => Ok(SimpleBoolean(
             compare_ord(left_operand, right_operand, comparison, constraint_system)?,
         )),
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => Ok(SimpleBoolean(compare_ord(
+            left_operand,
+            right_operand,
+            comparison,
+            constraint_system,
+        )?)),
         [_, _] => bail!(
             "{} is not supported for the given types",
             comparison.instruction()
@@ -97,13 +105,13 @@ where
 #[rustfmt::skip]
 mod compare_tests {
     use crate::CircuitIOType::{
-        SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, SimpleInt8
     };
     use ark_r1cs_std::prelude::{AllocVar, Boolean};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::{gadgets::{
-        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget, Int8Gadget,
     }, marlin::ConstraintSystemRef};
 
     use crate::{instructions::compare, CircuitIOType};
@@ -315,6 +323,63 @@ mod compare_tests {
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
         compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
+    }
+
+    #[test]
+    fn compare_i8_left_bigger() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = 1_i8;
+        let primitive_right_operand = -2_i8;
+
+        let left_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
+        );
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, true);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, false);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
+    }
+
+    #[test]
+    fn compare_i8_equal() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = 1_i8;
+        let primitive_right_operand = 1_i8;
+
+        let left_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
+        );
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, true);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, false);
+    }
+
+    #[test]
+    fn compare_i8_right_bigger() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = -2_i8;
+        let primitive_right_operand = 1_i8;
+
+        let left_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap(),
+        );
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThan, false);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::GreaterThanOrEqual, false);
+        compare_assert(&left_operand, &right_operand, cs.clone(), Comparison::LessThanOrEqual, true);
+        compare_assert(&left_operand, &right_operand, cs, Comparison::LessThan, true);
     }
 
     #[test]
