@@ -2,7 +2,9 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use ark_r1cs_std::prelude::EqGadget;
 use indexmap::IndexMap;
-pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{
+    SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
 
 pub fn is_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
@@ -20,6 +22,9 @@ pub fn is_eq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType
             Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
+        }
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
             Ok(SimpleBoolean(right_operand.is_eq(left_operand)?))
         }
         [_, _] => bail!("is.eq is not supported for the given types"),
@@ -45,6 +50,9 @@ pub fn is_neq(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOTyp
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
             Ok(SimpleBoolean(right_operand.is_neq(left_operand)?))
         }
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
+            Ok(SimpleBoolean(right_operand.is_neq(left_operand)?))
+        }
         [_, _] => bail!("is.neq is not supported for the given types"),
         [..] => bail!("is.neq requires two operands"),
     }
@@ -56,13 +64,15 @@ mod equality_tests {
     use crate::{
         instructions::is_eq::is_neq,
         CircuitIOType::{
-            SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+            SimpleAddress, SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64,
+            SimpleUInt8,
         },
     };
     use anyhow::Result;
     use ark_r1cs_std::prelude::{AllocVar, Boolean};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
+    use simpleworks::gadgets::Int8Gadget;
     use simpleworks::{
         gadgets::{
             AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
@@ -251,6 +261,38 @@ mod equality_tests {
         );
         let right_operand = SimpleUInt64(
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
+            .unwrap();
+    }
+
+    #[test]
+    fn test_i8_is_eq_is_true() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = 0_i8;
+        let primitive_right_operand = 0_i8;
+
+        let left_operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap());
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+
+        assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, true)
+            .unwrap();
+    }
+
+    #[test]
+    fn test_i8_is_eq_is_false() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = 1_i8;
+        let primitive_right_operand = 0_i8;
+
+        let left_operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap());
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
         );
 
         assert_equality_instructions(&sample_operands(left_operand, right_operand), cs, false)
