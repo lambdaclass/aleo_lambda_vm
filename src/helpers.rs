@@ -1,7 +1,7 @@
 use crate::{
     circuit_io_type::{
-        SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
-        SimpleUInt64, SimpleUInt8,
+        SimpleAddress, SimpleBoolean, SimpleField, SimpleInt8, SimpleRecord, SimpleUInt16,
+        SimpleUInt32, SimpleUInt64, SimpleUInt8,
     },
     instructions::{self},
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
@@ -14,8 +14,8 @@ use ark_relations::r1cs::Namespace;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
-        AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
-        UInt8Gadget,
+        AddressGadget, ConstraintF, FieldGadget, Int8Gadget, UInt16Gadget, UInt32Gadget,
+        UInt64Gadget, UInt8Gadget,
     },
     marlin::ConstraintSystemRef,
 };
@@ -232,6 +232,14 @@ pub fn function_variables(
                         **v,
                     )?)),
                 );
+            } else if let Operand::Literal(Literal::I8(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleInt8(Int8Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
+                );
             } else if let Operand::Literal(Literal::U16(v)) = o {
                 registers.insert(
                     o.to_string(),
@@ -331,6 +339,13 @@ pub(crate) fn process_inputs(
                 ValueType::Public(PlaintextType::Literal(LiteralType::U8)),
                 UserInputValueType::U8(v),
             ) => SimpleUInt8(UInt8Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::I8)),
+                UserInputValueType::I8(v),
+            ) => SimpleInt8(Int8Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
@@ -471,6 +486,10 @@ pub(crate) fn process_inputs(
                 for (k, v) in data {
                     let entry = match v {
                         UserInputValueType::U8(v) => SimpleUInt8(UInt8Gadget::new_witness(
+                            Namespace::new(cs.clone(), None),
+                            || Ok(v),
+                        )?),
+                        UserInputValueType::I8(v) => SimpleInt8(Int8Gadget::new_witness(
                             Namespace::new(cs.clone(), None),
                             || Ok(v),
                         )?),
