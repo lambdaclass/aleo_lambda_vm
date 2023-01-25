@@ -75,12 +75,22 @@ impl Transition {
             .collect()
     }
 
-    /// This exists just to conform to the snarkVM API.
+    // The following functions are essentially member getters implemented
+    // to comply with SnarkVM's API (where fields were private)
+
     pub fn fee(&self) -> &i64 {
         &self.fee
     }
 
     pub fn program_id(&self) -> &ProgramID {
         &self.program_id
+    }
+
+    pub fn outputs(&self) -> &Vec<VariableType> {
+        &self.outputs
+    }
+
+    pub fn function_name(&self) -> &Identifier {
+        &self.function_name
     }
 }
