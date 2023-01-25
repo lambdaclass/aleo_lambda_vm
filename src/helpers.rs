@@ -626,20 +626,24 @@ pub(crate) fn process_outputs(
             .get(0)
             .ok_or_else(|| anyhow!("Error getting the destination register"))?
             .to_string();
-            
-            // TODO: There should be type checking here so as to avoid having a register hold one type of record at one point
-            // and changing into a different type. Alternatively the whole register could be cleared.
-            if let CircuitIOType::SimpleRecord(record) = &circuit_output  {
-                program_variables.insert(format!("{}.owner", destination), Some(SimpleAddress(record.owner.clone()))); 
-                program_variables.insert(format!("{}.gates", destination), Some(SimpleUInt64(record.gates.clone()))); 
-                record.entries.iter().for_each(|(k, v)|
-                    { program_variables.insert(format!("{}.{}", destination, k), Some(v.clone())); }
-                );
-            }
 
-            program_variables.insert(destination.clone(), Some(circuit_output));
+        // TODO: There should be type checking here so as to avoid having a register hold one type of record at one point
+        // and changing into a different type. Alternatively the whole register could be cleared.
+        if let CircuitIOType::SimpleRecord(record) = &circuit_output {
+            program_variables.insert(
+                format!("{}.owner", destination),
+                Some(SimpleAddress(record.owner.clone())),
+            );
+            program_variables.insert(
+                format!("{}.gates", destination),
+                Some(SimpleUInt64(record.gates.clone())),
+            );
+            record.entries.iter().for_each(|(k, v)| {
+                program_variables.insert(format!("{}.{}", destination, k), Some(v.clone()));
+            });
+        }
 
-
+        program_variables.insert(destination.clone(), Some(circuit_output));
     }
     Ok(())
 }

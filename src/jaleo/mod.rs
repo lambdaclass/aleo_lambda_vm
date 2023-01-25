@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use rand::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 use simpleworks::{
     gadgets::ConstraintF,
     marlin::{generate_rand, MarlinProof},

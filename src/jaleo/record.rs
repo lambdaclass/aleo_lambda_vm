@@ -279,7 +279,7 @@ impl Record {
         let aead = Aes256Gcm::new(key);
 
         let mut iv = [0_u8; AES_IV_LENGTH];
-        thread_rng().fill(&mut iv);
+        //thread_rng().fill(&mut iv);
 
         let nonce = GenericArray::from_slice(&iv);
 
