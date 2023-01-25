@@ -2,13 +2,13 @@ use crate::record::Record;
 use anyhow::Result;
 use ark_r1cs_std::{prelude::Boolean, R1CSVar};
 use simpleworks::gadgets::{
-    traits::IsWitness, AddressGadget, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget,
-    UInt64Gadget, UInt8Gadget,
+    traits::IsWitness, AddressGadget, ConstraintF, FieldGadget, Int8Gadget, UInt16Gadget,
+    UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 
 pub use CircuitIOType::{
-    SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
-    SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleBoolean, SimpleField, SimpleInt8, SimpleRecord, SimpleUInt16,
+    SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
 
 #[derive(Clone, Debug)]
@@ -17,6 +17,7 @@ pub enum CircuitIOType {
     SimpleUInt16(UInt16Gadget),
     SimpleUInt32(UInt32Gadget),
     SimpleUInt64(UInt64Gadget),
+    SimpleInt8(Int8Gadget),
     SimpleRecord(Record),
     SimpleAddress(AddressGadget),
     SimpleBoolean(Boolean<ConstraintF>),
@@ -27,6 +28,7 @@ impl CircuitIOType {
     pub fn value(&self) -> Result<String> {
         match self {
             SimpleUInt8(value) => Ok(value.value()?.to_string()),
+            SimpleInt8(value) => Ok(value.value()?.to_string()),
             SimpleUInt16(value) => Ok(value.value()?.to_string()),
             SimpleUInt32(value) => Ok(value.value()?.to_string()),
             SimpleUInt64(value) => Ok(value.value()?.to_string()),
@@ -48,6 +50,7 @@ impl CircuitIOType {
             // by IsWitness implementors but [UInt8] does so we are making a
             // special case for it.
             SimpleUInt8(v) => [v.clone()].is_witness(),
+            SimpleInt8(v) => v.is_witness(),
             SimpleUInt16(v) => v.is_witness(),
             SimpleUInt32(v) => v.is_witness(),
             SimpleUInt64(v) => v.is_witness(),
@@ -64,6 +67,7 @@ impl CircuitIOType {
             // by IsWitness implementors but [UInt8] does so we are making a
             // special case for it.
             SimpleUInt8(v) => [v.clone()].is_constant(),
+            SimpleInt8(v) => v.is_constant(),
             SimpleUInt16(v) => v.is_constant(),
             SimpleUInt32(v) => v.is_constant(),
             SimpleUInt64(v) => v.is_constant(),
