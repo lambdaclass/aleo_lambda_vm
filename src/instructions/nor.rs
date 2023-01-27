@@ -3,7 +3,9 @@ use anyhow::{bail, Ok, Result};
 pub use ark_r1cs_std::boolean::AllocatedBool;
 use indexmap::IndexMap;
 use simpleworks::gadgets::traits::BitwiseOperationGadget;
-pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{
+    SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
 
 pub fn nor(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
@@ -31,6 +33,10 @@ pub fn nor(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             let result = left_operand.nor(right_operand.clone())?;
             Ok(SimpleUInt64(result))
         }
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
+            let result = left_operand.nor(right_operand.clone())?;
+            Ok(SimpleInt8(result))
+        }
         [_, _] => bail!("nor is not supported for the given types"),
         [..] => bail!("nor requires two operands"),
     }
@@ -39,13 +45,13 @@ pub fn nor(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
 #[cfg(test)]
 mod nor_unit_tests {
     use crate::CircuitIOType::{
-        self, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        self, SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
     };
     use ark_r1cs_std::prelude::{AllocVar, Boolean};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::{
-        gadgets::{ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
+        gadgets::{ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
         marlin::ConstraintSystemRef,
     };
 
@@ -385,6 +391,89 @@ mod nor_unit_tests {
         );
         let expected_result =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert_that_nor_with_two_operands_result_is_correct(
+            cs,
+            operand,
+            another_operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_u64_nor_with_zero_should_return_correct_value() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let zero_primitive_operand = 0_i8;
+        let max_value_primitive_operand = -1_i8;
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(zero_primitive_operand)).unwrap());
+        let expected_result = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(max_value_primitive_operand)).unwrap(),
+        );
+
+        assert_that_nor_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nor_with_max_value_return_correct_value() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let max_value_primitive_operand = i8::MAX;
+        let zero_primitive_operand = -128_i8;
+
+        let operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(max_value_primitive_operand)).unwrap(),
+        );
+        let expected_result =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(zero_primitive_operand)).unwrap());
+
+        assert_that_nor_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nor_with_min_value_return_correct_value() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let max_value_primitive_operand = i8::MIN;
+        let zero_primitive_operand = 127_i8;
+
+        let operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(max_value_primitive_operand)).unwrap(),
+        );
+        let expected_result =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(zero_primitive_operand)).unwrap());
+
+        assert_that_nor_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nor_with_two_numbers_return_correct_new_number() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_operand = 20_i8;
+        let other_primitive_operand = -15_i8;
+        let primitive_result = 10_i8;
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
+        let another_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(other_primitive_operand)).unwrap(),
+        );
+        let expected_result =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
 
         assert_that_nor_with_two_operands_result_is_correct(
             cs,
