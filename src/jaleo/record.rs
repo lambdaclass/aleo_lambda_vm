@@ -3,9 +3,7 @@ use crate::helpers::{self};
 use aes::cipher::KeyInit;
 use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
-use ark_std::rand::thread_rng;
 use digest::generic_array::GenericArray;
-use rand::Rng;
 use serde::{
     de,
     ser::{Error, SerializeStruct},
@@ -279,7 +277,10 @@ impl Record {
         let aead = Aes256Gcm::new(key);
 
         let mut iv = [0_u8; AES_IV_LENGTH];
-        thread_rng().fill(&mut iv);
+        let randomizer_bytes = randomizer.to_bytes_le()?;
+        iv.iter_mut()
+            .zip(randomizer_bytes.iter())
+            .for_each(|(x, y)| *x = *y);
 
         let nonce = GenericArray::from_slice(&iv);
 
