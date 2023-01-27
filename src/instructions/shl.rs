@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use ark_r1cs_std::R1CSVar;
 use indexmap::IndexMap;
 use simpleworks::{gadgets::traits::BitwiseOperationGadget, marlin::ConstraintSystemRef};
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn shl(
     operands: &IndexMap<String, CircuitIOType>,
@@ -27,6 +27,9 @@ pub fn shl(
         [SimpleUInt64(value_to_shift), SimpleUInt8(positions)] => Ok(SimpleUInt64(
             value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
         )),
+        [SimpleInt8(value_to_shift), SimpleUInt8(positions)] => Ok(SimpleInt8(
+            value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
+        )),
         // UInt16 Magnitude.
         [SimpleUInt8(value_to_shift), SimpleUInt16(positions)] => Ok(SimpleUInt8(
             value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
@@ -38,6 +41,9 @@ pub fn shl(
             value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
         )),
         [SimpleUInt64(value_to_shift), SimpleUInt16(positions)] => Ok(SimpleUInt64(
+            value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
+        )),
+        [SimpleInt8(value_to_shift), SimpleUInt16(positions)] => Ok(SimpleInt8(
             value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
         )),
         // UInt32 Magnitude.
@@ -53,8 +59,11 @@ pub fn shl(
         [SimpleUInt64(value_to_shift), SimpleUInt32(positions)] => Ok(SimpleUInt64(
             value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
         )),
-        [_] => bail!("shr is not supported for the given type"),
-        [..] => bail!("shr requires one operand"),
+        [SimpleInt8(value_to_shift), SimpleUInt32(positions)] => Ok(SimpleInt8(
+            value_to_shift.shift_left(positions.value()?.try_into()?, constraint_system)?,
+        )),
+        [_] => bail!("shl is not supported for the given type"),
+        [..] => bail!("shl requires one operand"),
     }
 }
 
@@ -64,10 +73,10 @@ mod tests {
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::gadgets::{
-        ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
     };
 
-    use crate::{instructions::shr, CircuitIOType};
+    use crate::{instructions::shl, CircuitIOType};
 
     fn sample_shift_operands(
         number_to_shift: CircuitIOType,
@@ -97,9 +106,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -127,9 +136,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -157,9 +166,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -189,7 +198,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -217,9 +226,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -247,9 +256,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -277,9 +286,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -309,7 +318,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -337,9 +346,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -367,9 +376,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -397,9 +406,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -429,7 +438,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -457,9 +466,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -487,9 +496,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -517,9 +526,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -549,7 +558,247 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_one_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 2_i8;
+        let primitive_positions_to_shift = 1_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_one_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 1_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_more_than_one_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 4_i8;
+        let primitive_positions_to_shift = 2_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_more_than_one_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 2_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -16_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_one_bit_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 1_i8;
+        let primitive_positions_to_shift = 1_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_one_bit_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -1_i8;
+        let primitive_positions_to_shift = 1_u8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_all_bits_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MAX;
+        let primitive_positions_to_shift = 8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_all_bits_left_shift_u8_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MIN;
+        let primitive_positions_to_shift = 8;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt8(
+            UInt8Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -577,9 +826,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -607,9 +856,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -637,9 +886,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -669,7 +918,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -697,9 +946,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -727,9 +976,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -757,9 +1006,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -789,7 +1038,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -817,9 +1066,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -847,9 +1096,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -877,9 +1126,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -909,7 +1158,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -937,9 +1186,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -967,9 +1216,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -997,9 +1246,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1029,7 +1278,247 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_one_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 2_i8;
+        let primitive_positions_to_shift = 1_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_one_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 1_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_more_than_one_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 4_i8;
+        let primitive_positions_to_shift = 2_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_more_than_one_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 2_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -16_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_one_bit_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 1_i8;
+        let primitive_positions_to_shift = 1_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_one_bit_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -1_i8;
+        let primitive_positions_to_shift = 1_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_all_bits_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MAX;
+        let primitive_positions_to_shift = 8_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_all_bits_left_shift_u16_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MIN;
+        let primitive_positions_to_shift = 8_u16;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt16(
+            UInt16Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1057,9 +1546,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1087,9 +1576,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1117,9 +1606,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1149,7 +1638,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1177,9 +1666,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1207,9 +1696,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1237,9 +1726,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1269,7 +1758,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1297,9 +1786,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1327,9 +1816,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1357,9 +1846,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1389,7 +1878,7 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1417,9 +1906,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1447,9 +1936,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = primitive_value_to_shift >> primitive_positions_to_shift;
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1477,9 +1966,9 @@ mod tests {
             .unwrap(),
         );
 
-        let expected_byte = 0_i32;
+        let expected_byte = 2_i32;
 
-        let result = shr(
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
@@ -1509,7 +1998,247 @@ mod tests {
 
         let expected_byte = 0_i32;
 
-        let result = shr(
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_one_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 2_i8;
+        let primitive_positions_to_shift = 1_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_one_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 1_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_more_than_one_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 4_i8;
+        let primitive_positions_to_shift = 2_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = primitive_value_to_shift << primitive_positions_to_shift;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_more_than_one_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -4_i8;
+        let primitive_positions_to_shift = 2_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -16_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_one_bit_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = 1_i8;
+        let primitive_positions_to_shift = 1_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_one_bit_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = -1_i8;
+        let primitive_positions_to_shift = 1_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = -2_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_overflow_all_bits_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MAX;
+        let primitive_positions_to_shift = 8_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
+            &sample_shift_operands(value_to_shift, positions_to_shift),
+            constraint_system.clone(),
+        )
+        .unwrap();
+
+        assert!(constraint_system.is_satisfied().unwrap());
+        assert_eq!(expected_byte.to_string(), result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_negative_overflow_all_bits_left_shift_u32_positions() {
+        let constraint_system = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_value_to_shift = i8::MIN;
+        let primitive_positions_to_shift = 8_u32;
+
+        let value_to_shift = CircuitIOType::SimpleInt8(
+            Int8Gadget::new_witness(constraint_system.clone(), || Ok(primitive_value_to_shift))
+                .unwrap(),
+        );
+        let positions_to_shift = CircuitIOType::SimpleUInt32(
+            UInt32Gadget::new_witness(constraint_system.clone(), || {
+                Ok(primitive_positions_to_shift)
+            })
+            .unwrap(),
+        );
+
+        let expected_byte = 0_i32;
+
+        let result = shl(
             &sample_shift_operands(value_to_shift, positions_to_shift),
             constraint_system.clone(),
         )
