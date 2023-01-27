@@ -182,20 +182,20 @@ pub fn process_circuit_outputs(
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
+        let register_split: Vec<&str> = register.split(".").collect();
+        ensure!(
+            register_split.len() <= 2,
+            "Output field {register} was not specified correctly"
+        );
         let program_variable = program_variables
-            .get(
-                register
-                    .split(".")
-                    .next()
-                    .expect("Error processing register"),
-            )
+            .get(register_split[0])
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
-                // if output is a record field (ie `output r0.gates as u64.public`), get the field
-                // otherwise, get the whole register
-                let register_value = match (r, register.contains(".")) {
+                // if desired output is a record field (ie `output r0.gates as u64.public`),
+                // get the field; get the whole register otherwise
+                let register_value = match (r, register_split.len() == 2) {
                     (Some(SimpleRecord(record)), true) => {
-                        let key = register.split(".").last().expect("Record field expected");
+                        let key = register_split[1];
                         match key {
                             "owner" => Some(SimpleAddress(record.owner.clone())),
                             "gates" => Some(SimpleUInt64(record.gates.clone())),
