@@ -1,12 +1,6 @@
-use anyhow::{anyhow, Result};
-use ark_r1cs_std::{prelude::Boolean, ToBitsGadget};
-use simpleworks::gadgets::{ConstraintF, UInt8Gadget};
-
-pub fn _to_bits_be(bits: &[Boolean<ConstraintF>]) -> Result<Vec<Boolean<ConstraintF>>> {
-    let mut bits_be = bits.to_vec();
-    bits_be.reverse();
-    Ok(bits_be)
-}
+use anyhow::{anyhow, Ok, Result};
+use ark_r1cs_std::prelude::Boolean;
+use simpleworks::gadgets::ConstraintF;
 
 pub fn add(
     augend: &[Boolean<ConstraintF>],
@@ -14,7 +8,7 @@ pub fn add(
 ) -> Result<Vec<Boolean<ConstraintF>>> {
     let mut sum = vec![Boolean::<ConstraintF>::FALSE; augend.len()];
     let mut carry = Boolean::<ConstraintF>::FALSE;
-    for (i, (augend_bit, addend_bit)) in augend.iter().zip(addend).enumerate().rev() {
+    for (i, (augend_bit, addend_bit)) in augend.iter().zip(addend).enumerate() {
         // Bit by bit sum is an xor for the augend, the addend and the carry bits.
         // carry in | addend | augend | carry out | augend + addend |
         //     0    |    0   |   0    |     0     |        0        |
@@ -41,39 +35,6 @@ pub fn add(
     Ok(sum.to_vec())
 }
 
-pub fn u8_add(augend: &UInt8Gadget, addend: &UInt8Gadget) -> Result<UInt8Gadget> {
-    let augend = augend.to_bits_be()?;
-    let addend = addend.to_bits_be()?;
-    let mut sum = vec![Boolean::<ConstraintF>::FALSE; augend.len()];
-    let mut carry = Boolean::<ConstraintF>::FALSE;
-    for (i, (augend_bit, addend_bit)) in augend.iter().zip(addend).enumerate().rev() {
-        // Bit by bit sum is an xor for the augend, the addend and the carry bits.
-        // carry in | addend | augend | carry out | augend + addend |
-        //     0    |    0   |   0    |     0     |        0        |
-        //     0    |    0   |   1    |     0     |        1        |
-        //     0    |    1   |   0    |     0     |        1        |
-        //     0    |    1   |   1    |     1     |        0        |
-        //     1    |    0   |   0    |     0     |        1        |
-        //     1    |    0   |   1    |     1     |        0        |
-        //     1    |    1   |   0    |     1     |        0        |
-        //     1    |    1   |   1    |     1     |        1        |
-        // sum[i] = (!carry & (augend_bit ^ addend_bit)) | (carry & !(augend_bit ^ addend_bit))
-        //        = augend_bit ^ addend_bit ^ carry
-        *sum.get_mut(i)
-            .ok_or_else(|| anyhow!("Error accessing the index of sum"))? =
-            carry.xor(augend_bit)?.xor(&addend_bit)?;
-        // To simplify things, the variable carry acts for both the carry in and
-        // the carry out.
-        // The carry out is augend & addend when the carry in is 0, and it is
-        // augend | addend when the carry in is 1.
-        // carry = carry.not()
-        carry = (carry.not().and(&(augend_bit.and(&addend_bit)?))?)
-            .or(&(carry.and(&(augend_bit.or(&addend_bit)?))?))?;
-    }
-    sum.reverse();
-    Ok(UInt8Gadget::from_bits_le(&sum))
-}
-
 #[cfg(test)]
 mod tests {
     use super::add;
@@ -82,32 +43,32 @@ mod tests {
 
     const U8_BITS: usize = 8;
     const U8_ONE: [Boolean<ConstraintF>; 8] = [
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::TRUE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
     ];
     const U8_THREE: [Boolean<ConstraintF>; 8] = [
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::TRUE,
         Boolean::<ConstraintF>::TRUE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
     ];
     const U8_FOUR: [Boolean<ConstraintF>; 8] = [
         Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
-        Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::TRUE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
+        Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::FALSE,
         Boolean::<ConstraintF>::FALSE,
     ];
@@ -131,12 +92,12 @@ mod tests {
         let addend = augend.clone();
         let expected_result = vec![
             Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::FALSE,
         ];
 
@@ -149,23 +110,23 @@ mod tests {
     #[test]
     fn test_u8_add_with_more_than_one_carry() {
         let augend = vec![
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
         ];
         let addend = U8_ONE.to_vec();
         let expected_result = vec![
             Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::FALSE,
         ];
@@ -200,33 +161,33 @@ mod tests {
     #[test]
     fn test_u8_add() {
         let augend = vec![
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
         ];
         let addend = vec![
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
         ];
         let expected_result = vec![
             Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
-            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::TRUE,
             Boolean::<ConstraintF>::TRUE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
+            Boolean::<ConstraintF>::FALSE,
             Boolean::<ConstraintF>::FALSE,
         ];
 

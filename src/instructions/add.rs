@@ -2,8 +2,8 @@ use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Ga
 use anyhow::{bail, Result};
 use ark_r1cs_std::ToBitsGadget;
 use indexmap::IndexMap;
-use simpleworks::gadgets::UInt8Gadget;
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+use simpleworks::gadgets::{Int8Gadget, UInt8Gadget};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 use super::helpers;
 
@@ -16,8 +16,8 @@ pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
     {
         [SimpleUInt8(addend), SimpleUInt8(augend)] => {
             let addition = helpers::add(&addend.to_bits_le()?, &augend.to_bits_le()?)?;
-            let addition = UInt8Gadget::from_bits_le(&addition);
-            Ok(SimpleUInt8(addition))
+            let result = UInt8Gadget::from_bits_le(&addition);
+            Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(addend), SimpleUInt16(augend)] => {
             Ok(SimpleUInt16(UInt16Gadget::addmany(&[
@@ -37,6 +37,11 @@ pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
                 augend.clone(),
             ])?))
         }
+        [SimpleInt8(addend), SimpleInt8(augend)] => {
+            let addition = helpers::add(&addend.to_bits_le()?, &augend.to_bits_le()?)?;
+            let result = Int8Gadget::from_bits_le(&addition)?;
+            Ok(SimpleInt8(result))
+        }
         [_, _] => bail!("add is not supported for the given types"),
         [..] => bail!("add requires two operands"),
     }
@@ -45,13 +50,14 @@ pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
 #[cfg(test)]
 mod add_tests {
     use crate::CircuitIOType::{
-        SimpleAddress, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        SimpleAddress, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
     };
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::gadgets::{
-        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        AddressGadget, ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+        UInt8Gadget,
     };
 
     use crate::{instructions::add::add, CircuitIOType};
@@ -164,6 +170,27 @@ mod add_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+    }
+
+    #[test]
+    fn test_add_i8() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_left_operand = -10_i8;
+        let primitive_right_operand = 5_i8;
+        let primitive_result = -5_i8;
+
+        let left_operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_left_operand)).unwrap());
+        let right_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(primitive_right_operand)).unwrap(),
+        );
+        let expected_result = SimpleInt8(Int8Gadget::constant(primitive_result));
+
+        let result = add(&sample_operands(left_operand, right_operand)).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert!(matches!(result, CircuitIOType::SimpleInt8(_)));
         assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
     }
 
