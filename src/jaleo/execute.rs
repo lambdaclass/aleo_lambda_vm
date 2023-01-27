@@ -183,11 +183,23 @@ pub fn process_circuit_outputs(
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
         let program_variable = program_variables
-            .get(&register)
+            .get(&register.split(".").next().unwrap().to_string())
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
-                r.clone()
-                    .ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+                // if output is a record field (ie `output r0.gates as u64.public`), get the field
+                // otherwise, get the whole register
+                let register_value = match (r, register.contains(".")) {
+                    (Some(SimpleRecord(record)), true) => {
+                        let key = register.split(".").last().expect("Record field expected");
+                        match key {
+                            "owner" => Some(SimpleAddress(record.owner.clone())),
+                            "gates" => Some(SimpleUInt64(record.gates.clone())),
+                            _ => record.entries.get(key).map(|x| x.clone()),
+                        }
+                    }
+                    _ => r.clone(),
+                };
+                register_value.ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
             })?;
 
         circuit_outputs.insert(register, {

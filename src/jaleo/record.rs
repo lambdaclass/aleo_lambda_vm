@@ -3,9 +3,7 @@ use crate::helpers::{self};
 use aes::cipher::KeyInit;
 use aes_gcm::{AeadInPlace, Aes256Gcm};
 use anyhow::{anyhow, Result};
-use ark_std::rand::thread_rng;
 use digest::generic_array::GenericArray;
-use rand::Rng;
 use serde::{
     de,
     ser::{Error, SerializeStruct},
