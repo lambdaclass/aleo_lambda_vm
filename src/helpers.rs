@@ -627,7 +627,7 @@ pub(crate) fn process_outputs(
             .ok_or_else(|| anyhow!("Error getting the destination register"))?
             .to_string();
 
-        program_variables.insert(destination.clone(), Some(circuit_output));
+        program_variables.insert(destination, Some(circuit_output));
     }
     Ok(())
 }

@@ -183,7 +183,12 @@ pub fn process_circuit_outputs(
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
         let program_variable = program_variables
-            .get(&register.split(".").next().unwrap().to_string())
+            .get(
+                register
+                    .split(".")
+                    .next()
+                    .expect("Error processing register"),
+            )
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
                 // if output is a record field (ie `output r0.gates as u64.public`), get the field
