@@ -1,10 +1,12 @@
+use crate::instructions::helpers;
 use crate::{
     circuit_io_type::CircuitIOType, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget,
 };
 use anyhow::{bail, ensure, Result};
-use ark_r1cs_std::{prelude::Boolean, R1CSVar};
+use ark_r1cs_std::{prelude::Boolean, R1CSVar, ToBitsGadget};
 use indexmap::IndexMap;
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+use simpleworks::gadgets::Int8Gadget;
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the subtraction of two numbers and not for UInt8.
 // We compute the subtraction as an addition thanks to the following:
@@ -94,6 +96,32 @@ pub fn sub(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
 
             Ok(SimpleUInt64(difference))
         }
+        [SimpleInt8(minuend), SimpleInt8(subtrahend)] => {
+            ensure!(
+                minuend.value()?.checked_sub(subtrahend.value()?).is_some(),
+                "Subtraction underflow"
+            );
+
+            let minuend_as_augend: Vec<Boolean<ConstraintF>> = negate(minuend.to_bits_le()?);
+            let subtrahend_as_addend: Vec<Boolean<ConstraintF>> = subtrahend.to_bits_le()?;
+
+            let minuend_as_augend_var = Int8Gadget::from_bits_le(&minuend_as_augend)?;
+            let subtrahend_as_addend_var = Int8Gadget::from_bits_le(&subtrahend_as_addend)?;
+
+            let partial_result = helpers::add(
+                &minuend_as_augend_var.to_bits_le()?,
+                &subtrahend_as_addend_var.to_bits_le()?,
+            )?;
+
+            let difference = Int8Gadget::from_bits_le(
+                &partial_result
+                    .into_iter()
+                    .map(|bit| bit.not())
+                    .collect::<Vec<Boolean<ConstraintF>>>(),
+            )?;
+
+            Ok(SimpleInt8(difference))
+        }
         [_, _] => bail!("Subtraction is not supported for the given types"),
         [..] => bail!("Subtraction requires two operands"),
     }
@@ -110,9 +138,10 @@ mod subtract_tests {
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
     use indexmap::IndexMap;
+    use simpleworks::gadgets::Int8Gadget;
 
     use crate::{
-        CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64},
+        CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64},
         ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget,
     };
 
@@ -346,6 +375,113 @@ mod subtract_tests {
         let subtrahend_var = SimpleUInt64(
             UInt64Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend))
                 .unwrap(),
+        );
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands);
+
+        if let Err(err) = result_var {
+            assert_eq!(err.to_string(), "Subtraction underflow");
+        } else {
+            panic!("Subtraction should have failed");
+        }
+    }
+
+    #[test]
+    fn test_i8_difference_is_zero() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_minuend = 1_i8;
+        let primitive_subtrahend = 1_i8;
+        let primitive_result = primitive_minuend - primitive_subtrahend;
+
+        let minuend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(primitive_minuend))
+                .unwrap(),
+        );
+        let subtrahend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || {
+                Ok(primitive_subtrahend)
+            })
+            .unwrap(),
+        );
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_difference_with_positive_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_minuend = 2_i8;
+        let primitive_subtrahend = 1_i8;
+        let primitive_result = primitive_minuend - primitive_subtrahend;
+
+        let minuend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(primitive_minuend))
+                .unwrap(),
+        );
+        let subtrahend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || {
+                Ok(primitive_subtrahend)
+            })
+            .unwrap(),
+        );
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_difference_with_negative_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_minuend = -3_i8;
+        let primitive_subtrahend = -3_i8;
+        let primitive_result = primitive_minuend - primitive_subtrahend;
+
+        let minuend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(primitive_minuend))
+                .unwrap(),
+        );
+        let subtrahend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || {
+                Ok(primitive_subtrahend)
+            })
+            .unwrap(),
+        );
+        let mut operands = IndexMap::new();
+        operands.insert("r0".to_owned(), minuend_var);
+        operands.insert("r1".to_owned(), subtrahend_var);
+        let result_var = super::sub(&operands).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(primitive_result.to_string(), result_var.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_underflow_should_raise_an_error() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+
+        let primitive_minuend = -100_i8;
+        let primitive_subtrahend = 100_i8;
+
+        let minuend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs.clone(), None), || Ok(primitive_minuend))
+                .unwrap(),
+        );
+        let subtrahend_var = SimpleInt8(
+            Int8Gadget::new_witness(Namespace::new(cs, None), || Ok(primitive_subtrahend)).unwrap(),
         );
         let mut operands = IndexMap::new();
         operands.insert("r0".to_owned(), minuend_var);
