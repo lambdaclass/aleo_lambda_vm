@@ -1,11 +1,8 @@
-use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Gadget};
+use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
-use ark_r1cs_std::ToBitsGadget;
 use indexmap::IndexMap;
-use simpleworks::gadgets::UInt8Gadget;
+use simpleworks::gadgets::traits::ArithmeticGadget;
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
-
-use super::helpers;
 
 // Aleo instructions support the addition of two numbers and not for UInt8.
 pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
@@ -15,27 +12,20 @@ pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
         .as_slice()
     {
         [SimpleUInt8(addend), SimpleUInt8(augend)] => {
-            let addition = helpers::add(&addend.to_bits_le()?, &augend.to_bits_le()?)?;
-            let addition = UInt8Gadget::from_bits_le(&addition);
-            Ok(SimpleUInt8(addition))
+            let result = addend.add(augend)?;
+            Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(addend), SimpleUInt16(augend)] => {
-            Ok(SimpleUInt16(UInt16Gadget::addmany(&[
-                addend.clone(),
-                augend.clone(),
-            ])?))
+            let result = addend.add(augend)?;
+            Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(addend), SimpleUInt32(augend)] => {
-            Ok(SimpleUInt32(UInt32Gadget::addmany(&[
-                addend.clone(),
-                augend.clone(),
-            ])?))
+            let result = addend.add(augend)?;
+            Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(addend), SimpleUInt64(augend)] => {
-            Ok(SimpleUInt64(UInt64Gadget::addmany(&[
-                addend.clone(),
-                augend.clone(),
-            ])?))
+            let result = addend.add(augend)?;
+            Ok(SimpleUInt64(result))
         }
         [_, _] => bail!("add is not supported for the given types"),
         [..] => bail!("add requires two operands"),
