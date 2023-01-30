@@ -182,7 +182,7 @@ pub fn process_circuit_outputs(
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
-        let register_split: Vec<&str> = register.split(".").collect();
+        let register_split: Vec<&str> = register.split('.').collect();
         ensure!(
             register_split.len() <= 2,
             "Output field {register} was not specified correctly"
@@ -195,11 +195,14 @@ pub fn process_circuit_outputs(
                 // get the field; get the whole register otherwise
                 let register_value = match (r, register_split.len() == 2) {
                     (Some(SimpleRecord(record)), true) => {
-                        let key = register_split[1];
-                        match key {
-                            "owner" => Some(SimpleAddress(record.owner.clone())),
-                            "gates" => Some(SimpleUInt64(record.gates.clone())),
-                            _ => record.entries.get(key).map(|x| x.clone()),
+                        if let Some(key) = register_split.get(1) {
+                            match *key {
+                                "owner" => Some(SimpleAddress(record.owner.clone())),
+                                "gates" => Some(SimpleUInt64(record.gates.clone())),
+                                _ => record.entries.get(*key).cloned(),
+                            }
+                        } else {
+                            None
                         }
                     }
                     _ => r.clone(),
