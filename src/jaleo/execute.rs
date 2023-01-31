@@ -187,8 +187,16 @@ pub fn process_circuit_outputs(
             register_split.len() <= 2,
             "Output field {register} was not specified correctly"
         );
+        let register_variable = match register_split.first() {
+            Some(register_variable) => register_variable,
+            None => {
+                return Err(anyhow!(
+                    "Could not get the variable in Output field: {register}"
+                ))
+            }
+        };
         let program_variable = program_variables
-            .get(register_split[0])
+            .get(*register_variable)
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
                 // if desired output is a record field (ie `output r0.gates as u64.public`),
