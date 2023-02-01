@@ -39,8 +39,8 @@ use jaleo::{Identifier, UserInputValueType};
 pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serialize_verifying_key};
 use simpleworks::{
     gadgets::{
-        traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
-        UInt64Gadget, UInt8Gadget,
+        traits::ToFieldElements, AddressGadget, ConstraintF, Int8Gadget, UInt16Gadget,
+        UInt32Gadget, UInt64Gadget, UInt8Gadget,
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };

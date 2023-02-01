@@ -2,7 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 use simpleworks::gadgets::traits::ArithmeticGadget;
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the subtraction of two numbers and not for UInt8.
 // We compute the subtraction as an addition thanks to the following:
@@ -34,30 +34,8 @@ pub fn sub(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(minuend), SimpleInt8(subtrahend)] => {
-            ensure!(
-                minuend.value()?.checked_sub(subtrahend.value()?).is_some(),
-                "Subtraction underflow"
-            );
-
-            let minuend_as_augend: Vec<Boolean<ConstraintF>> = negate(minuend.to_bits_le()?);
-            let subtrahend_as_addend: Vec<Boolean<ConstraintF>> = subtrahend.to_bits_le()?;
-
-            let minuend_as_augend_var = Int8Gadget::from_bits_le(&minuend_as_augend)?;
-            let subtrahend_as_addend_var = Int8Gadget::from_bits_le(&subtrahend_as_addend)?;
-
-            let partial_result = helpers::add(
-                &minuend_as_augend_var.to_bits_le()?,
-                &subtrahend_as_addend_var.to_bits_le()?,
-            )?;
-
-            let difference = Int8Gadget::from_bits_le(
-                &partial_result
-                    .into_iter()
-                    .map(|bit| bit.not())
-                    .collect::<Vec<Boolean<ConstraintF>>>(),
-            )?;
-
-            Ok(SimpleInt8(difference))
+            let result = minuend.sub(subtrahend)?;
+            Ok(SimpleInt8(result))
         }
         [_, _] => bail!("Subtraction is not supported for the given types"),
         [..] => bail!("Subtraction requires two operands"),
@@ -69,11 +47,11 @@ mod subtract_tests {
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::{ConstraintSystem, Namespace};
     use indexmap::IndexMap;
-    use simpleworks::gadgets::Int8Gadget;
+    use simpleworks::gadgets::{
+        ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    };
 
-    use crate::{
-        CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8},};
-    use simpleworks::gadgets::UInt8Gadget;
+    use crate::CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
     #[test]
     fn test_u8_difference_is_zero() {

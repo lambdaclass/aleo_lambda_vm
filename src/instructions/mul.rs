@@ -2,7 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 use simpleworks::{gadgets::traits::ArithmeticGadget, marlin::ConstraintSystemRef};
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, SimpleInt8};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn mul(
     operands: &IndexMap<String, CircuitIOType>,
@@ -30,18 +30,8 @@ pub fn mul(
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(multiplicand), SimpleInt8(multiplier)] => {
-            let mut product = Int8Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, multiplier_bit) in multiplier.to_bits_le()?.iter().enumerate() {
-                // If the multiplier bit is a 1.
-                let addend = Int8Gadget::shift_left(multiplicand, i, constraint_system.clone())?;
-                let partial_sum = &helpers::add(&product.to_bits_le()?, &addend.to_bits_le()?)?;
-                product = Int8Gadget::conditionally_select(
-                    multiplier_bit,
-                    &Int8Gadget::from_bits_le(partial_sum)?,
-                    &product,
-                )?;
-            }
-            Ok(SimpleInt8(product))
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleInt8(result))
         }
         [..] => bail!("Unsupported operand types for addmany"),
     }

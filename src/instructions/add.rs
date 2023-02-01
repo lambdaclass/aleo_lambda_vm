@@ -1,7 +1,7 @@
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
-use simpleworks::gadgets::{Int8Gadget, UInt8Gadget, traits::ArithmeticGadget};
+use simpleworks::gadgets::traits::ArithmeticGadget;
 pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 // Aleo instructions support the addition of two numbers and not for UInt8.
@@ -28,8 +28,7 @@ pub fn add(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(addend), SimpleInt8(augend)] => {
-            let addition = helpers::add(&addend.to_bits_le()?, &augend.to_bits_le()?)?;
-            let result = Int8Gadget::from_bits_le(&addition)?;
+            let result = addend.add(augend)?;
             Ok(SimpleInt8(result))
         }
         [_, _] => bail!("add is not supported for the given types"),

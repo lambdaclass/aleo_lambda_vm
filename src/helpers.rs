@@ -14,8 +14,8 @@ use ark_relations::r1cs::Namespace;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
-        AddressGadget, Comparison, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, Int8Gadget,
-        UInt64Gadget, UInt8Gadget,
+        AddressGadget, Comparison, ConstraintF, FieldGadget, Int8Gadget, UInt16Gadget,
+        UInt32Gadget, UInt64Gadget, UInt8Gadget,
     },
     marlin::ConstraintSystemRef,
 };

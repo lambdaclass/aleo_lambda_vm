@@ -40,6 +40,10 @@ pub fn compare(
             let result = left_operand.compare(right_operand, comparison, constraint_system)?;
             Ok(SimpleBoolean(result))
         }
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
+            let result = left_operand.compare(right_operand, comparison, constraint_system)?;
+            Ok(SimpleBoolean(result))
+        }
         [_, _] => bail!(
             "{} is not supported for the given types",
             comparison.instruction()

@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use crate::{
-    circuit_io_type::CircuitIOType, helpers, record::Record, UInt16Gadget, UInt32Gadget,
-    UInt64Gadget, UInt8Gadget, VMRecordEntriesMap, Int8Gadget
+    circuit_io_type::CircuitIOType, helpers, record::Record, Int8Gadget, UInt16Gadget,
+    UInt32Gadget, UInt64Gadget, UInt8Gadget, VMRecordEntriesMap,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::{

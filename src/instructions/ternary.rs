@@ -1,6 +1,6 @@
 use crate::{
     circuit_io_type::CircuitIOType::{self, SimpleAddress},
-    UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use anyhow::{bail, Result};
 use ark_r1cs_std::{select::CondSelectGadget, R1CSVar};

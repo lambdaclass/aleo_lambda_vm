@@ -33,7 +33,7 @@ pub fn and(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> 
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
-            let result = left_operand.and(right_operand.clone())?;
+            let result = left_operand.and(right_operand)?;
             Ok(SimpleInt8(result))
         }
         [_, _] => bail!("and is not supported for the given types"),

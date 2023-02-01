@@ -33,7 +33,7 @@ pub fn nand(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
-            let result = left_operand.nand(right_operand.clone())?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleInt8(result))
         }
         [_, _] => bail!("nand is not supported for the given types"),
