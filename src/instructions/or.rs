@@ -17,19 +17,19 @@ pub fn or(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
             Ok(SimpleBoolean(result))
         }
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            let result = left_operand.or(right_operand.clone())?;
+            let result = left_operand.or(right_operand)?;
             Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            let result = left_operand.or(right_operand.clone())?;
+            let result = left_operand.or(right_operand)?;
             Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            let result = left_operand.or(right_operand.clone())?;
+            let result = left_operand.or(right_operand)?;
             Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            let result = left_operand.or(right_operand.clone())?;
+            let result = left_operand.or(right_operand)?;
             Ok(SimpleUInt64(result))
         }
         [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {

@@ -3,37 +3,16 @@
 /// - GreaterThanOrEqual (`gte`)
 /// - LessThanOrEqual (`lte`)
 /// - LessThan (`lt`)
-use crate::{circuit_io_type::CircuitIOType, ConstraintF};
+use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
-use ark_r1cs_std::{
-    prelude::{AllocVar, Boolean},
-    select::CondSelectGadget,
-    R1CSVar,
-};
-use ark_relations::r1cs::SynthesisError;
+
 use indexmap::IndexMap;
+use simpleworks::gadgets::traits::ComparisonGadget;
+use simpleworks::gadgets::Comparison;
 use simpleworks::marlin::ConstraintSystemRef;
 pub use CircuitIOType::{
     SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
-
-pub enum Comparison {
-    GreaterThan,
-    GreaterThanOrEqual,
-    LessThanOrEqual,
-    LessThan,
-}
-
-impl Comparison {
-    pub fn instruction(&self) -> &str {
-        match self {
-            Comparison::GreaterThan => "gt",
-            Comparison::GreaterThanOrEqual => "gte",
-            Comparison::LessThanOrEqual => "lte",
-            Comparison::LessThan => "lt",
-        }
-    }
-}
 
 pub fn compare(
     operands: &IndexMap<String, CircuitIOType>,
@@ -45,60 +24,28 @@ pub fn compare(
         .collect::<Vec<&CircuitIOType>>()
         .as_slice()
     {
-        [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => Ok(SimpleBoolean(compare_ord(
-            left_operand,
-            right_operand,
-            comparison,
-            constraint_system,
-        )?)),
-        [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => Ok(SimpleBoolean(
-            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
-        )),
-        [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => Ok(SimpleBoolean(
-            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
-        )),
-        [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => Ok(SimpleBoolean(
-            compare_ord(left_operand, right_operand, comparison, constraint_system)?,
-        )),
-        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => Ok(SimpleBoolean(compare_ord(
-            left_operand,
-            right_operand,
-            comparison,
-            constraint_system,
-        )?)),
+        [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
+            let result = left_operand.compare(right_operand, comparison, constraint_system)?;
+            Ok(SimpleBoolean(result))
+        }
+        [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
+            let result = left_operand.compare(right_operand, comparison, constraint_system)?;
+            Ok(SimpleBoolean(result))
+        }
+        [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
+            let result = left_operand.compare(right_operand, comparison, constraint_system)?;
+            Ok(SimpleBoolean(result))
+        }
+        [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
+            let result = left_operand.compare(right_operand, comparison, constraint_system)?;
+            Ok(SimpleBoolean(result))
+        }
         [_, _] => bail!(
             "{} is not supported for the given types",
             comparison.instruction()
         ),
         [..] => bail!("{} requires two operands", comparison.instruction()),
     }
-}
-
-fn compare_ord<T: R1CSVar<ConstraintF>>(
-    left_operand: T,
-    right_operand: T,
-    comparison: Comparison,
-    constraint_system: ConstraintSystemRef,
-) -> Result<Boolean<ConstraintF>, SynthesisError>
-where
-    T::Value: PartialOrd,
-{
-    let result = match comparison {
-        Comparison::GreaterThan => left_operand.value()? > right_operand.value()?,
-        Comparison::GreaterThanOrEqual => left_operand.value()? >= right_operand.value()?,
-        Comparison::LessThanOrEqual => left_operand.value()? <= right_operand.value()?,
-        Comparison::LessThan => left_operand.value()? < right_operand.value()?,
-    };
-
-    let true_witness = Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(true))?;
-    let false_witness =
-        Boolean::<ConstraintF>::new_witness(constraint_system.clone(), || Ok(false))?;
-
-    Boolean::conditionally_select(
-        &Boolean::new_witness(constraint_system, || Ok(result))?,
-        &true_witness,
-        &false_witness,
-    )
 }
 
 #[cfg(test)]

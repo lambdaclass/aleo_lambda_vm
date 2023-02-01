@@ -1,11 +1,10 @@
 use crate::{
     circuit_io_type::CircuitIOType::{self, SimpleAddress},
-    UInt16Gadget, UInt32Gadget, UInt64Gadget,
+    UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use anyhow::{bail, Result};
 use ark_r1cs_std::{select::CondSelectGadget, R1CSVar};
 use indexmap::IndexMap;
-use simpleworks::gadgets::{Int8Gadget, UInt8Gadget};
 pub use CircuitIOType::{
     SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };

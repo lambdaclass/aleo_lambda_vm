@@ -1,13 +1,8 @@
-use super::helpers;
-use crate::{circuit_io_type::CircuitIOType, UInt16Gadget, UInt32Gadget, UInt64Gadget};
+use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
-use ark_r1cs_std::{prelude::AllocVar, select::CondSelectGadget, ToBitsGadget};
 use indexmap::IndexMap;
-use simpleworks::{
-    gadgets::{traits::BitwiseOperationGadget, Int8Gadget, UInt8Gadget},
-    marlin::ConstraintSystemRef,
-};
-pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+use simpleworks::{gadgets::traits::ArithmeticGadget, marlin::ConstraintSystemRef};
+pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8, SimpleInt8};
 
 pub fn mul(
     operands: &IndexMap<String, CircuitIOType>,
@@ -19,59 +14,20 @@ pub fn mul(
         .as_slice()
     {
         [SimpleUInt8(multiplicand), SimpleUInt8(multiplier)] => {
-            let mut product = UInt8Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, multiplier_bit) in multiplier.to_bits_le()?.iter().enumerate() {
-                // If the multiplier bit is a 1.
-                let addend = UInt8Gadget::shift_left(multiplicand, i, constraint_system.clone())?;
-                product = UInt8Gadget::conditionally_select(
-                    multiplier_bit,
-                    &UInt8Gadget::from_bits_le(&helpers::add(
-                        &product.to_bits_le()?,
-                        &addend.to_bits_le()?,
-                    )?),
-                    &product,
-                )?;
-            }
-            Ok(SimpleUInt8(product))
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(multiplicand), SimpleUInt16(multiplier)] => {
-            let mut product = UInt16Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, multiplier_bit) in multiplier.to_bits_le().iter().enumerate() {
-                // If the multiplier bit is a 1.
-                let addend = UInt16Gadget::shift_left(multiplicand, i, constraint_system.clone())?;
-                product = UInt16Gadget::conditionally_select(
-                    multiplier_bit,
-                    &UInt16Gadget::addmany(&[product.clone(), addend])?,
-                    &product,
-                )?;
-            }
-            Ok(SimpleUInt16(product))
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(multiplicand), SimpleUInt32(multiplier)] => {
-            let mut product = UInt32Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, multiplier_bit) in multiplier.to_bits_le().iter().enumerate() {
-                // If the multiplier bit is a 1.
-                let addend = UInt32Gadget::shift_left(multiplicand, i, constraint_system.clone())?;
-                product = UInt32Gadget::conditionally_select(
-                    multiplier_bit,
-                    &UInt32Gadget::addmany(&[product.clone(), addend])?,
-                    &product,
-                )?;
-            }
-            Ok(SimpleUInt32(product))
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(multiplicand), SimpleUInt64(multiplier)] => {
-            let mut product = UInt64Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, multiplier_bit) in multiplier.to_bits_le().iter().enumerate() {
-                // If the multiplier bit is a 1.
-                let addend = UInt64Gadget::shift_left(multiplicand, i, constraint_system.clone())?;
-                product = UInt64Gadget::conditionally_select(
-                    multiplier_bit,
-                    &UInt64Gadget::addmany(&[product.clone(), addend])?,
-                    &product,
-                )?;
-            }
-            Ok(SimpleUInt64(product))
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleUInt64(result))
         }
         [SimpleInt8(multiplicand), SimpleInt8(multiplier)] => {
             let mut product = Int8Gadget::new_witness(constraint_system.clone(), || Ok(0))?;

@@ -14,7 +14,7 @@ use ark_relations::r1cs::Namespace;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
-        AddressGadget, ConstraintF, FieldGadget, Int8Gadget, UInt16Gadget, UInt32Gadget,
+        AddressGadget, Comparison, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget, Int8Gadget,
         UInt64Gadget, UInt8Gadget,
     },
     marlin::ConstraintSystemRef,
@@ -605,25 +605,23 @@ pub(crate) fn process_outputs(
             Instruction::GreaterThan(_) => instructions::compare(
                 &operands,
                 constraint_system.clone(),
-                instructions::Comparison::GreaterThan,
+                Comparison::GreaterThan,
             )?,
             Instruction::GreaterThanOrEqual(_) => instructions::compare(
                 &operands,
                 constraint_system.clone(),
-                instructions::Comparison::GreaterThanOrEqual,
+                Comparison::GreaterThanOrEqual,
             )?,
             Instruction::HashPSD2(_) => instructions::hash_psd2(&operands)?,
             Instruction::IsEq(_) => instructions::is_eq(&operands)?,
             Instruction::IsNeq(_) => instructions::is_neq(&operands)?,
-            Instruction::LessThan(_) => instructions::compare(
-                &operands,
-                constraint_system.clone(),
-                instructions::Comparison::LessThan,
-            )?,
+            Instruction::LessThan(_) => {
+                instructions::compare(&operands, constraint_system.clone(), Comparison::LessThan)?
+            }
             Instruction::LessThanOrEqual(_) => instructions::compare(
                 &operands,
                 constraint_system.clone(),
-                instructions::Comparison::LessThanOrEqual,
+                Comparison::LessThanOrEqual,
             )?,
             Instruction::Nand(_) => instructions::nand(&operands)?,
             Instruction::Or(_) => instructions::or(&operands)?,
