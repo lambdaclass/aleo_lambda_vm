@@ -5,7 +5,7 @@ use crate::{
     variable_type::VariableType,
     CircuitInputType, CircuitOutputType, SimpleFunctionVariables,
 };
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use ark_r1cs_std::R1CSVar;
 use indexmap::IndexMap;
 use log::debug;
@@ -194,13 +194,13 @@ pub fn process_circuit_outputs(
             Some(register_variable) => register_variable,
             None => {
                 return Err(anyhow!(
-                    "Could not get the variable in Output field: {register}"
+                    "Could not get the variable in Output field: {register_identifier}"
                 ))
             }
         };
         let program_variable = program_variables
             .get(*register_variable)
-            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .ok_or_else(|| anyhow!("Register \"{register_variable}\" not found"))
             .and_then(|r| {
                 // if desired output is a record field (ie `output r0.gates as u64.public`),
                 // get the field; get the whole register otherwise
