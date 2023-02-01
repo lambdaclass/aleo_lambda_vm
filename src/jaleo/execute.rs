@@ -184,12 +184,12 @@ pub fn process_circuit_outputs(
         let register_identifier = o.register().to_string();
         // output can be of the form 'r7.owner', so split and get the first section
         let register_split: Vec<&str> = register_identifier.split('.').collect();
-        
+
         ensure!(
             register_split.len() <= 2,
             "Output field {register_identifier} was not specified correctly"
         );
-        
+
         let register_variable = match register_split.first() {
             Some(register_variable) => register_variable,
             None => {
