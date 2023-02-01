@@ -69,7 +69,7 @@ fn main() -> Result<()> {
         }
         Some("generate_parameters") => {
             let file_dir = vmtropy::universal_srs::generate_universal_srs_and_write_to_file()?;
-            println!("Stored universal parameters under {:?}", file_dir);
+            println!("Stored universal parameters under {file_dir:?}");
 
             Ok(())
         }

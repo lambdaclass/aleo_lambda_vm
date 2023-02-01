@@ -42,7 +42,7 @@ use simpleworks::{
         traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
         UInt64Gadget,
     },
-    marlin::{MarlinProof, ProvingKey, VerifyingKey, UniversalSRS},
+    marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
@@ -68,7 +68,6 @@ pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
 pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
 pub type SimpleFunctionVariables = IndexMap<String, Option<CircuitIOType>>;
 pub type FunctionKeys = (ProvingKey, VerifyingKey);
-
 
 /// Returns the circuit outputs and the marlin proof.
 ///

@@ -18,7 +18,7 @@ pub fn get_universal_srs_dir_and_filepath() -> Result<(PathBuf, PathBuf)> {
     let parameters_dir = dirs::home_dir()
         .ok_or_else(|| anyhow!("Home dir not found. Set a home directory"))?
         .join(".vmtropy");
-        
+
     let file_dir = parameters_dir.join("universal_srs");
     Ok((parameters_dir, file_dir))
 }
@@ -29,16 +29,14 @@ pub fn load_universal_srs_from_file() -> Result<Box<UniversalSRS>> {
     let reader = BufReader::new(f);
     let des = UniversalSRS::deserialize_unchecked(reader);
 
-    let res = Ok(Box::new(des.map_err(
-        |_e| anyhow!("Error deserializing Universal SRS"),
-    )?));
-
-    res
+    Ok(Box::new(des.map_err(|_e| {
+        anyhow!("Error deserializing Universal SRS")
+    })?))
 }
 
-pub fn generate_universal_srs_and_write_to_file() -> Result<PathBuf> {    
+pub fn generate_universal_srs_and_write_to_file() -> Result<PathBuf> {
     let universal_srs = generate_universal_srs()?;
-    
+
     let mut bytes = Vec::new();
     universal_srs.serialize_uncompressed(&mut bytes)?;
 

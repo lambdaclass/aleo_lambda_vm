@@ -2,7 +2,6 @@ mod helpers;
 
 #[cfg(test)]
 mod aleo_roulette_functions_tests {
-    use std::time::Instant;
 
     use crate::helpers::test_helpers;
     use ark_r1cs_std::R1CSVar;
@@ -25,7 +24,6 @@ mod aleo_roulette_functions_tests {
         // generate universal srs file before running tests
         let _ = vmtropy::universal_srs::generate_universal_srs_and_write_to_file();
     }
-
 
     fn get_aleo_roulette_program() -> Program {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -580,6 +578,5 @@ mod aleo_roulette_functions_tests {
             &proof,
             "mint",
         );
-        
     }
 }
