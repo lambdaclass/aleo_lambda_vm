@@ -2,7 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 use simpleworks::{gadgets::traits::ArithmeticGadget, marlin::ConstraintSystemRef};
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn div(
     operands: &IndexMap<String, CircuitIOType>,
@@ -29,6 +29,10 @@ pub fn div(
             let result = dividend.div(divisor, constraint_system)?;
             Ok(SimpleUInt64(result))
         }
+        [SimpleInt8(dividend), SimpleInt8(divisor)] => {
+            let result = dividend.div(divisor, constraint_system)?;
+            Ok(SimpleInt8(result))
+        }
         [_, _] => bail!("div is not supported for the given types"),
         [..] => bail!("div requires two operands"),
     }
@@ -39,9 +43,9 @@ mod div_unit_tests {
     use crate::{
         instructions::div::div,
         CircuitIOType::{
-            self, SimpleAddress, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+            self, SimpleAddress, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
         },
-        UInt16Gadget, UInt32Gadget, UInt64Gadget,
+        Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
     };
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
@@ -323,6 +327,138 @@ mod div_unit_tests {
         let divisor =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
         let expected_product = dividend.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            div(&sample_operands(dividend, divisor), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_dividing_by_zero_should_raise_an_error() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = i8::MAX;
+        let primitive_divisor = 0_i8;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+
+        let result = div(&sample_operands(dividend, divisor), cs).unwrap_err();
+
+        assert_eq!(result.to_string(), "attempt to divide by zero");
+    }
+
+    #[test]
+    fn test_i8_dividing_zero_should_result_on_zero() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = 0_i8;
+        let primitive_divisor = i8::MAX;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+        let expected_product = dividend.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            div(&sample_operands(dividend, divisor), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_dividing_by_one_should_result_on_the_dividend() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = 10_i8;
+        let primitive_divisor = 1_i8;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+        let expected_product = dividend.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            div(&sample_operands(dividend, divisor), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_divide_two_positive_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = 10_i8;
+        let primitive_divisor = 5_i8;
+        let primitive_result = 2_i8;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            div(&sample_operands(dividend, divisor), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_divide_two_negative_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = -10_i8;
+        let primitive_divisor = -5_i8;
+        let primitive_result = 2_i8;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            div(&sample_operands(dividend, divisor), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_divide_negative_and_positive_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_dividend = -10_i8;
+        let primitive_divisor = 5_i8;
+        let primitive_result = -2_i8;
+
+        let dividend =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
+        let divisor =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
