@@ -182,24 +182,35 @@ pub fn process_circuit_outputs(
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
         let register = o.register().to_string();
-        let register_split: Vec<&str> = register.split(".").collect();
+        let register_split: Vec<&str> = register.split('.').collect();
         ensure!(
             register_split.len() <= 2,
             "Output field {register} was not specified correctly"
         );
+        let register_variable = match register_split.first() {
+            Some(register_variable) => register_variable,
+            None => {
+                return Err(anyhow!(
+                    "Could not get the variable in Output field: {register}"
+                ))
+            }
+        };
         let program_variable = program_variables
-            .get(register_split[0])
+            .get(*register_variable)
             .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
                 // if desired output is a record field (ie `output r0.gates as u64.public`),
                 // get the field; get the whole register otherwise
                 let register_value = match (r, register_split.len() == 2) {
                     (Some(SimpleRecord(record)), true) => {
-                        let key = register_split[1];
-                        match key {
-                            "owner" => Some(SimpleAddress(record.owner.clone())),
-                            "gates" => Some(SimpleUInt64(record.gates.clone())),
-                            _ => record.entries.get(key).map(|x| x.clone()),
+                        if let Some(key) = register_split.get(1) {
+                            match *key {
+                                "owner" => Some(SimpleAddress(record.owner.clone())),
+                                "gates" => Some(SimpleUInt64(record.gates.clone())),
+                                _ => record.entries.get(*key).cloned(),
+                            }
+                        } else {
+                            None
                         }
                     }
                     _ => r.clone(),

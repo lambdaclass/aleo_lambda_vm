@@ -1,6 +1,5 @@
 use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Ok, Result};
-use ark_r1cs_std::prelude::Boolean;
 use indexmap::IndexMap;
 use simpleworks::gadgets::traits::BitwiseOperationGadget;
 pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
@@ -12,23 +11,23 @@ pub fn nand(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
         .as_slice()
     {
         [SimpleBoolean(left_operand), SimpleBoolean(right_operand)] => {
-            let result = Boolean::kary_nand(&[left_operand.clone(), right_operand.clone()])?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleBoolean(result))
         }
         [SimpleUInt8(left_operand), SimpleUInt8(right_operand)] => {
-            let result = left_operand.nand(right_operand.clone())?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(left_operand), SimpleUInt16(right_operand)] => {
-            let result = left_operand.nand(right_operand.clone())?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(left_operand), SimpleUInt32(right_operand)] => {
-            let result = left_operand.nand(right_operand.clone())?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(left_operand), SimpleUInt64(right_operand)] => {
-            let result = left_operand.nand(right_operand.clone())?;
+            let result = left_operand.nand(right_operand)?;
             Ok(SimpleUInt64(result))
         }
         [_, _] => bail!("nand is not supported for the given types"),
