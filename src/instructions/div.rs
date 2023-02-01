@@ -1,13 +1,7 @@
-use crate::{
-    circuit_io_type::CircuitIOType, instructions::helpers, UInt16Gadget, UInt32Gadget, UInt64Gadget,
-};
-use anyhow::{bail, ensure, Result};
-use ark_r1cs_std::{prelude::AllocVar, select::CondSelectGadget, R1CSVar, ToBitsGadget};
+use crate::circuit_io_type::CircuitIOType;
+use anyhow::{bail, Result};
 use indexmap::IndexMap;
-use simpleworks::{
-    gadgets::{traits::BitwiseOperationGadget, UInt8Gadget},
-    marlin::ConstraintSystemRef,
-};
+use simpleworks::{gadgets::traits::ArithmeticGadget, marlin::ConstraintSystemRef};
 pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn div(
@@ -20,62 +14,20 @@ pub fn div(
         .as_slice()
     {
         [SimpleUInt8(dividend), SimpleUInt8(divisor)] => {
-            ensure!(divisor.value()? != 0_u8, "attempt to divide by zero");
-            let mut quotient = UInt8Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, divisor_bit) in divisor.to_bits_le()?.iter().enumerate() {
-                // If the divisor bit is a 1.
-                let addend = UInt8Gadget::shift_right(dividend, i, constraint_system.clone())?;
-                let mut partial_sum = helpers::add(&quotient.to_bits_be()?, &addend.to_bits_be()?)?;
-                partial_sum.reverse();
-                quotient = UInt8Gadget::conditionally_select(
-                    divisor_bit,
-                    &UInt8Gadget::from_bits_le(&partial_sum),
-                    &quotient,
-                )?;
-            }
-            Ok(SimpleUInt8(quotient))
+            let result = dividend.div(divisor, constraint_system)?;
+            Ok(SimpleUInt8(result))
         }
         [SimpleUInt16(dividend), SimpleUInt16(divisor)] => {
-            ensure!(divisor.value()? != 0_u16, "attempt to divide by zero");
-            let mut quotient = UInt16Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
-                // If the divisor bit is a 1.
-                let addend = UInt16Gadget::shift_right(dividend, i, constraint_system.clone())?;
-                quotient = UInt16Gadget::conditionally_select(
-                    divisor_bit,
-                    &UInt16Gadget::addmany(&[quotient.clone(), addend])?,
-                    &quotient,
-                )?;
-            }
-            Ok(SimpleUInt16(quotient))
+            let result = dividend.div(divisor, constraint_system)?;
+            Ok(SimpleUInt16(result))
         }
         [SimpleUInt32(dividend), SimpleUInt32(divisor)] => {
-            ensure!(divisor.value()? != 0_u32, "attempt to divide by zero");
-            let mut quotient = UInt32Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
-                // If the divisor bit is a 1.
-                let addend = UInt32Gadget::shift_right(dividend, i, constraint_system.clone())?;
-                quotient = UInt32Gadget::conditionally_select(
-                    divisor_bit,
-                    &UInt32Gadget::addmany(&[quotient.clone(), addend])?,
-                    &quotient,
-                )?;
-            }
-            Ok(SimpleUInt32(quotient))
+            let result = dividend.div(divisor, constraint_system)?;
+            Ok(SimpleUInt32(result))
         }
         [SimpleUInt64(dividend), SimpleUInt64(divisor)] => {
-            ensure!(divisor.value()? != 0_u64, "attempt to divide by zero");
-            let mut quotient = UInt64Gadget::new_witness(constraint_system.clone(), || Ok(0))?;
-            for (i, divisor_bit) in divisor.to_bits_le().iter().enumerate() {
-                // If the divisor bit is a 1.
-                let addend = UInt64Gadget::shift_right(dividend, i, constraint_system.clone())?;
-                quotient = UInt64Gadget::conditionally_select(
-                    divisor_bit,
-                    &UInt64Gadget::addmany(&[quotient.clone(), addend])?,
-                    &quotient,
-                )?;
-            }
-            Ok(SimpleUInt64(quotient))
+            let result = dividend.div(divisor, constraint_system)?;
+            Ok(SimpleUInt64(result))
         }
         [_, _] => bail!("div is not supported for the given types"),
         [..] => bail!("div requires two operands"),
@@ -179,16 +131,18 @@ mod div_unit_tests {
     }
 
     #[test]
-    fn test_u8_if_the_dividend_is_one_the_result_should_be_the_dividend() {
+    fn test_u8_divide_two_numbers_result_is_correct() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let primitive_dividend = 1_u8;
-        let primitive_divisor = 0x55;
+        let primitive_dividend = 10_u8;
+        let primitive_divisor = 5_u8;
+        let primitive_result = 2_u8;
 
         let dividend =
             SimpleUInt8(UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
         let divisor =
             SimpleUInt8(UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
-        let expected_product = dividend.clone();
+        let expected_product =
+            SimpleUInt8(UInt8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(
@@ -243,28 +197,6 @@ mod div_unit_tests {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_dividend = 0x5555;
         let primitive_divisor = 1_u16;
-
-        let dividend =
-            SimpleUInt16(UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
-        let divisor =
-            SimpleUInt16(UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
-        let expected_product = dividend.clone();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert_eq!(
-            div(&sample_operands(dividend, divisor), cs)
-                .unwrap()
-                .value()
-                .unwrap(),
-            expected_product.value().unwrap()
-        );
-    }
-
-    #[test]
-    fn test_u16_if_the_dividend_is_one_the_result_should_be_the_dividend() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let primitive_dividend = 1_u16;
-        let primitive_divisor = 0x5555;
 
         let dividend =
             SimpleUInt16(UInt16Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
@@ -343,28 +275,6 @@ mod div_unit_tests {
     }
 
     #[test]
-    fn test_u32_if_the_dividend_is_one_the_result_should_be_the_dividend() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let primitive_dividend = 1_u32;
-        let primitive_divisor = 0x55555555;
-
-        let dividend =
-            SimpleUInt32(UInt32Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
-        let divisor =
-            SimpleUInt32(UInt32Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
-        let expected_product = dividend.clone();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert_eq!(
-            div(&sample_operands(dividend, divisor), cs)
-                .unwrap()
-                .value()
-                .unwrap(),
-            expected_product.value().unwrap()
-        );
-    }
-
-    #[test]
     fn test_u64_dividing_by_zero_should_raise_an_error() {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_dividend = u64::MAX;
@@ -407,28 +317,6 @@ mod div_unit_tests {
         let cs = ConstraintSystem::<ConstraintF>::new_ref();
         let primitive_dividend = 0x5555555555555555;
         let primitive_divisor = 1_u64;
-
-        let dividend =
-            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());
-        let divisor =
-            SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_divisor)).unwrap());
-        let expected_product = dividend.clone();
-
-        assert!(cs.is_satisfied().unwrap());
-        assert_eq!(
-            div(&sample_operands(dividend, divisor), cs)
-                .unwrap()
-                .value()
-                .unwrap(),
-            expected_product.value().unwrap()
-        );
-    }
-
-    #[test]
-    fn test_u64_if_the_dividend_is_one_the_result_should_be_the_dividend() {
-        let cs = ConstraintSystem::<ConstraintF>::new_ref();
-        let primitive_dividend = 1_u64;
-        let primitive_divisor = 0x5555555555555555;
 
         let dividend =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_dividend)).unwrap());

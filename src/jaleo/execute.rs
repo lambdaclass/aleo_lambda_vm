@@ -184,26 +184,36 @@ pub fn process_circuit_outputs(
         let register_identifier = o.register().to_string();
         // output can be of the form 'r7.owner', so split and get the first section
         let register_split: Vec<&str> = register_identifier.split('.').collect();
+        
         ensure!(
             register_split.len() <= 2,
             "Output field {register_identifier} was not specified correctly"
         );
-        let register_position = register_split.first()
-            .context("Error getting register position")?;
+        
+        let register_variable = match register_split.first() {
+            Some(register_variable) => register_variable,
+            None => {
+                return Err(anyhow!(
+                    "Could not get the variable in Output field: {register}"
+                ))
+            }
+        };
         let program_variable = program_variables
-            .get(*register_position)
-            .ok_or_else(|| anyhow!("Register \"{register_identifier}\" not found"))
+            .get(*register_variable)
+            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
             .and_then(|r| {
                 // if desired output is a record field (ie `output r0.gates as u64.public`),
                 // get the field; get the whole register otherwise
                 let register_value = match (r, register_split.len() == 2) {
                     (Some(SimpleRecord(record)), true) => {
-                        let key = *register_split.first()
-                            .context("Error getting record field")?;
-                        match key {
-                            "owner" => Some(SimpleAddress(record.owner.clone())),
-                            "gates" => Some(SimpleUInt64(record.gates.clone())),
-                            _ => record.entries.get(key).cloned(),
+                        if let Some(key) = register_split.get(1) {
+                            match *key {
+                                "owner" => Some(SimpleAddress(record.owner.clone())),
+                                "gates" => Some(SimpleUInt64(record.gates.clone())),
+                                _ => record.entries.get(*key).cloned(),
+                            }
+                        } else {
+                            None
                         }
                     }
                     _ => r.clone(),

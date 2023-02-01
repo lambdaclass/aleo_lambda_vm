@@ -14,12 +14,9 @@ pub use div::div;
 
 mod compare;
 pub use compare::compare;
-pub use compare::Comparison;
 
 mod hash_psd2;
 pub use hash_psd2::hash_psd2;
-
-pub(crate) mod helpers;
 
 mod assert;
 pub use assert::assert_eq;

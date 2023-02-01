@@ -40,7 +40,7 @@ pub use simpleworks::marlin::serialization::{deserialize_verifying_key, serializ
 use simpleworks::{
     gadgets::{
         traits::ToFieldElements, AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget,
-        UInt64Gadget,
+        UInt64Gadget, UInt8Gadget,
     },
     marlin::{MarlinProof, ProvingKey, UniversalSRS, VerifyingKey},
 };
