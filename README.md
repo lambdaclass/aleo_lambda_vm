@@ -240,7 +240,7 @@ fn main() {
     // Parse the program
     let program_string = std::fs::read_to_string("./programs/add/main.aleo").unwrap();
     let (program, build) = build_program(&program_string).unwrap();
-    let function = String::from("hello_1");
+    let function = String::from("main");
     // Declare the inputs (it is the same for public or private)
     let user_inputs = vec![U16(1), U16(1)];
 
