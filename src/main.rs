@@ -2,9 +2,7 @@ use anyhow::{anyhow, bail, Result};
 use ark_serialize::CanonicalSerialize;
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
-use std::fs;
 use std::path::PathBuf;
-use vmtropy::universal_srs::{generate_universal_srs, get_universal_srs_dir_and_filepath};
 use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]

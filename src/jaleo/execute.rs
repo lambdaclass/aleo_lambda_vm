@@ -5,8 +5,8 @@ use crate::{
     variable_type::VariableType,
     CircuitInputType, CircuitOutputType, SimpleFunctionVariables,
 };
-use anyhow::{anyhow, bail, ensure, Result};
 use ark_r1cs_std::R1CSVar;
+use anyhow::{anyhow, bail, ensure, Result};
 use indexmap::IndexMap;
 use log::debug;
 use simpleworks::marlin::serialization::serialize_proof;

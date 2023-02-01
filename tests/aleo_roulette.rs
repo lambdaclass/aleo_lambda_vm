@@ -2,6 +2,8 @@ mod helpers;
 
 #[cfg(test)]
 mod aleo_roulette_functions_tests {
+    use std::time::Instant;
+
     use crate::helpers::test_helpers;
     use ark_r1cs_std::R1CSVar;
     use simpleworks::marlin::MarlinProof;
@@ -17,6 +19,13 @@ mod aleo_roulette_functions_tests {
     const MAKE_BET: &str = "make_bet";
     const MINT_CASINO_TOKEN_RECORD: &str = "mint_casino_token_record";
     const PSD_BITS_MOD: &str = "psd_bits_mod";
+
+    #[ctor::ctor]
+    fn init() {
+        // generate universal srs file before running tests
+        let _ = vmtropy::universal_srs::generate_universal_srs_and_write_to_file();
+    }
+
 
     fn get_aleo_roulette_program() -> Program {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -50,7 +59,7 @@ mod aleo_roulette_functions_tests {
 
         assert!(
             vmtropy::verify_proof(function_verifying_key.clone(), public_inputs, proof).unwrap()
-        )
+        );
     }
 
     #[test]
@@ -515,7 +524,6 @@ mod aleo_roulette_functions_tests {
     #[test]
     fn test_records() {
         let program = get_aleo_records_program();
-
         let (address_string, address_bytes) = test_helpers::address();
         let amount_to_mint = 1_u64;
 
@@ -572,5 +580,6 @@ mod aleo_roulette_functions_tests {
             &proof,
             "mint",
         );
+        
     }
 }
