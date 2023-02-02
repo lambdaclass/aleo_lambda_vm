@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Result};
-use rand::rngs::StdRng;
-use simpleworks::marlin::{ConstraintSystemRef, MarlinProof, UniversalSRS};
-use std::cell::RefCell;
-use std::rc::Rc;
 pub use lambdavm::build_program;
 pub use lambdavm::jaleo::{get_credits_key, mint_credits};
 pub use lambdavm::jaleo::{Itertools, UserInputValueType};
 use lambdavm::SimpleFunctionVariables;
+use rand::rngs::StdRng;
+use simpleworks::marlin::{ConstraintSystemRef, MarlinProof, UniversalSRS};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub type Function = snarkvm::prelude::Function<snarkvm::prelude::Testnet3>;
 pub type Address = lambdavm::jaleo::Address;

@@ -4,12 +4,12 @@
 pub mod test_helpers {
     use anyhow::Result;
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
-    use snarkvm::prelude::{Group, Testnet3};
     use lambdavm::{
         helpers,
         jaleo::{self, Address, PrivateKey},
         CircuitIOType, VMRecordEntriesMap,
     };
+    use snarkvm::prelude::{Group, Testnet3};
 
     pub fn address() -> (String, [u8; 63]) {
         let rng = &mut rand::thread_rng();
