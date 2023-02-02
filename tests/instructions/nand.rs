@@ -2,7 +2,7 @@
 mod nand_tests {
     use crate::helpers::test_helpers;
     use snarkvm::prelude::{Parser, Program, Testnet3};
-    use vmtropy::jaleo::UserInputValueType::{Boolean, U16, U32, U64, U8};
+    use vmtropy::jaleo::UserInputValueType::{Boolean, I8, U16, U32, U64, U8};
 
     #[test]
     fn test_nand_with_bool_public_inputs() {
@@ -602,5 +602,125 @@ mod nand_tests {
         let r2 = function_variables["r2"].as_ref().unwrap();
         assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r2.value().unwrap(), "4294967295".to_owned());
+    }
+
+    #[test]
+    fn test_nand_with_i8_public_inputs() {
+        let program_string = test_helpers::read_program("nand").unwrap();
+        let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_16";
+
+        /*
+        function hello_16:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            nand r0 r1 into r2;
+            output r2 as i8.public;
+        */
+
+        let user_inputs = vec![I8(-1), I8(-1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "-1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r1.value().unwrap(), "-1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r2.value().unwrap(), "0".to_owned());
+    }
+
+    #[test]
+    fn test_nand_with_i8_private_inputs() {
+        let program_string = test_helpers::read_program("nand").unwrap();
+        let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_17";
+
+        /*
+        function hello_17:
+            input r0 as i8.private;
+            input r1 as i8.private;
+            nand r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(-1), I8(-1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "-1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r1.value().unwrap(), "-1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r2.value().unwrap(), "0".to_owned());
+    }
+
+    #[test]
+    fn test_nand_with_i8_private_or_public_inputs() {
+        let program_string = test_helpers::read_program("nand").unwrap();
+        let (_, program) = Program::<Testnet3>::parse(&program_string).unwrap();
+        let function_name = "hello_18";
+
+        /*
+        function hello_18:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            nand r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(-1), I8(-1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "r2"];
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "-1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r1.value().unwrap(), "-1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r2.value().unwrap(), "0".to_owned());
     }
 }

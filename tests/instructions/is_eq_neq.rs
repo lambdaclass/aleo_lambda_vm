@@ -4,7 +4,7 @@ mod is_eq_tests {
     use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{
         Program,
-        UserInputValueType::{U16, U32, U64, U8},
+        UserInputValueType::{I8, U16, U32, U64, U8},
     };
 
     #[test]
@@ -519,6 +519,141 @@ mod is_eq_tests {
 
         let r1 = function_variables["r1"].as_ref().unwrap();
         assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(r1.value().unwrap(), "1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r2.value().unwrap(), "true".to_owned());
+
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r3.value().unwrap(), "false".to_owned());
+    }
+
+    #[test]
+    fn test_is_eq_with_i8_public_inputs() {
+        let program_string = test_helpers::read_program("is_eq_neq").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_13";
+
+        /*
+        function hello_13:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            is.eq r0 r1 into r2;
+            output r2 as i8.public;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "1i8", "r4", "r2", "r3"];
+
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r1.value().unwrap(), "1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r2.value().unwrap(), "true".to_owned());
+
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r3.value().unwrap(), "false".to_owned());
+    }
+
+    #[test]
+    fn test_is_eq_with_i8_private_inputs() {
+        let program_string = test_helpers::read_program("is_eq_neq").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_14";
+
+        /*
+        function hello_14:
+            input r0 as i8.private;
+            input r1 as i8.private;
+            is.eq r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "1i8", "r4", "r2", "r3"];
+
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r1.value().unwrap(), "1".to_owned());
+
+        let r2 = function_variables["r2"].as_ref().unwrap();
+        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r2.value().unwrap(), "true".to_owned());
+
+        let r3 = function_variables["r3"].as_ref().unwrap();
+        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert_eq!(r3.value().unwrap(), "false".to_owned());
+    }
+
+    #[test]
+    fn test_is_eq_with_i8_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("is_eq_neq").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_15";
+
+        /*
+        function hello_15:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            is.eq r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+
+        let expected_function_variables = vec!["r0", "r1", "1i8", "r4", "r2", "r3"];
+
+        for (register, expected_register) in
+            function_variables.keys().zip(expected_function_variables)
+        {
+            assert_eq!(register, expected_register);
+        }
+
+        let r0 = function_variables["r0"].as_ref().unwrap();
+        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert_eq!(r0.value().unwrap(), "1".to_owned());
+
+        let r1 = function_variables["r1"].as_ref().unwrap();
+        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "1".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();

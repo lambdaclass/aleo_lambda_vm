@@ -6,7 +6,7 @@ mod compare_tests {
         helpers::random_nonce,
         jaleo::{
             Program, Record as JAleoRecord, RecordEntriesMap,
-            UserInputValueType::{Record, U16, U32, U64},
+            UserInputValueType::{Record, I8, U16, U32, U64},
         },
     };
 
@@ -193,6 +193,69 @@ mod compare_tests {
         */
 
         let user_inputs = vec![U64(1), U64(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn compare_with_i8_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_13";
+
+        /*
+        function hello_10:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as i8.public;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn compare_with_i8_private_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_14";
+
+        /*
+        function hello_11:
+            input r0 as i8.private;
+            input r1 as i8.private;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn compare_with_i8_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("compare").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_15";
+
+        /*
+        function hello_12:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            [compare-functions] r0 r1 into r2/r3/r4/r5;
+            output r2/r3/r4/r5 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
 
         // execute circuit
         let (_compiled_function_variables, _proof) =

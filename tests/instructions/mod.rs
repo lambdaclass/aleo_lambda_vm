@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod add;
 #[cfg(test)]
+mod and;
+#[cfg(test)]
 mod compare;
 #[cfg(test)]
 mod div;

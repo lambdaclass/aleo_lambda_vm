@@ -4,7 +4,7 @@ mod add_tests {
     use snarkvm::prelude::Parser;
     use vmtropy::jaleo::{
         Program,
-        UserInputValueType::{U16, U32, U64},
+        UserInputValueType::{I8, U16, U32, U64},
     };
 
     #[test]
@@ -190,6 +190,69 @@ mod add_tests {
         */
 
         let user_inputs = vec![U64(1), U64(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn test_add_with_i8_public_inputs() {
+        let program_string = test_helpers::read_program("add").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_10";
+
+        /*
+        function hello_7:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            add r0 r1 into r2;
+            output r2 as i8.public;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn test_add_with_i8_private_inputs() {
+        let program_string = test_helpers::read_program("add").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_11";
+
+        /*
+        function hello_2:
+            input r0 as i8.private;
+            input r1 as i8.private;
+            add r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
+
+        // execute circuit
+        let (_compiled_function_variables, _proof) =
+            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+    }
+
+    #[test]
+    fn test_add_with_i8_private_and_public_inputs() {
+        let program_string = test_helpers::read_program("add").unwrap();
+        let (_, program) = Program::parse(&program_string).unwrap();
+        let function_name = "hello_12";
+
+        /*
+        function hello_3:
+            input r0 as i8.public;
+            input r1 as i8.public;
+            add r0 r1 into r2;
+            output r2 as i8.private;
+        */
+
+        let user_inputs = vec![I8(1), I8(1)];
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
