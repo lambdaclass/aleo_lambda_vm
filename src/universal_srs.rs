@@ -17,7 +17,7 @@ pub fn generate_universal_srs() -> Result<Box<UniversalSRS>> {
 pub fn get_universal_srs_dir_and_filepath() -> Result<(PathBuf, PathBuf)> {
     let parameters_dir = dirs::home_dir()
         .ok_or_else(|| anyhow!("Home dir not found. Set a home directory"))?
-        .join(".vmtropy");
+        .join(".lambdavm");
 
     let file_dir = parameters_dir.join("universal_srs");
     Ok((parameters_dir, file_dir))

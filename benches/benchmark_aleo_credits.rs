@@ -6,7 +6,7 @@ mod benchmarks;
 
 fn run_benchmarks(_c: &mut Criterion) {
     cfg_if::cfg_if! {
-        if #[cfg(any(feature = "vmtropy_backend", feature = "snarkvm_backend"))] {
+        if #[cfg(any(feature = "lambdavm_backend", feature = "snarkvm_backend"))] {
             benchmarks::aleo_credits::execute_genesis(_c);
             benchmarks::aleo_credits::execute_mint(_c);
             benchmarks::aleo_credits::execute_transfer(_c);

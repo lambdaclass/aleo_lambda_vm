@@ -2,7 +2,7 @@
 mod cast_tests {
     use crate::helpers::test_helpers;
     use snarkvm::prelude::Parser;
-    use vmtropy::jaleo::{
+    use lambdavm::jaleo::{
         Identifier, Program,
         UserInputValueType::{U16, U32, U64},
     };
@@ -26,7 +26,7 @@ mod cast_tests {
         ];
 
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, &function, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "0u64", "r2"];
         for (register, expected_register) in
@@ -37,26 +37,26 @@ mod cast_tests {
 
         // Amount to mint.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0.value().unwrap(), amount_to_mint.to_string());
 
         // Address.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleAddress(_)));
         assert_eq!(r1.value().unwrap(), address_string);
 
         // Constant literal (record gates).
         let constant_0u64 = function_variables["0u64"].as_ref().unwrap();
         assert!(matches!(
             constant_0u64,
-            vmtropy::CircuitIOType::SimpleUInt64(_)
+            lambdavm::CircuitIOType::SimpleUInt64(_)
         ));
         assert_eq!(constant_0u64.value().unwrap(), "0".to_owned());
 
         // Minted output record.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r2 {
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r2 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), 0);
             assert_ne!(record.nonce, ConstraintF::default());
@@ -64,14 +64,14 @@ mod cast_tests {
             panic!("r2 should be a record");
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let (_function_proving_key, function_verifying_key) = program_build
             .map
             .get(&Identifier::try_from("mint").unwrap())
             .unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &_proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &_proof).unwrap()
         )
     }
 }

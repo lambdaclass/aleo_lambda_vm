@@ -5,7 +5,7 @@ pub mod test_helpers {
     use anyhow::Result;
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
     use snarkvm::prelude::{Group, Testnet3};
-    use vmtropy::{
+    use lambdavm::{
         helpers,
         jaleo::{self, Address, PrivateKey},
         CircuitIOType, VMRecordEntriesMap,
@@ -78,7 +78,7 @@ pub mod test_helpers {
                         }
                     }
                     (CircuitIOType::SimpleRecord(self_v), CircuitIOType::SimpleRecord(other_v)) => {
-                        vmtropy::Record::eq(self_v, other_v)
+                        lambdavm::Record::eq(self_v, other_v)
                     }
                     (
                         CircuitIOType::SimpleAddress(self_v),

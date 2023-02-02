@@ -5,7 +5,7 @@ mod marlin_tests {
     use super::helpers::test_helpers;
     use snarkvm::prelude::Parser;
     use std::str::FromStr;
-    use vmtropy::{
+    use lambdavm::{
         build_program,
         jaleo::{
             Identifier, Program,
@@ -31,7 +31,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -58,7 +58,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -78,7 +78,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -105,7 +105,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -133,7 +133,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -160,7 +160,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
@@ -187,7 +187,7 @@ mod marlin_tests {
         let user_inputs = vec![U8(1), U8(1)];
         // execute circuit
         let (_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let (_program, program_build) =
             test_helpers::build_program_for_div(&program_string).unwrap();
@@ -216,7 +216,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
@@ -242,7 +242,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
@@ -268,7 +268,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
@@ -294,7 +294,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =
@@ -320,7 +320,7 @@ mod marlin_tests {
 
         // execute circuit
         let (_compiled_function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
         let (_program, program_build) = build_program(&program_string).unwrap();
         let function_identifier = Identifier::from_str(function_name).unwrap();
         let (_function_proving_key, function_verifying_key) =

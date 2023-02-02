@@ -2,7 +2,7 @@
 mod compare_tests {
     use crate::helpers::test_helpers;
     use snarkvm::prelude::Parser;
-    use vmtropy::{
+    use lambdavm::{
         helpers::random_nonce,
         jaleo::{
             Program, Record as JAleoRecord, RecordEntriesMap,
@@ -28,7 +28,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -49,7 +49,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -70,7 +70,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -91,7 +91,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -112,7 +112,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -133,7 +133,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -154,7 +154,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -175,7 +175,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -196,7 +196,7 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 
     #[test]
@@ -224,6 +224,6 @@ mod compare_tests {
 
         // execute circuit
         let (_compiled_function_variables, _bytes_proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
     }
 }

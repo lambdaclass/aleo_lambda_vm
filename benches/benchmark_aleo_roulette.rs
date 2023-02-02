@@ -6,7 +6,7 @@ mod benchmarks;
 
 fn run_benchmarks(_c: &mut Criterion) {
     cfg_if::cfg_if! {
-        if #[cfg(any(feature = "vmtropy_backend", feature = "snarkvm_backend"))] {
+        if #[cfg(any(feature = "lambdavm_backend", feature = "snarkvm_backend"))] {
             benchmarks::aleo_roulette::benchmark_psd_hash_execution(_c);
             benchmarks::aleo_roulette::benchmark_mint_casino_token_record_execution(_c);
             benchmarks::aleo_roulette::benchmark_make_bet_execution(_c);

@@ -1,4 +1,4 @@
-# VMtropy Debug
+# lambdavm Debug
 
 ## 1. Run Valgrind
 
