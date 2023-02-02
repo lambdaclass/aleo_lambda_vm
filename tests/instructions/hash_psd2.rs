@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod hash_psd2_tests {
     use crate::helpers::test_helpers;
+    use lambdavm::jaleo::UserInputValueType::{U16, U32, U64, U8};
     use snarkvm::prelude::{Parser, Program, Testnet3};
-    use vmtropy::jaleo::UserInputValueType::{U16, U32, U64, U8};
 
     #[test]
     fn test_hash_psd2_with_u8_public_inputs() {
@@ -21,7 +21,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -31,11 +31,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -56,7 +56,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -66,11 +66,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -91,7 +91,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -101,11 +101,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -126,7 +126,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -153,7 +153,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -163,11 +163,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt16(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt16(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -188,7 +188,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -198,11 +198,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt16(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt16(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -223,7 +223,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -233,11 +233,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt32(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt32(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -258,7 +258,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -268,11 +268,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt32(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt32(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -293,7 +293,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -303,11 +303,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt32(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt32(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -328,7 +328,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -338,11 +338,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -363,7 +363,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -373,11 +373,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 
@@ -398,7 +398,7 @@ mod hash_psd2_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1"];
         for (register, expected_register) in
@@ -408,11 +408,11 @@ mod hash_psd2_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleField(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleField(_)));
         assert_ne!(r1.value().unwrap(), r0.value().unwrap());
     }
 }

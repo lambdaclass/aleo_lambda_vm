@@ -7,14 +7,14 @@ pub mod test_helpers {
     use ark_r1cs_std::{prelude::EqGadget, R1CSVar};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
-    use simpleworks::gadgets::ConstraintF;
-    use snarkvm::prelude::{Group, LiteralType, Parser, PlaintextType, Testnet3, ValueType};
-    use vmtropy::{
+    use lambdavm::{
         build_function,
         helpers::{self, aleo_entries_to_vm_entries},
         jaleo::{self, Address, Identifier, PrivateKey, Program, Record, UserInputValueType},
         CircuitIOType, ProgramBuild, VMRecordEntriesMap,
     };
+    use simpleworks::gadgets::ConstraintF;
+    use snarkvm::prelude::{Group, LiteralType, Parser, PlaintextType, Testnet3, ValueType};
 
     pub fn address() -> (String, [u8; 63]) {
         let rng = &mut rand::thread_rng();
@@ -83,7 +83,7 @@ pub mod test_helpers {
                         }
                     }
                     (CircuitIOType::SimpleRecord(self_v), CircuitIOType::SimpleRecord(other_v)) => {
-                        vmtropy::Record::eq(self_v, other_v)
+                        lambdavm::Record::eq(self_v, other_v)
                     }
                     (
                         CircuitIOType::SimpleAddress(self_v),
@@ -124,7 +124,7 @@ pub mod test_helpers {
                 &inputs,
                 constraint_system.clone(),
                 &universal_srs,
-                &mut vmtropy::helpers::function_variables(function, constraint_system.clone())?,
+                &mut lambdavm::helpers::function_variables(function, constraint_system.clone())?,
             ) {
                 Ok((function_proving_key, function_verifying_key)) => {
                     (function_proving_key, function_verifying_key)

@@ -1,29 +1,29 @@
 use anyhow::{anyhow, Result};
+pub use lambdavm::build_program;
+pub use lambdavm::jaleo::{get_credits_key, mint_credits};
+pub use lambdavm::jaleo::{Itertools, UserInputValueType};
+use lambdavm::SimpleFunctionVariables;
 use rand::rngs::StdRng;
 use simpleworks::marlin::{ConstraintSystemRef, MarlinProof, UniversalSRS};
 use std::cell::RefCell;
 use std::rc::Rc;
-pub use vmtropy::build_program;
-pub use vmtropy::jaleo::{get_credits_key, mint_credits};
-pub use vmtropy::jaleo::{Itertools, UserInputValueType};
-use vmtropy::SimpleFunctionVariables;
 
 pub type Function = snarkvm::prelude::Function<snarkvm::prelude::Testnet3>;
-pub type Address = vmtropy::jaleo::Address;
-pub type Identifier = vmtropy::jaleo::Identifier;
-pub type Program = vmtropy::jaleo::Program;
-pub type ProgramBuild = vmtropy::ProgramBuild;
-pub type Record = vmtropy::jaleo::Record;
-pub type EncryptedRecord = vmtropy::jaleo::EncryptedRecord;
-pub type ViewKey = vmtropy::jaleo::ViewKey;
-pub type PrivateKey = vmtropy::jaleo::PrivateKey;
-pub type Field = vmtropy::jaleo::Field;
-pub type ProgramID = vmtropy::jaleo::ProgramID;
-pub type VerifyingKey = vmtropy::jaleo::VerifyingKey;
-pub type ProvingKey = vmtropy::jaleo::ProvingKey;
-pub type Deployment = vmtropy::jaleo::Deployment;
-pub type Transition = vmtropy::jaleo::Transition;
-pub type VerifyingKeyMap = vmtropy::jaleo::VerifyingKeyMap;
+pub type Address = lambdavm::jaleo::Address;
+pub type Identifier = lambdavm::jaleo::Identifier;
+pub type Program = lambdavm::jaleo::Program;
+pub type ProgramBuild = lambdavm::ProgramBuild;
+pub type Record = lambdavm::jaleo::Record;
+pub type EncryptedRecord = lambdavm::jaleo::EncryptedRecord;
+pub type ViewKey = lambdavm::jaleo::ViewKey;
+pub type PrivateKey = lambdavm::jaleo::PrivateKey;
+pub type Field = lambdavm::jaleo::Field;
+pub type ProgramID = lambdavm::jaleo::ProgramID;
+pub type VerifyingKey = lambdavm::jaleo::VerifyingKey;
+pub type ProvingKey = lambdavm::jaleo::ProvingKey;
+pub type Deployment = lambdavm::jaleo::Deployment;
+pub type Transition = lambdavm::jaleo::Transition;
+pub type VerifyingKeyMap = lambdavm::jaleo::VerifyingKeyMap;
 
 // This allows us to execute functions without depending on generating the
 // universal srs.
@@ -38,8 +38,8 @@ pub fn execute_function(
 ) -> Result<(SimpleFunctionVariables, MarlinProof)> {
     let function = program.get_function(function_name)?;
     let mut function_variables =
-        vmtropy::helpers::function_variables(&function, constraint_system.clone())?;
-    let (function_proving_key, _function_verifying_key) = vmtropy::build_function(
+        lambdavm::helpers::function_variables(&function, constraint_system.clone())?;
+    let (function_proving_key, _function_verifying_key) = lambdavm::build_function(
         program,
         &function,
         inputs,

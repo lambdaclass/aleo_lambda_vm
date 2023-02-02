@@ -32,7 +32,7 @@ cargo run --release -- execute hello ./examples/sample-program/sample.aleo 2u32 
 Underneath this runs the binary located in `./target/release`, so you can also do instead:
 
 ```
-./target/release/vmtropy execute hello ./examples/sample-program/sample.aleo 2u32 1u32
+./target/release/lambdavm execute hello ./examples/sample-program/sample.aleo 2u32 1u32
 ```
 
 after having run `cargo build --release`.
@@ -135,7 +135,7 @@ To execute a program's function, you call `execute_function`. It takes the parse
 ```rust
 // Run the `hello` function defined in the `sample.aleo` program
 let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&program, &function, &user_inputs).unwrap();
+        lambdavm::execute_function(&program, &function, &user_inputs).unwrap();
 ```
 
 It returns a tuple, where the first element is a map of all function variables (the hash map used to keep track of every register mentioned above) and the second element of the tuple is the proof of execution.
@@ -209,7 +209,7 @@ the map ends up like this
 Verifying a given proof amounts to the following function call
 
 ```rust
-let result = vmtropy::verify_proof(function_verifying_key.clone(), public_inputs, proof).unwrap();
+let result = lambdavm::verify_proof(function_verifying_key.clone(), public_inputs, proof).unwrap();
 assert!(result);
 ```
 
@@ -232,10 +232,10 @@ function main:
 Executing the function `main` would look like this:
 
 ```rust
-use vmtropy::jaleo::UserInputValueType::U16;
+use lambdavm::jaleo::UserInputValueType::U16;
 
 fn main() {
-    use vmtropy::{build_program, execute_function};
+    use lambdavm::{build_program, execute_function};
 
     // Parse the program
     let program_string = std::fs::read_to_string("./programs/add/main.aleo").unwrap();
@@ -248,7 +248,7 @@ fn main() {
     let (_function_variables, proof) = execute_function(&program, &function, &user_inputs).unwrap();
     let (_proving_key, verifying_key) = build.get(&function).unwrap();
 
-    assert!(vmtropy::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
+    assert!(lambdavm::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
 }
 ```
 

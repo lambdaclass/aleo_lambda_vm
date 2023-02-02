@@ -1,7 +1,7 @@
-use vmtropy::jaleo::UserInputValueType::U16;
+use lambdavm::jaleo::UserInputValueType::U16;
 
 fn main() {
-    use vmtropy::{build_program, execute_function};
+    use lambdavm::{build_program, execute_function};
 
     // Parse the program
     let program_string = std::fs::read_to_string("./programs/add/main.aleo").unwrap();
@@ -14,5 +14,5 @@ fn main() {
     let (_function_variables, proof) = execute_function(&program, &function, &user_inputs).unwrap();
     let (_proving_key, verifying_key) = build.get(&function).unwrap();
 
-    assert!(vmtropy::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
+    assert!(lambdavm::verify_proof(verifying_key.clone(), &user_inputs, &proof).unwrap())
 }

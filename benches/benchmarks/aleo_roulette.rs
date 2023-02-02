@@ -1,5 +1,5 @@
 cfg_if::cfg_if! {
-    if #[cfg(any(feature = "vmtropy_backend", feature = "snarkvm_backend", feature = "vmtropy_backend_flamegraph", feature = "snarkvm_backend_flamegraph"))] {
+    if #[cfg(any(feature = "lambdavm_backend", feature = "snarkvm_backend", feature = "lambdavm_backend_flamegraph", feature = "snarkvm_backend_flamegraph"))] {
         use super::{helpers::test_helpers, vm::{self, Program, Identifier, PrivateKey}};
         use ark_ff::UniformRand;
         use ark_relations::r1cs::ConstraintSystem;
@@ -7,8 +7,8 @@ cfg_if::cfg_if! {
         use criterion::{Criterion, BenchmarkId};
         use simpleworks::gadgets::ConstraintF;
         use snarkvm::prelude::Parser;
-        use vmtropy::jaleo;
-        use vmtropy::helpers::random_nonce;
+        use lambdavm::jaleo;
+        use lambdavm::helpers::random_nonce;
 
         const ALEO_ROULETTE_PROGRAM: &str = "programs/roulette.aleo";
         const PSD_HASH: &str = "psd_hash";
@@ -109,7 +109,7 @@ cfg_if::cfg_if! {
             let mut casino_token_record_data = jaleo::RecordEntriesMap::new();
             casino_token_record_data.insert(
                 "amount".to_owned(),
-                vmtropy::jaleo::UserInputValueType::U64(casino_token_record_amount),
+                lambdavm::jaleo::UserInputValueType::U64(casino_token_record_amount),
             );
             let casino_token_record_nonce = random_nonce();
 

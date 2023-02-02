@@ -1,12 +1,12 @@
 cfg_if::cfg_if! {
-    if #[cfg(any(feature = "vmtropy_backend", feature = "snarkvm_backend", feature = "vmtropy_backend_flamegraph", feature = "snarkvm_backend_flamegraph"))] {
+    if #[cfg(any(feature = "lambdavm_backend", feature = "snarkvm_backend", feature = "lambdavm_backend_flamegraph", feature = "snarkvm_backend_flamegraph"))] {
         use super::{helpers::test_helpers, vm::{self, Program, Identifier, PrivateKey}};
         use ark_relations::r1cs::ConstraintSystem;
         use criterion::{Criterion, BenchmarkId};
         use simpleworks::gadgets::ConstraintF;
         use snarkvm::prelude::Parser;
-        use vmtropy::jaleo;
-        use vmtropy::helpers::random_nonce;
+        use lambdavm::jaleo;
+        use lambdavm::helpers::random_nonce;
 
         const ALEO_CREDITS_PROGRAM: &str = "programs/credits.aleo";
         const GENESIS: &str = "genesis";

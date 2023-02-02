@@ -36,7 +36,7 @@ pub type Deployment = snarkvm::prelude::Deployment<Testnet3>;
 pub type Transition = snarkvm::prelude::Transition<Testnet3>;
 
 /// This struct is nothing more than a wrapper around the actual IndexMap that is used
-/// for the verifying keys map. Why does it exist? The problem comes from the vmtropy backend.
+/// for the verifying keys map. Why does it exist? The problem comes from the lambdavm backend.
 /// Arkworks' verifying keys do not implement the regular `Serialize`/`Deserialize` traits,
 /// as they use their own custom `CanonicalSerialize`/`CanonicalDeserialize` ones. To implement
 /// the regular `Serialize`/`Deserialize` traits, we wrapped the IndexMap around this struct.
@@ -76,32 +76,32 @@ pub fn generate_program(program_string: &str) -> Result<Program> {
 }
 
 fn user_input_value_to_aleo_value(
-    values: &[vmtropy::jaleo::UserInputValueType],
+    values: &[lambdavm::jaleo::UserInputValueType],
 ) -> Vec<Value<Testnet3>> {
     values
         .iter()
         .map(|value| match value {
-            vmtropy::jaleo::UserInputValueType::Address(address) => {
+            lambdavm::jaleo::UserInputValueType::Address(address) => {
                 let address = std::str::from_utf8(address).unwrap();
                 let address = Address::from_str(address).unwrap();
                 Value::Plaintext(Plaintext::from(Literal::Address(address)))
             }
-            vmtropy::jaleo::UserInputValueType::Boolean(boolean) => {
+            lambdavm::jaleo::UserInputValueType::Boolean(boolean) => {
                 Value::Plaintext(Plaintext::from(Literal::Boolean(Boolean::new(*boolean))))
             }
-            vmtropy::jaleo::UserInputValueType::U8(value) => {
+            lambdavm::jaleo::UserInputValueType::U8(value) => {
                 Value::Plaintext(Plaintext::from(Literal::U8(Integer::new(*value))))
             }
-            vmtropy::jaleo::UserInputValueType::U16(value) => {
+            lambdavm::jaleo::UserInputValueType::U16(value) => {
                 Value::Plaintext(Plaintext::from(Literal::U16(Integer::new(*value))))
             }
-            vmtropy::jaleo::UserInputValueType::U32(value) => {
+            lambdavm::jaleo::UserInputValueType::U32(value) => {
                 Value::Plaintext(Plaintext::from(Literal::U32(Integer::new(*value))))
             }
-            vmtropy::jaleo::UserInputValueType::U64(value) => {
+            lambdavm::jaleo::UserInputValueType::U64(value) => {
                 Value::Plaintext(Plaintext::from(Literal::U64(Integer::new(*value))))
             }
-            vmtropy::jaleo::UserInputValueType::Record(_record) => {
+            lambdavm::jaleo::UserInputValueType::Record(_record) => {
                 todo!()
             }
             _ => unreachable!("At least for the actual benchmarks"),
@@ -112,7 +112,7 @@ fn user_input_value_to_aleo_value(
 pub fn execute_function(
     program: &Program,
     function_name: &Identifier,
-    inputs: &[vmtropy::jaleo::UserInputValueType],
+    inputs: &[lambdavm::jaleo::UserInputValueType],
     private_key: &PrivateKey,
     _universal_srs: &UniversalSRS,
     _constraint_system: ConstraintSystemRef,

@@ -1,9 +1,9 @@
 use anyhow::{anyhow, bail, Result};
 use ark_serialize::CanonicalSerialize;
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
+use lambdavm::jaleo::UserInputValueType;
 use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
 use std::path::PathBuf;
-use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -15,7 +15,7 @@ struct Args {
 }
 
 fn main() -> Result<()> {
-    let matches = Command::new("vmtropy")
+    let matches = Command::new("lambdavm")
         .subcommand(
             Command::new("execute")
                 // Function to execute.
@@ -68,7 +68,7 @@ fn main() -> Result<()> {
             execute(&function_name, &program_string, &vec_user_inputs)
         }
         Some("generate_parameters") => {
-            let file_dir = vmtropy::universal_srs::generate_universal_srs_and_write_to_file()?;
+            let file_dir = lambdavm::universal_srs::generate_universal_srs_and_write_to_file()?;
             println!("Stored universal parameters under {file_dir:?}");
 
             Ok(())
@@ -94,7 +94,7 @@ fn execute(
     let (_, program) = Program::<Testnet3>::parse(&program_str).map_err(|e| anyhow!("{}", e))?;
 
     let (_compiled_function_variables, proof) =
-        vmtropy::execute_function(&program, function_name, &inputs_copy)?;
+        lambdavm::execute_function(&program, function_name, &inputs_copy)?;
 
     for (register, value) in _compiled_function_variables {
         println!(
