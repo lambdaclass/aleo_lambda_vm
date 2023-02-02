@@ -60,3 +60,18 @@ function hello_12:
     input r0 as u8.public;
     hash.psd2 r0 into r1;
     output r1 as field.private;
+
+function hello_13:
+    input r0 as i8.public;
+    hash.psd2 r0 into r1;
+    output r1 as field.public;
+
+function hello_14:
+    input r0 as i8.private;
+    hash.psd2 r0 into r1;
+    output r1 as field.private;
+
+function hello_15:
+    input r0 as i8.public;
+    hash.psd2 r0 into r1;
+    output r1 as field.private;

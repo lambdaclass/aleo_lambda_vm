@@ -133,3 +133,36 @@ function hello_12:
     assert.neq r0 r4;
     output r2 as u8.public;
     output r3 as u8.public;
+
+function hello_13:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    is.eq r0 r1 into r2;
+    is.neq r0 r1 into r3;
+    assert.eq r0 r1;
+    add r0 1i8 into r4;
+    assert.neq r0 r4;
+    output r2 as i8.public;
+    output r3 as i8.public;
+
+function hello_14:
+    input r0 as i8.private;
+    input r1 as i8.private;
+    is.eq r0 r1 into r2;
+    is.neq r0 r1 into r3;
+    assert.eq r0 r1;
+    add r0 1i8 into r4;
+    assert.neq r0 r4;
+    output r2 as i8.private;
+    output r3 as i8.private;
+
+function hello_15:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    is.eq r0 r1 into r2;
+    is.neq r0 r1 into r3;
+    assert.eq r0 r1;
+    add r0 1i8 into r4;
+    assert.neq r0 r4;
+    output r2 as i8.public;
+    output r3 as i8.public;

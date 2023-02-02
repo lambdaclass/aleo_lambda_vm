@@ -54,3 +54,21 @@ function hello_9:
     input r1 as u64.public;
     add r0 r1 into r2;
     output r2 as u64.private;
+
+function hello_10:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    add r0 r1 into r2;
+    output r2 as i8.public;
+
+function hello_11:
+    input r0 as i8.private;
+    input r1 as i8.private;
+    add r0 r1 into r2;
+    output r2 as i8.private;
+
+function hello_12:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    add r0 r1 into r2;
+    output r2 as i8.private;

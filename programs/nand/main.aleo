@@ -90,3 +90,21 @@ function hello_15:
     input r1 as u64.public;
     nand r0 r1 into r2;
     output r2 as u64.private;
+
+function hello_16:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    nand r0 r1 into r2;
+    output r2 as i8.public;
+
+function hello_17:
+    input r0 as i8.private;
+    input r1 as i8.private;
+    nand r0 r1 into r2;
+    output r2 as i8.private;
+
+function hello_18:
+    input r0 as i8.public;
+    input r1 as i8.public;
+    nand r0 r1 into r2;
+    output r2 as i8.private;
