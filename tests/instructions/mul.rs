@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod mul_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::{Parser, Program, Testnet3};
     use lambdavm::jaleo::UserInputValueType::{U16, U32, U64, U8};
+    use snarkvm::prelude::{Parser, Program, Testnet3};
 
     #[test]
     fn test_mul_with_u8_public_inputs() {

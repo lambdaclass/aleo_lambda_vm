@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod add_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::Parser;
     use lambdavm::jaleo::{
         Program,
         UserInputValueType::{U16, U32, U64},
     };
+    use snarkvm::prelude::Parser;
 
     #[test]
     fn test_add_with_u16_public_inputs() {

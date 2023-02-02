@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod compare_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::Parser;
     use lambdavm::{
         helpers::random_nonce,
         jaleo::{
@@ -9,6 +8,7 @@ mod compare_tests {
             UserInputValueType::{Record, U16, U32, U64},
         },
     };
+    use snarkvm::prelude::Parser;
 
     #[test]
     fn compare_with_u16_public_inputs() {

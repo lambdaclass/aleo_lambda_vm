@@ -3,8 +3,6 @@ mod helpers;
 #[cfg(test)]
 mod marlin_tests {
     use super::helpers::test_helpers;
-    use snarkvm::prelude::Parser;
-    use std::str::FromStr;
     use lambdavm::{
         build_program,
         jaleo::{
@@ -13,6 +11,8 @@ mod marlin_tests {
         },
         verify_proof,
     };
+    use snarkvm::prelude::Parser;
+    use std::str::FromStr;
 
     #[test]
     fn test_add() {

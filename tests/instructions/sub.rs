@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod sub_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::Parser;
     use lambdavm::{
         helpers,
         jaleo::{
@@ -9,6 +8,7 @@ mod sub_tests {
             UserInputValueType::{Record, U16, U32, U64},
         },
     };
+    use snarkvm::prelude::Parser;
 
     #[test]
     fn test_subtract_with_u16_public_inputs() {

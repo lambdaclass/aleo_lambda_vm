@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod ternary_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::Parser;
     use lambdavm::jaleo::{
         Program,
         UserInputValueType::{U16, U32, U64, U8},
     };
+    use snarkvm::prelude::Parser;
 
     #[test]
     fn test_ternary_with_u8_public_inputs_true_value() {

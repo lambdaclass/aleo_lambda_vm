@@ -1,9 +1,9 @@
 use anyhow::{anyhow, bail, Result};
-use clap::{Arg, ArgAction, Command, Parser, ValueHint};
-use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
 use ark_serialize::CanonicalSerialize;
-use std::path::PathBuf;
+use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use lambdavm::jaleo::UserInputValueType;
+use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

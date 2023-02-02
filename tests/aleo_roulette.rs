@@ -5,12 +5,12 @@ mod aleo_roulette_functions_tests {
 
     use crate::helpers::test_helpers;
     use ark_r1cs_std::R1CSVar;
-    use simpleworks::marlin::MarlinProof;
-    use snarkvm::prelude::Parser;
     use lambdavm::{
         helpers,
         jaleo::{self, Identifier, Program, UserInputValueType},
     };
+    use simpleworks::marlin::MarlinProof;
+    use snarkvm::prelude::Parser;
 
     const ALEO_ROULETTE_PROGRAM_DIR: &str = "programs/roulette.aleo";
     const RECORDS_PROGRAM_DIR: &str = "programs/records.aleo";

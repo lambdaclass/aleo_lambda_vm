@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod nor_tests {
     use crate::helpers::test_helpers;
-    use snarkvm::prelude::{Parser, Program, Testnet3};
     use lambdavm::jaleo::UserInputValueType::{Boolean, U16, U32, U64, U8};
+    use snarkvm::prelude::{Parser, Program, Testnet3};
 
     #[test]
     fn test_nor_with_bool_public_inputs() {

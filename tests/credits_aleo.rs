@@ -6,8 +6,8 @@ mod credits_functions_tests {
 
     use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
     use ark_r1cs_std::R1CSVar;
-    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
     use lambdavm::{helpers, jaleo, VMRecordEntriesMap};
+    use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
 
     #[ctor::ctor]
     fn init() {
@@ -205,7 +205,10 @@ mod credits_functions_tests {
 
         // Sender's address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
-        assert!(matches!(r0_owner, lambdavm::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(
+            r0_owner,
+            lambdavm::CircuitIOType::SimpleAddress(_)
+        ));
         assert_eq!(r1.value().unwrap(), receiver_address_string);
 
         // Receiver's output record.
@@ -332,7 +335,10 @@ mod credits_functions_tests {
 
         // First record address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
-        assert!(matches!(r0_owner, lambdavm::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(
+            r0_owner,
+            lambdavm::CircuitIOType::SimpleAddress(_)
+        ));
         assert_eq!(r0_owner.value().unwrap(), address_string);
 
         // Receiver's output record.
