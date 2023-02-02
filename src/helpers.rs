@@ -79,6 +79,11 @@ pub(crate) fn default_user_inputs(
             | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
                 UserInputValueType::U128(u128::default())
             }
+            //Int
+            ValueType::Public(PlaintextType::Literal(LiteralType::I8))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::I8)) => {
+                UserInputValueType::I8(i8::default())
+            }
             // Address
             ValueType::Public(PlaintextType::Literal(LiteralType::Address))
             | ValueType::Private(PlaintextType::Literal(LiteralType::Address)) => {
@@ -159,6 +164,11 @@ pub fn aleo_entries_to_vm_entries(
             | EntryType::Public(PlaintextType::Literal(LiteralType::U128))
             | EntryType::Private(PlaintextType::Literal(LiteralType::U128)) => {
                 UserInputValueType::U128(u128::default())
+            }
+            EntryType::Constant(PlaintextType::Literal(LiteralType::I8))
+            | EntryType::Public(PlaintextType::Literal(LiteralType::I8))
+            | EntryType::Private(PlaintextType::Literal(LiteralType::I8)) => {
+                UserInputValueType::I8(i8::default())
             }
             EntryType::Constant(PlaintextType::Literal(l))
             | EntryType::Public(PlaintextType::Literal(l))
@@ -343,13 +353,6 @@ pub(crate) fn process_inputs(
                 || Ok(v),
             )?),
             (
-                ValueType::Public(PlaintextType::Literal(LiteralType::I8)),
-                UserInputValueType::I8(v),
-            ) => SimpleInt8(Int8Gadget::new_input(
-                Namespace::new(cs.clone(), None),
-                || Ok(v),
-            )?),
-            (
                 ValueType::Public(PlaintextType::Literal(LiteralType::U16)),
                 UserInputValueType::U16(v),
             ) => SimpleUInt16(UInt16Gadget::new_input(
@@ -367,6 +370,14 @@ pub(crate) fn process_inputs(
                 ValueType::Public(PlaintextType::Literal(LiteralType::U64)),
                 UserInputValueType::U64(v),
             ) => SimpleUInt64(UInt64Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
+            // Public Int
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::I8)),
+                UserInputValueType::I8(v),
+            ) => SimpleInt8(Int8Gadget::new_input(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
@@ -423,6 +434,14 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
+            // Private Int
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::I8)),
+                UserInputValueType::I8(v),
+            ) => SimpleInt8(Int8Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
             // Private Address
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::Address)),
@@ -454,14 +473,16 @@ pub(crate) fn process_inputs(
                     | LiteralType::U64
                     | LiteralType::U32
                     | LiteralType::U16
-                    | LiteralType::U8,
+                    | LiteralType::U8
+                    | LiteralType::I8,
                 ))
                 | ValueType::Public(PlaintextType::Literal(
                     LiteralType::Address
                     | LiteralType::U64
                     | LiteralType::U32
                     | LiteralType::U16
-                    | LiteralType::U8,
+                    | LiteralType::U8
+                    | LiteralType::I8,
                 )),
                 _,
             ) => {
@@ -754,6 +775,13 @@ pub fn process_operands(
             (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
                 "Literal \"{}\"u64 not assigned in registers",
                 Operand::Literal(Literal::U64(*v))
+            ),
+            (Operand::Literal(Literal::I8(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}i8", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::I8(v)), Some(None)) => bail!(
+                "Literal \"{}\"i8 not assigned in registers",
+                Operand::Literal(Literal::I8(*v))
             ),
             (Operand::Literal(_), _) => bail!("Literal operand not supported"),
             (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),
