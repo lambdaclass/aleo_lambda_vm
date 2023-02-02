@@ -181,23 +181,26 @@ pub fn process_circuit_outputs(
 ) -> Result<CircuitOutputType> {
     let mut circuit_outputs = IndexMap::new();
     function.outputs().iter().try_for_each(|o| {
-        let register = o.register().to_string();
-        let register_split: Vec<&str> = register.split('.').collect();
+        let register_identifier = o.register().to_string();
+        // output can be of the form 'r7.owner', so split and get the first section
+        let register_split: Vec<&str> = register_identifier.split('.').collect();
+
         ensure!(
             register_split.len() <= 2,
-            "Output field {register} was not specified correctly"
+            "Output field {register_identifier} was not specified correctly"
         );
+
         let register_variable = match register_split.first() {
             Some(register_variable) => register_variable,
             None => {
                 return Err(anyhow!(
-                    "Could not get the variable in Output field: {register}"
+                    "Could not get the variable in Output field: {register_identifier}"
                 ))
             }
         };
         let program_variable = program_variables
             .get(*register_variable)
-            .ok_or_else(|| anyhow!("Register \"{register}\" not found"))
+            .ok_or_else(|| anyhow!("Register \"{register_variable}\" not found"))
             .and_then(|r| {
                 // if desired output is a record field (ie `output r0.gates as u64.public`),
                 // get the field; get the whole register otherwise
@@ -215,10 +218,11 @@ pub fn process_circuit_outputs(
                     }
                     _ => r.clone(),
                 };
-                register_value.ok_or_else(|| anyhow!("Register \"{register}\" not assigned"))
+                register_value
+                    .ok_or_else(|| anyhow!("Register \"{register_identifier}\" not assigned"))
             })?;
 
-        circuit_outputs.insert(register, {
+        circuit_outputs.insert(register_identifier, {
             if program_variable.is_witness()? {
                 match program_variable {
                     SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),

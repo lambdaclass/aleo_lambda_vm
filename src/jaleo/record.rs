@@ -394,8 +394,7 @@ mod tests {
         assert_eq!(
             record_string,
             format!(
-                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{}\"}}",
-                nonce_as_string,
+                "{{\"owner\":\"{address_string}\",\"gates\":\"{gates}u64\",\"data\":{{}},\"nonce\":\"{nonce_as_string}\"}}",
             )
         );
     }

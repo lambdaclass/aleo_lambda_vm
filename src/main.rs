@@ -1,10 +1,8 @@
 use anyhow::{anyhow, bail, Result};
-use ark_serialize::{CanonicalSerialize, Write};
+use ark_serialize::CanonicalSerialize;
 use clap::{Arg, ArgAction, Command, Parser, ValueHint};
 use snarkvm::prelude::{Parser as AleoParser, Program, Testnet3};
-use std::fs;
 use std::path::PathBuf;
-use vmtropy::generate_universal_srs;
 use vmtropy::jaleo::UserInputValueType;
 
 #[derive(Parser, Debug)]
@@ -70,28 +68,7 @@ fn main() -> Result<()> {
             execute(&function_name, &program_string, &vec_user_inputs)
         }
         Some("generate_parameters") => {
-            let universal_srs = generate_universal_srs()?;
-
-            let mut bytes = Vec::new();
-            universal_srs.serialize(&mut bytes).unwrap();
-
-            let parameters_dir = dirs::home_dir()
-                .ok_or_else(|| anyhow!("Home dir not found. Set a home directory"))?
-                .join(".vmtropy");
-            let file_dir = parameters_dir.join("universal_srs");
-            fs::create_dir_all(parameters_dir)?;
-
-            let mut file = std::fs::OpenOptions::new()
-                // create or open if it already exists
-                .create(true)
-                .write(true)
-                // Overwrite file, do not append
-                .append(false)
-                .open(&file_dir)?;
-
-            // This let is so clippy doesn't complain
-            let _written_amount = file.write(&bytes)?;
-
+            let file_dir = vmtropy::universal_srs::generate_universal_srs_and_write_to_file()?;
             println!("Stored universal parameters under {file_dir:?}");
 
             Ok(())

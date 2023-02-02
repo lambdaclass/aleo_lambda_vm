@@ -9,6 +9,12 @@ mod credits_functions_tests {
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
     use vmtropy::{helpers, jaleo, VMRecordEntriesMap};
 
+    #[ctor::ctor]
+    fn init() {
+        // generate universal srs file before running tests
+        let _ = vmtropy::universal_srs::generate_universal_srs_and_write_to_file();
+    }
+
     #[test]
     fn test_genesis() {
         let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
