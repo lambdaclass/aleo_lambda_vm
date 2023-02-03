@@ -47,21 +47,22 @@ use simpleworks::{
 use snarkvm::prelude::{Function, Parser, Program, Testnet3};
 use std::cell::RefCell;
 use std::rc::Rc;
-
-pub use snarkvm;
+use universal_srs::load_universal_srs_from_file;
 
 mod circuit_io_type;
 pub use circuit_io_type::CircuitIOType;
+
 pub mod helpers;
 pub mod instructions;
 pub mod jaleo;
 mod record;
 pub use record::{Record, VMRecordEntriesMap};
-mod variable_type;
 pub use variable_type::VariableType;
 mod program_build;
 pub use program_build::ProgramBuild;
 pub use simpleworks::marlin::generate_rand;
+pub mod universal_srs;
+pub mod variable_type;
 
 pub type CircuitOutputType = IndexMap<String, variable_type::VariableType>;
 pub type CircuitInputType = IndexMap<String, variable_type::VariableType>;
@@ -117,10 +118,7 @@ pub fn execute_function(
 /// Builds a program, which means generating the proving and verifying keys
 /// for each function in the program.
 pub fn build_program(program_string: &str) -> Result<(Program<Testnet3>, ProgramBuild)> {
-    let mut rng = simpleworks::marlin::generate_rand();
-    let universal_srs =
-        simpleworks::marlin::generate_universal_srs(100000, 25000, 300000, &mut rng)?;
-
+    let universal_srs = load_universal_srs_from_file()?;
     let (_, program) = Program::<Testnet3>::parse(program_string).map_err(|e| anyhow!("{}", e))?;
 
     let mut program_build = ProgramBuild {

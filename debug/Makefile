@@ -2,7 +2,7 @@ build:
 	cargo build --release
 
 valgrind: build
-	valgrind --leak-check=full --show-reachable=yes --log-file="${OUTDIR}valgrind.${FN}.txt" ./target/release/vmtropy_debug --f ${FN} 
+	valgrind --leak-check=full --show-reachable=yes --log-file="${OUTDIR}valgrind.${FN}.txt" ./target/release/lambdavm_debug --f ${FN} 
 
 valgrind-full: build
 	./valgrind-full.sh

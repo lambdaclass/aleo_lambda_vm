@@ -6,8 +6,14 @@ mod credits_functions_tests {
 
     use crate::helpers::test_helpers::{self, vm_record_entries_are_equal};
     use ark_r1cs_std::R1CSVar;
+    use lambdavm::{helpers, jaleo, VMRecordEntriesMap};
     use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-    use vmtropy::{helpers, jaleo, VMRecordEntriesMap};
+
+    #[ctor::ctor]
+    fn init() {
+        // generate universal srs file before running tests
+        let _ = lambdavm::universal_srs::generate_universal_srs_and_write_to_file();
+    }
 
     #[test]
     fn test_genesis() {
@@ -27,7 +33,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -38,18 +44,18 @@ mod credits_functions_tests {
 
         // Address.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleAddress(_)));
         assert_eq!(r0.value().unwrap(), address_string);
 
         // Genesis credits.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r1.value().unwrap(), genesis_credits.to_string());
 
         // Genesis output record.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), genesis_credits);
             assert!(vm_record_entries_are_equal(
@@ -59,13 +65,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let genesis_identifier = Identifier::from_str("genesis").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&genesis_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -85,7 +91,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, "mint", &user_inputs).unwrap();
+            lambdavm::execute_function(&program, "mint", &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -96,18 +102,18 @@ mod credits_functions_tests {
 
         // Address.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleAddress(_)));
         assert_eq!(r0.value().unwrap(), address_string);
 
         // Credits to mint.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r1.value().unwrap(), credits_to_mint.to_string());
 
         // Minted output record.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), credits_to_mint);
             assert!(vm_record_entries_are_equal(
@@ -117,13 +123,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let mint_identifier = Identifier::from_str("mint").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&mint_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -151,7 +157,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, "transfer", &user_inputs).unwrap();
+            lambdavm::execute_function(&program, "transfer", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r2", "r0.gates", "r3", "r0.owner", "r4", "r5"];
@@ -163,8 +169,8 @@ mod credits_functions_tests {
 
         // Sender's input record.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), sender_address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
             assert!(vm_record_entries_are_equal(
@@ -176,22 +182,22 @@ mod credits_functions_tests {
 
         // Receiver's address.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleAddress(_)));
         assert_eq!(r1.value().unwrap(), receiver_address_string);
 
         // Amount to transfer.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r2.value().unwrap(), amount_to_transfer.to_string());
 
         // Sender's record gates.
         let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
-        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0_gates, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0_gates.value().unwrap(), initial_balance.to_string());
 
         // Sender's new balance.
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(
             r3.value().unwrap(),
             (initial_balance - amount_to_transfer).to_string()
@@ -199,13 +205,16 @@ mod credits_functions_tests {
 
         // Sender's address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
-        assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(
+            r0_owner,
+            lambdavm::CircuitIOType::SimpleAddress(_)
+        ));
         assert_eq!(r1.value().unwrap(), receiver_address_string);
 
         // Receiver's output record.
         let r4 = function_variables["r4"].as_ref().unwrap();
-        assert!(matches!(r4, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r4 {
+        assert!(matches!(r4, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r4 {
             assert_eq!(record.owner.value().unwrap(), receiver_address_string);
             assert_eq!(record.gates.value().unwrap(), amount_to_transfer);
             assert!(vm_record_entries_are_equal(
@@ -217,8 +226,8 @@ mod credits_functions_tests {
 
         // Sender's output record.
         let r5 = function_variables["r5"].as_ref().unwrap();
-        assert!(matches!(r5, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r5 {
+        assert!(matches!(r5, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r5 {
             assert_eq!(record.owner.value().unwrap(), sender_address_string);
             assert_eq!(
                 record.gates.value().unwrap(),
@@ -231,13 +240,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, ConstraintF::default());
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let transfer_identifier = Identifier::from_str("transfer").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&transfer_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -270,7 +279,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, "combine", &user_inputs).unwrap();
+            lambdavm::execute_function(&program, "combine", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r1.gates", "r2", "r0.owner", "r3"];
@@ -282,8 +291,8 @@ mod credits_functions_tests {
 
         // First input record.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
             assert!(vm_record_entries_are_equal(
@@ -295,8 +304,8 @@ mod credits_functions_tests {
 
         // Second input record.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r1 {
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r1 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
             assert!(vm_record_entries_are_equal(
@@ -308,17 +317,17 @@ mod credits_functions_tests {
 
         // First record gates.
         let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
-        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0_gates, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r0_gates.value().unwrap(), initial_balance.to_string());
 
         // Second record gates.
         let r1_gates = function_variables["r1.gates"].as_ref().unwrap();
-        assert!(matches!(r1_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r1_gates, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r1_gates.value().unwrap(), initial_balance.to_string());
 
         // Amount to transfer.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(
             r2.value().unwrap(),
             (initial_balance + initial_balance).to_string()
@@ -326,13 +335,16 @@ mod credits_functions_tests {
 
         // First record address.
         let r0_owner = function_variables["r0.owner"].as_ref().unwrap();
-        assert!(matches!(r0_owner, vmtropy::CircuitIOType::SimpleAddress(_)));
+        assert!(matches!(
+            r0_owner,
+            lambdavm::CircuitIOType::SimpleAddress(_)
+        ));
         assert_eq!(r0_owner.value().unwrap(), address_string);
 
         // Receiver's output record.
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r3 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(
                 record.gates.value().unwrap(),
@@ -346,13 +358,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, second_record_nonce);
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let combine_identifier = Identifier::from_str("combine").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&combine_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -379,7 +391,7 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, "split", &user_inputs).unwrap();
+            lambdavm::execute_function(&program, "split", &user_inputs).unwrap();
 
         let expected_function_variables =
             vec!["r0", "r1", "r0.gates", "r2", "r0.owner", "r3", "r4"];
@@ -391,8 +403,8 @@ mod credits_functions_tests {
 
         // Record to split.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), gates_of_existing_record);
             assert!(vm_record_entries_are_equal(
@@ -404,12 +416,12 @@ mod credits_functions_tests {
 
         // Amount to split.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r1.value().unwrap(), gates_for_new_record.to_string());
 
         // Record to split gates.
         let r0_gates = function_variables["r0.gates"].as_ref().unwrap();
-        assert!(matches!(r0_gates, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r0_gates, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(
             r0_gates.value().unwrap(),
             gates_of_existing_record.to_string()
@@ -417,7 +429,7 @@ mod credits_functions_tests {
 
         // Second new record balance.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(
             r2.value().unwrap(),
             (gates_of_existing_record - gates_for_new_record).to_string()
@@ -425,8 +437,8 @@ mod credits_functions_tests {
 
         // First new record.
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r3 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), gates_for_new_record);
             assert!(vm_record_entries_are_equal(
@@ -438,8 +450,8 @@ mod credits_functions_tests {
 
         // Second new record.
         let r4 = function_variables["r4"].as_ref().unwrap();
-        assert!(matches!(r4, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r4 {
+        assert!(matches!(r4, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r4 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(
                 record.gates.value().unwrap(),
@@ -452,13 +464,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, nonce);
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let split_identifier = Identifier::from_str("split").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&split_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 
@@ -485,12 +497,12 @@ mod credits_functions_tests {
         ];
 
         let (function_variables, proof) =
-            vmtropy::execute_function(&program, "fee", &user_inputs).unwrap();
+            lambdavm::execute_function(&program, "fee", &user_inputs).unwrap();
 
         // Input record.
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r0 {
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r0 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance);
             assert!(vm_record_entries_are_equal(
@@ -502,18 +514,18 @@ mod credits_functions_tests {
 
         // Fee.
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r1.value().unwrap(), fee.to_string());
 
         // Output record balance.
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleUInt64(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleUInt64(_)));
         assert_eq!(r2.value().unwrap(), (initial_balance - fee).to_string());
 
         // Output record.
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleRecord(_)));
-        if let vmtropy::CircuitIOType::SimpleRecord(record) = r3 {
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleRecord(_)));
+        if let lambdavm::CircuitIOType::SimpleRecord(record) = r3 {
             assert_eq!(record.owner.value().unwrap(), address_string);
             assert_eq!(record.gates.value().unwrap(), initial_balance - fee);
             assert!(vm_record_entries_are_equal(
@@ -523,13 +535,13 @@ mod credits_functions_tests {
             // assert_ne!(record.nonce, nonce);
         }
 
-        let (_program, program_build) = vmtropy::build_program(&program_string).unwrap();
+        let (_program, program_build) = lambdavm::build_program(&program_string).unwrap();
         let fee_identifier = Identifier::from_str("fee").unwrap();
         let (_function_proving_key, function_verifying_key) =
             program_build.map.get(&fee_identifier).unwrap();
         let public_inputs = [];
         assert!(
-            vmtropy::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
+            lambdavm::verify_proof(function_verifying_key.clone(), &public_inputs, &proof).unwrap()
         )
     }
 }

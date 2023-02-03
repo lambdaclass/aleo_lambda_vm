@@ -37,7 +37,7 @@ do
     ANALYSIS="reports/heaptrack/analysis/${FILE_PREFIX}"
     echo "Heaptracking ${test}"
     # Runs the process and starts the heaptrack.
-    ./target/release/vmtropy_debug --f ${test} & heaptrack -o "${OUTFILE}" -p $!
+    ./target/release/lambdavm_debug --f ${test} & heaptrack -o "${OUTFILE}" -p $!
     # Analyze the file.
     heaptrack -a "${OUTFILE}.gz" > ${ANALYSIS}.txt
     echo "Heaptracked ${test}"

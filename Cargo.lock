@@ -944,6 +944,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctor"
+version = "0.1.26"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d2301688392eb071b0bf1a37be05c469d3cc4dbbd95df672fe28ab021e6a096"
+dependencies = [
+ "quote 1.0.23",
+ "syn 1.0.107",
+]
+
+[[package]]
 name = "ctr"
 version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1649,6 +1659,53 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3afef3b6eff9ce9d8ff9b3601125eec7f0c8cbac7abd14f355d053fa56c98768"
 dependencies = [
  "cpufeatures",
+]
+
+[[package]]
+name = "lambdavm"
+version = "0.1.0"
+dependencies = [
+ "aes",
+ "aes-gcm",
+ "anyhow",
+ "ark-bls12-381",
+ "ark-crypto-primitives",
+ "ark-ec",
+ "ark-ed-on-bls12-381",
+ "ark-ff",
+ "ark-marlin 0.3.0 (git+https://github.com/Entropy1729/marlin.git?branch=impl_debug_for_vk)",
+ "ark-poly",
+ "ark-poly-commit",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "ark-snark",
+ "ark-std",
+ "bincode",
+ "blake2",
+ "cfg-if",
+ "clap 4.1.4",
+ "criterion",
+ "ctor",
+ "derivative",
+ "digest 0.9.0",
+ "dirs",
+ "hex",
+ "hkdf",
+ "indexmap",
+ "log",
+ "parking_lot",
+ "pprof",
+ "rand",
+ "rand_chacha",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sha3",
+ "simpleworks",
+ "snarkvm",
+ "tracing",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -3694,52 +3751,6 @@ name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
-
-[[package]]
-name = "vmtropy"
-version = "0.1.0"
-dependencies = [
- "aes",
- "aes-gcm",
- "anyhow",
- "ark-bls12-381",
- "ark-crypto-primitives",
- "ark-ec",
- "ark-ed-on-bls12-381",
- "ark-ff",
- "ark-marlin 0.3.0 (git+https://github.com/Entropy1729/marlin.git?branch=impl_debug_for_vk)",
- "ark-poly",
- "ark-poly-commit",
- "ark-r1cs-std",
- "ark-relations",
- "ark-serialize",
- "ark-snark",
- "ark-std",
- "bincode",
- "blake2",
- "cfg-if",
- "clap 4.1.4",
- "criterion",
- "derivative",
- "digest 0.9.0",
- "dirs",
- "hex",
- "hkdf",
- "indexmap",
- "log",
- "parking_lot",
- "pprof",
- "rand",
- "rand_chacha",
- "serde",
- "serde_json",
- "sha2",
- "sha3",
- "simpleworks",
- "snarkvm",
- "tracing",
- "tracing-subscriber 0.2.25",
-]
 
 [[package]]
 name = "walkdir"

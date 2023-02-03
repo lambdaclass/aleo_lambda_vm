@@ -1,5 +1,5 @@
 [package]
-name = "vmtropy"
+name = "lambdavm"
 version = "0.1.0"
 edition = "2021"
 
@@ -70,6 +70,7 @@ debug-assertions = false
 
 [dev-dependencies]
 rand = "0.8"
+ctor = "0.1.26"
 parking_lot = "0.12"
 cfg-if = "1"
 
@@ -93,6 +94,6 @@ harness = false
 [features]
 snarkvm_backend_flamegraph = ["benchmark_flamegraph"]
 snarkvm_backend = []
-vmtropy_backend_flamegraph = ["benchmark_flamegraph"]
-vmtropy_backend = []
+lambdavm_backend_flamegraph = ["benchmark_flamegraph"]
+lambdavm_backend = []
 benchmark_flamegraph = []

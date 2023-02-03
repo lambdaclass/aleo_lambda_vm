@@ -1,5 +1,5 @@
 [package]
-name = "vmtropy_debug"
+name = "lambdavm_debug"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,7 +10,7 @@ debug-assertions = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-vmtropy = { path = "../" }
+lambdavm = { path = "../" }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 ark-r1cs-std = { version = "^0.3.0", default-features = false }

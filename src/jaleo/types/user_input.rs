@@ -231,7 +231,7 @@ mod tests {
             nonce: Some(nonce),
         });
         let out = format!("{v}");
-        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{}\"}}", nonce));
+        assert_eq!(out, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"1u64\",\"entries\":{{}},\"nonce\":\"{nonce}\"}}"));
     }
 
     /* Deserialize Tests */
@@ -382,7 +382,7 @@ mod tests {
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{}\"}}", nonce));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{}},\"nonce\":\"{nonce}\"}}"));
     }
 
     #[test]
@@ -409,7 +409,7 @@ mod tests {
 
         let v = serde_json::to_string(&data).unwrap();
 
-        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{}\"}}", nonce));
+        assert_eq!(v, format!("{{\"owner\":\"aleo1ecw94zggphqkpdsjhfjutr9p33nn9tk2d34tz23t29awtejupugq4vne6m\",\"gates\":\"0u64\",\"data\":{{\"amount\":\"0u64\"}},\"nonce\":\"{nonce}\"}}"));
     }
 
     #[test]

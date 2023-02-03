@@ -4,7 +4,7 @@ use clap::Parser as ClapParser;
 use clap::{Arg, ArgAction, Command};
 use simpleworks::types::value::SimpleworksValueType::{Address, Record, U128, U16, U32, U64};
 use snarkvm::prelude::{Identifier, Parser, Program, Testnet3};
-use vmtropy::circuit_io_type::SimpleRecord;
+use lambdavm::circuit_io_type::SimpleRecord;
 
 #[derive(ClapParser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -82,7 +82,7 @@ fn test01_add_with_u16_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -109,7 +109,7 @@ fn test02_add_with_u16_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -136,7 +136,7 @@ fn test03_add_with_u16_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -163,7 +163,7 @@ fn test04_add_with_u32_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -190,7 +190,7 @@ fn test05_add_with_u32_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -217,7 +217,7 @@ fn test06_add_with_u32_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -244,7 +244,7 @@ fn test07_add_with_u64_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -271,7 +271,7 @@ fn test08_add_with_u64_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -298,7 +298,7 @@ fn test09_add_with_u64_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -325,7 +325,7 @@ fn test_subtract_with_u16_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -352,7 +352,7 @@ fn test_subtract_with_u16_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -379,7 +379,7 @@ fn test_subtract_with_u16_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -406,7 +406,7 @@ fn test_subtract_with_u32_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -433,7 +433,7 @@ fn test_subtract_with_u32_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -460,7 +460,7 @@ fn test_subtract_with_u32_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -487,7 +487,7 @@ fn test_subtract_with_u64_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -514,7 +514,7 @@ fn test_subtract_with_u64_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -541,7 +541,7 @@ fn test_subtract_with_u64_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -569,7 +569,7 @@ fn test_subtract_with_u128_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -597,7 +597,7 @@ fn test_subtract_with_u128_private_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -625,7 +625,7 @@ fn test_subtract_with_u128_private_and_public_inputs() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -650,7 +650,7 @@ fn test_record_add() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -675,7 +675,7 @@ fn test_record_subtract() {
 
     // execute circuit
     let (ret_ok, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
     assert!(ret_ok);
 
     for (register, output) in circuit_outputs {
@@ -709,7 +709,7 @@ fn test_genesis() {
     let user_inputs = vec![Address(address_bytes), U64(1)];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     let expected_output_register_locator = &"r2".to_string();
     assert!(constraint_system_is_satisfied);
@@ -735,7 +735,7 @@ fn test_mint() {
     let user_inputs = vec![Address(address_bytes), U64(1)];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     let expected_output_register_locator = &"r2".to_string();
     assert!(constraint_system_is_satisfied);
@@ -767,7 +767,7 @@ fn test_transfer() {
     ];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     let receiver_record_output_register = &"r4".to_string();
     let sender_record_output_register = &"r5".to_string();
@@ -823,7 +823,7 @@ fn test_combine() {
     let user_inputs = vec![Record(address_bytes, amount), Record(address_bytes, amount)];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     let expected_output_register_locator = &"r3".to_string();
 
@@ -855,7 +855,7 @@ fn test_split() {
     ];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     assert!(constraint_system_is_satisfied);
     assert_eq!(circuit_outputs.len(), 2, "Two output records were expected");
@@ -907,7 +907,7 @@ fn test_fee() {
     let user_inputs = vec![Record(address_bytes, amount), U64(fee)];
 
     let (constraint_system_is_satisfied, circuit_outputs, _bytes_proof) =
-        vmtropy::execute_function(function, &user_inputs).unwrap();
+        lambdavm::execute_function(function, &user_inputs).unwrap();
 
     assert!(constraint_system_is_satisfied);
     assert_eq!(circuit_outputs.len(), 1, "One output records was expected");
