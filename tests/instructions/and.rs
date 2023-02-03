@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod and_tests {
     use crate::helpers::test_helpers;
+    use lambdavm::jaleo::UserInputValueType::{Boolean, I8, U16, U32, U64, U8};
     use snarkvm::prelude::{Parser, Program, Testnet3};
-    use lambdavm::jaleo::UserInputValueType::{Boolean, U16, U32, U64, U8, I8};
 
     #[test]
     fn test_and_with_bool_public_inputs() {
