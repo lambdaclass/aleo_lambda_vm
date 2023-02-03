@@ -546,7 +546,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -556,15 +556,15 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "1".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "true".to_owned());
     }
 
@@ -587,7 +587,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -597,19 +597,19 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "1".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r3.value().unwrap(), r0.value().unwrap());
     }
 
@@ -632,7 +632,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -642,19 +642,19 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "1".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "true".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r3.value().unwrap(), r0.value().unwrap());
     }
 
@@ -1197,7 +1197,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -1207,15 +1207,15 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "2".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "false".to_owned());
     }
 
@@ -1238,7 +1238,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -1248,19 +1248,19 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "2".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "false".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r3.value().unwrap(), r1.value().unwrap());
     }
 
@@ -1283,7 +1283,7 @@ mod ternary_tests {
 
         // execute circuit
         let (function_variables, _proof) =
-            vmtropy::execute_function(&program, function_name, &user_inputs).unwrap();
+            lambdavm::execute_function(&program, function_name, &user_inputs).unwrap();
 
         let expected_function_variables = vec!["r0", "r1", "r2"];
         for (register, expected_register) in
@@ -1293,19 +1293,19 @@ mod ternary_tests {
         }
 
         let r0 = function_variables["r0"].as_ref().unwrap();
-        assert!(matches!(r0, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r0, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r0.value().unwrap(), "1".to_owned());
 
         let r1 = function_variables["r1"].as_ref().unwrap();
-        assert!(matches!(r1, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r1, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r1.value().unwrap(), "2".to_owned());
 
         let r2 = function_variables["r2"].as_ref().unwrap();
-        assert!(matches!(r2, vmtropy::CircuitIOType::SimpleBoolean(_)));
+        assert!(matches!(r2, lambdavm::CircuitIOType::SimpleBoolean(_)));
         assert_eq!(r2.value().unwrap(), "false".to_owned());
 
         let r3 = function_variables["r3"].as_ref().unwrap();
-        assert!(matches!(r3, vmtropy::CircuitIOType::SimpleInt8(_)));
+        assert!(matches!(r3, lambdavm::CircuitIOType::SimpleInt8(_)));
         assert_eq!(r3.value().unwrap(), r1.value().unwrap());
     }
 }
