@@ -33,6 +33,8 @@ use crate::{
 
 pub use simpleworks::marlin::serialization::{deserialize_proof, serialize_proof};
 
+pub type Signature = simpleworks::schnorr_signature::SimpleSchnorrSignature;
+
 pub type Address = snarkvm::prelude::Address<Testnet3>;
 pub type Identifier = snarkvm::prelude::Identifier<Testnet3>;
 pub type Program = snarkvm::prelude::Program<Testnet3>;
