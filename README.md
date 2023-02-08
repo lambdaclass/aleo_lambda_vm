@@ -44,7 +44,7 @@ The VM does not currently support all data types and opcodes. A complete impleme
 ### Missing data types
 
 - `Group`
-- All signed Integers. `I8`, `I16`, `I32`, `I64` and `I128`.
+- All signed Integers. `I16`, `I32`, `I64` and `I128`. (`I8` is already implemented).
 - `Scalar`
 - `String`
 - `Interface`
@@ -53,19 +53,13 @@ The VM does not currently support all data types and opcodes. A complete impleme
 
 - `abs` and `abs.w` (absolute value and its wrapping version)
 - `add.w`
-- `and`
-- `assert.eq` and `assert.neq`
 - The `BHP` and `Pedersen` commit instructions with all its variants (`commit.bhp256`, `commit.bhp512`, `commit.bhp768`, `commit.bhp1024`, `commit.ped64` and `commit.ped128`).
 - `div.w`
 - `double`
-- `gt`, `gte`, `lt` and `lte`
 - All hash instructions expect for `hash.psd2` (`hash.bhp256`, `hash.bhp512`, `hash.bhp768`, `hash.bhp1024`, `hash.ped64`, `hash.ped128`, `hash.psd4` and `hash.psd8`).
 - `inv`
-- `is.neq`
 - `mul.w`
-- `nand`
 - `neg`
-- `nor`, `not`, `or` and `xor`
 - `pow` and `pow.w`
 - `rem` and `rem.w`
 - `shl.w` and `shr.w`
