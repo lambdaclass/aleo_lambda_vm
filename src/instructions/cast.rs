@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use crate::{
-    circuit_io_type::CircuitIOType, helpers, record::Record, UInt16Gadget, UInt32Gadget,
-    UInt64Gadget, UInt8Gadget, VMRecordEntriesMap,
+    circuit_io_type::CircuitIOType, helpers, record::Record, Int8Gadget, UInt16Gadget,
+    UInt32Gadget, UInt64Gadget, UInt8Gadget, VMRecordEntriesMap,
 };
 use anyhow::{anyhow, bail, Result};
 use ark_r1cs_std::{
@@ -119,6 +119,13 @@ pub fn cast(
                             operand_value.value()?,
                         )?)),
                         (
+                            EntryType::Constant(PlaintextType::Literal(LiteralType::I8)),
+                            CircuitIOType::SimpleInt8(operand_value),
+                        ) => Ok(CircuitIOType::SimpleInt8(Int8Gadget::new_constant(
+                            constraint_system.clone(),
+                            operand_value.value()?,
+                        )?)),
+                        (
                             EntryType::Constant(PlaintextType::Literal(LiteralType::U16)),
                             CircuitIOType::SimpleUInt16(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt16(UInt16Gadget::new_constant(
@@ -169,6 +176,14 @@ pub fn cast(
                             | EntryType::Private(PlaintextType::Literal(LiteralType::U8)),
                             CircuitIOType::SimpleUInt8(operand_value),
                         ) => Ok(CircuitIOType::SimpleUInt8(UInt8Gadget::new_witness(
+                            constraint_system.clone(),
+                            || operand_value.value(),
+                        )?)),
+                        (
+                            EntryType::Public(PlaintextType::Literal(LiteralType::I8))
+                            | EntryType::Private(PlaintextType::Literal(LiteralType::I8)),
+                            CircuitIOType::SimpleInt8(operand_value),
+                        ) => Ok(CircuitIOType::SimpleInt8(Int8Gadget::new_witness(
                             constraint_system.clone(),
                             || operand_value.value(),
                         )?)),
@@ -247,6 +262,13 @@ pub fn cast(
             (Operand::Literal(Literal::U8(v)), Some(None)) => bail!(
                 "Literal \"{}\"u8 not assigned in registers",
                 Operand::Literal(Literal::U8(*v))
+            ),
+            (Operand::Literal(Literal::I8(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}i8", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::I8(v)), Some(None)) => bail!(
+                "Literal \"{}\"i8 not assigned in registers",
+                Operand::Literal(Literal::I8(*v))
             ),
             (Operand::Literal(Literal::U16(literal_value)), Some(Some(v))) => {
                 instruction_operands.insert(format!("{}u16", **literal_value), v.clone());

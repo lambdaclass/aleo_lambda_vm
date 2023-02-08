@@ -1,11 +1,13 @@
 use crate::{
     circuit_io_type::CircuitIOType::{self, SimpleAddress},
-    UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+    Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
 };
 use anyhow::{bail, Result};
 use ark_r1cs_std::{select::CondSelectGadget, R1CSVar};
 use indexmap::IndexMap;
-pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{
+    SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
 
 pub fn ternary(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
@@ -41,6 +43,13 @@ pub fn ternary(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOTy
                 false_value,
             )?))
         }
+        [SimpleBoolean(condition), SimpleInt8(true_value), SimpleInt8(false_value)] => {
+            Ok(SimpleInt8(Int8Gadget::conditionally_select(
+                condition,
+                true_value,
+                false_value,
+            )?))
+        }
         // TODO: Replace with AddressGadget::conditionally_select when https://github.com/lambdaclass/simpleworks/pull/47 is merged.
         [SimpleBoolean(condition), SimpleAddress(true_value), SimpleAddress(false_value)] => {
             if condition.value()? {
@@ -61,14 +70,15 @@ mod ternary_tests {
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::gadgets::{
-        AddressGadget, ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget,
+        AddressGadget, ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget,
+        UInt8Gadget,
     };
 
     use crate::{
         instructions::ternary::ternary,
         CircuitIOType::{
-            self, SimpleAddress, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64,
-            SimpleUInt8,
+            self, SimpleAddress, SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32,
+            SimpleUInt64, SimpleUInt8,
         },
     };
 
@@ -279,6 +289,52 @@ mod ternary_tests {
 
         assert!(cs.is_satisfied().unwrap());
         assert!(matches!(result, CircuitIOType::SimpleUInt64(_)));
+        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_ternary_true_value() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_condition = true;
+        let primitive_true_value = -1_i8;
+        let primitive_false_value = 1_i8;
+
+        let condition = SimpleBoolean(
+            Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(primitive_condition)).unwrap(),
+        );
+        let true_value =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_true_value)).unwrap());
+        let false_value =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_false_value)).unwrap());
+        let expected_result = true_value.clone();
+
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert!(matches!(result, CircuitIOType::SimpleInt8(_)));
+        assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
+    }
+
+    #[test]
+    fn test_i8_ternary_false_value() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_condition = false;
+        let primitive_true_value = -1_i8;
+        let primitive_false_value = 1_i8;
+
+        let condition = SimpleBoolean(
+            Boolean::<ConstraintF>::new_witness(cs.clone(), || Ok(primitive_condition)).unwrap(),
+        );
+        let true_value =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_true_value)).unwrap());
+        let false_value =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_false_value)).unwrap());
+        let expected_result = false_value.clone();
+
+        let result = ternary(&sample_ternary_operands(condition, true_value, false_value)).unwrap();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert!(matches!(result, CircuitIOType::SimpleInt8(_)));
         assert_eq!(result.value().unwrap(), expected_result.value().unwrap());
     }
 

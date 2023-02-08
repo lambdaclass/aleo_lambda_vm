@@ -18,6 +18,7 @@ pub type RecordEntriesMap = IndexMap<String, UserInputValueType>;
 pub enum UserInputValueType {
     U8(u8),
     U16(u16),
+    I8(i8),
     U32(u32),
     U64(u64),
     U128(u128),
@@ -109,6 +110,7 @@ impl fmt::Display for UserInputValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             UserInputValueType::U8(v) => write!(f, "{v}u8"),
+            UserInputValueType::I8(v) => write!(f, "{v}i8"),
             UserInputValueType::U16(v) => write!(f, "{v}u16"),
             UserInputValueType::U32(v) => write!(f, "{v}u32"),
             UserInputValueType::U64(v) => write!(f, "{v}u64"),
@@ -150,6 +152,7 @@ impl ToFieldElements<ConstraintF> for UserInputValueType {
     fn to_field_elements(&self) -> Result<Vec<ConstraintF>> {
         match self {
             UserInputValueType::U8(value) => value.to_field_elements(),
+            UserInputValueType::I8(value) => value.to_field_elements(),
             UserInputValueType::U16(value) => value.to_field_elements(),
             UserInputValueType::U32(value) => value.to_field_elements(),
             UserInputValueType::U64(value) => value.to_field_elements(),

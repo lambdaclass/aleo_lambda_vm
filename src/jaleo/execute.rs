@@ -13,8 +13,8 @@ use simpleworks::marlin::serialization::serialize_proof;
 use snarkvm::prelude::{Scalar, Uniform};
 
 use crate::CircuitIOType::{
-    SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
-    SimpleUInt64, SimpleUInt8,
+    SimpleAddress, SimpleBoolean, SimpleField, SimpleInt8, SimpleRecord, SimpleUInt16,
+    SimpleUInt32, SimpleUInt64, SimpleUInt8,
 };
 
 pub fn credits_execution(
@@ -95,6 +95,7 @@ pub fn process_circuit_inputs(
             if program_variable.is_witness()? {
                 match program_variable {
                     SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleInt8(v) => VariableType::Private(UserInputValueType::I8(v.value()?)),
                     SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
                     SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
@@ -104,6 +105,7 @@ pub fn process_circuit_inputs(
                         for (k, v) in r.entries {
                             let primitive_value = match v {
                                 SimpleUInt8(v) => UserInputValueType::U8(v.value()?),
+                                SimpleInt8(v) => UserInputValueType::I8(v.value()?),
                                 SimpleUInt16(v) => UserInputValueType::U16(v.value()?),
                                 SimpleUInt32(v) => UserInputValueType::U32(v.value()?),
                                 SimpleUInt64(v) => UserInputValueType::U64(v.value()?),
@@ -141,6 +143,7 @@ pub fn process_circuit_inputs(
             } else {
                 match program_variable {
                     SimpleUInt8(v) => VariableType::Public(UserInputValueType::U8(v.value()?)),
+                    SimpleInt8(v) => VariableType::Public(UserInputValueType::I8(v.value()?)),
                     SimpleUInt16(v) => VariableType::Public(UserInputValueType::U16(v.value()?)),
                     SimpleUInt32(v) => VariableType::Public(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Public(UserInputValueType::U64(v.value()?)),
@@ -226,6 +229,7 @@ pub fn process_circuit_outputs(
             if program_variable.is_witness()? {
                 match program_variable {
                     SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleInt8(v) => VariableType::Private(UserInputValueType::I8(v.value()?)),
                     SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
                     SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),
@@ -235,6 +239,7 @@ pub fn process_circuit_outputs(
                         for (k, v) in r.entries {
                             let primitive_value = match v {
                                 SimpleUInt8(v) => UserInputValueType::U8(v.value()?),
+                                SimpleInt8(v) => UserInputValueType::I8(v.value()?),
                                 SimpleUInt16(v) => UserInputValueType::U16(v.value()?),
                                 SimpleUInt32(v) => UserInputValueType::U32(v.value()?),
                                 SimpleUInt64(v) => UserInputValueType::U64(v.value()?),
@@ -280,6 +285,7 @@ pub fn process_circuit_outputs(
             } else {
                 match program_variable {
                     SimpleUInt8(v) => VariableType::Private(UserInputValueType::U8(v.value()?)),
+                    SimpleInt8(v) => VariableType::Private(UserInputValueType::I8(v.value()?)),
                     SimpleUInt16(v) => VariableType::Private(UserInputValueType::U16(v.value()?)),
                     SimpleUInt32(v) => VariableType::Private(UserInputValueType::U32(v.value()?)),
                     SimpleUInt64(v) => VariableType::Private(UserInputValueType::U64(v.value()?)),

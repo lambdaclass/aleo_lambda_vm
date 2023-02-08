@@ -2,7 +2,9 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Ok, Result};
 use indexmap::IndexMap;
 use simpleworks::gadgets::traits::BitwiseOperationGadget;
-pub use CircuitIOType::{SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{
+    SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+};
 
 pub fn nand(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType> {
     match operands
@@ -30,6 +32,10 @@ pub fn nand(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
             let result = left_operand.nand(right_operand)?;
             Ok(SimpleUInt64(result))
         }
+        [SimpleInt8(left_operand), SimpleInt8(right_operand)] => {
+            let result = left_operand.nand(right_operand)?;
+            Ok(SimpleInt8(result))
+        }
         [_, _] => bail!("nand is not supported for the given types"),
         [..] => bail!("nand requires two operands"),
     }
@@ -39,13 +45,13 @@ pub fn nand(operands: &IndexMap<String, CircuitIOType>) -> Result<CircuitIOType>
 mod nand_unit_tests {
 
     use crate::CircuitIOType::{
-        self, SimpleBoolean, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
+        self, SimpleBoolean, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8,
     };
     use ark_r1cs_std::prelude::{AllocVar, Boolean};
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
     use simpleworks::{
-        gadgets::{ConstraintF, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
+        gadgets::{ConstraintF, Int8Gadget, UInt16Gadget, UInt32Gadget, UInt64Gadget, UInt8Gadget},
         marlin::ConstraintSystemRef,
     };
 
@@ -385,6 +391,88 @@ mod nand_unit_tests {
         );
         let expected_result =
             SimpleUInt64(UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert_that_nand_with_two_operands_result_is_correct(
+            cs,
+            operand,
+            another_operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nand_with_zero_should_return_correct_number() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let zero_primitive_operand = 0_i8; //10000000
+        let max_primitive_operand = -1_i8; //10000001
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(zero_primitive_operand)).unwrap());
+        let expected_result =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(max_primitive_operand)).unwrap());
+
+        assert_that_nand_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nand_with_max_value_return_expected_result() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let result_primitive_operand = -128_i8;
+        let max_primitive_operand = i8::MAX;
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(max_primitive_operand)).unwrap());
+        let expected_result = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(result_primitive_operand)).unwrap(),
+        );
+
+        assert_that_nand_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nand_with_min_value_return_expected_result() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let result_primitive_operand = 127_i8;
+        let max_primitive_operand = i8::MIN;
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(max_primitive_operand)).unwrap());
+        let expected_result = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(result_primitive_operand)).unwrap(),
+        );
+
+        assert_that_nand_with_two_operands_result_is_correct(
+            cs,
+            operand.clone(),
+            operand,
+            expected_result,
+        );
+    }
+
+    #[test]
+    fn test_i8_nand_with_two_numbers_return_correct_new_number() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_operand = 20_i8; // 00010100
+        let other_primitive_operand = -15_i8; // 11110001
+        let primitive_result = -17_i8; // 11101111
+
+        let operand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_operand)).unwrap());
+        let another_operand = SimpleInt8(
+            Int8Gadget::new_witness(cs.clone(), || Ok(other_primitive_operand)).unwrap(),
+        );
+        let expected_result =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
 
         assert_that_nand_with_two_operands_result_is_correct(
             cs,

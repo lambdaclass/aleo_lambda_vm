@@ -2,7 +2,7 @@ use crate::circuit_io_type::CircuitIOType;
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 use simpleworks::{gadgets::traits::ArithmeticGadget, marlin::ConstraintSystemRef};
-pub use CircuitIOType::{SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
+pub use CircuitIOType::{SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8};
 
 pub fn mul(
     operands: &IndexMap<String, CircuitIOType>,
@@ -29,6 +29,10 @@ pub fn mul(
             let result = multiplicand.mul(multiplier, constraint_system)?;
             Ok(SimpleUInt64(result))
         }
+        [SimpleInt8(multiplicand), SimpleInt8(multiplier)] => {
+            let result = multiplicand.mul(multiplier, constraint_system)?;
+            Ok(SimpleInt8(result))
+        }
         [..] => bail!("Unsupported operand types for addmany"),
     }
 }
@@ -38,13 +42,13 @@ pub fn mul(
 mod tests {
     use crate::{
         instructions::mul::mul,
-        CircuitIOType::{self, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8},
+        CircuitIOType::{self, SimpleInt8, SimpleUInt16, SimpleUInt32, SimpleUInt64, SimpleUInt8},
         UInt16Gadget, UInt32Gadget, UInt64Gadget,
     };
     use ark_r1cs_std::prelude::AllocVar;
     use ark_relations::r1cs::ConstraintSystem;
     use indexmap::IndexMap;
-    use simpleworks::gadgets::{ConstraintF, UInt8Gadget};
+    use simpleworks::gadgets::{ConstraintF, Int8Gadget, UInt8Gadget};
 
     fn sample_operands(
         multiplicand: CircuitIOType,
@@ -433,6 +437,166 @@ mod tests {
             UInt64Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap(),
         );
         let expected_product = multiplier.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiplying_by_zero_should_result_on_zero() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = i8::MAX;
+        let primitive_multiplier = 0_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product = multiplier.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiplying_by_zero_should_result_on_zero_commutative() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = 0_i8;
+        let primitive_multiplier = i8::MAX;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product = multiplicand.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiplying_by_one_the_multiplicand_should_result_on_the_multiplicand() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = 20_i8;
+        let primitive_multiplier = 1_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product = multiplicand.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_if_the_multiplicand_is_one_the_result_should_be_the_multiplier() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = 1_i8;
+        let primitive_multiplier = 20_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product = multiplier.clone();
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiply_two_positive_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = 10_i8;
+        let primitive_multiplier = 10_i8;
+        let primitive_result = 100_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiply_two_negative_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = -10_i8;
+        let primitive_multiplier = -10_i8;
+        let primitive_result = 100_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
+
+        assert!(cs.is_satisfied().unwrap());
+        assert_eq!(
+            mul(&sample_operands(multiplicand, multiplier), cs)
+                .unwrap()
+                .value()
+                .unwrap(),
+            expected_product.value().unwrap()
+        );
+    }
+
+    #[test]
+    fn test_i8_multiply_negative_and_positive_numbers_result_is_correct() {
+        let cs = ConstraintSystem::<ConstraintF>::new_ref();
+        let primitive_multiplicand = -10_i8;
+        let primitive_multiplier = 10_i8;
+        let primitive_result = -100_i8;
+
+        let multiplicand =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplicand)).unwrap());
+        let multiplier =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_multiplier)).unwrap());
+        let expected_product =
+            SimpleInt8(Int8Gadget::new_witness(cs.clone(), || Ok(primitive_result)).unwrap());
 
         assert!(cs.is_satisfied().unwrap());
         assert_eq!(

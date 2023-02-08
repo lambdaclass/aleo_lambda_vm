@@ -1,7 +1,7 @@
 use crate::{
     circuit_io_type::{
-        SimpleAddress, SimpleBoolean, SimpleField, SimpleRecord, SimpleUInt16, SimpleUInt32,
-        SimpleUInt64, SimpleUInt8,
+        SimpleAddress, SimpleBoolean, SimpleField, SimpleInt8, SimpleRecord, SimpleUInt16,
+        SimpleUInt32, SimpleUInt64, SimpleUInt8,
     },
     instructions::{self},
     jaleo::{Identifier, Program, Record as JAleoRecord, RecordEntriesMap, UserInputValueType},
@@ -14,8 +14,8 @@ use ark_relations::r1cs::Namespace;
 use indexmap::IndexMap;
 use simpleworks::{
     gadgets::{
-        AddressGadget, Comparison, ConstraintF, FieldGadget, UInt16Gadget, UInt32Gadget,
-        UInt64Gadget, UInt8Gadget,
+        AddressGadget, Comparison, ConstraintF, FieldGadget, Int8Gadget, UInt16Gadget,
+        UInt32Gadget, UInt64Gadget, UInt8Gadget,
     },
     marlin::ConstraintSystemRef,
 };
@@ -78,6 +78,11 @@ pub(crate) fn default_user_inputs(
             ValueType::Public(PlaintextType::Literal(LiteralType::U128))
             | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
                 UserInputValueType::U128(u128::default())
+            }
+            //Int
+            ValueType::Public(PlaintextType::Literal(LiteralType::I8))
+            | ValueType::Private(PlaintextType::Literal(LiteralType::I8)) => {
+                UserInputValueType::I8(i8::default())
             }
             // Address
             ValueType::Public(PlaintextType::Literal(LiteralType::Address))
@@ -160,6 +165,11 @@ pub fn aleo_entries_to_vm_entries(
             | EntryType::Private(PlaintextType::Literal(LiteralType::U128)) => {
                 UserInputValueType::U128(u128::default())
             }
+            EntryType::Constant(PlaintextType::Literal(LiteralType::I8))
+            | EntryType::Public(PlaintextType::Literal(LiteralType::I8))
+            | EntryType::Private(PlaintextType::Literal(LiteralType::I8)) => {
+                UserInputValueType::I8(i8::default())
+            }
             EntryType::Constant(PlaintextType::Literal(l))
             | EntryType::Public(PlaintextType::Literal(l))
             | EntryType::Private(PlaintextType::Literal(l)) => bail!(format!(
@@ -228,6 +238,14 @@ pub fn function_variables(
                 registers.insert(
                     o.to_string(),
                     Some(SimpleUInt8(UInt8Gadget::new_constant(
+                        constraint_system.clone(),
+                        **v,
+                    )?)),
+                );
+            } else if let Operand::Literal(Literal::I8(v)) = o {
+                registers.insert(
+                    o.to_string(),
+                    Some(SimpleInt8(Int8Gadget::new_constant(
                         constraint_system.clone(),
                         **v,
                     )?)),
@@ -355,6 +373,14 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
+            // Public Int
+            (
+                ValueType::Public(PlaintextType::Literal(LiteralType::I8)),
+                UserInputValueType::I8(v),
+            ) => SimpleInt8(Int8Gadget::new_input(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
             // Public Address
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::Address)),
@@ -408,6 +434,14 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(v),
             )?),
+            // Private Int
+            (
+                ValueType::Private(PlaintextType::Literal(LiteralType::I8)),
+                UserInputValueType::I8(v),
+            ) => SimpleInt8(Int8Gadget::new_witness(
+                Namespace::new(cs.clone(), None),
+                || Ok(v),
+            )?),
             // Private Address
             (
                 ValueType::Private(PlaintextType::Literal(LiteralType::Address)),
@@ -439,14 +473,16 @@ pub(crate) fn process_inputs(
                     | LiteralType::U64
                     | LiteralType::U32
                     | LiteralType::U16
-                    | LiteralType::U8,
+                    | LiteralType::U8
+                    | LiteralType::I8,
                 ))
                 | ValueType::Public(PlaintextType::Literal(
                     LiteralType::Address
                     | LiteralType::U64
                     | LiteralType::U32
                     | LiteralType::U16
-                    | LiteralType::U8,
+                    | LiteralType::U8
+                    | LiteralType::I8,
                 )),
                 _,
             ) => {
@@ -471,6 +507,10 @@ pub(crate) fn process_inputs(
                 for (k, v) in data {
                     let entry = match v {
                         UserInputValueType::U8(v) => SimpleUInt8(UInt8Gadget::new_witness(
+                            Namespace::new(cs.clone(), None),
+                            || Ok(v),
+                        )?),
+                        UserInputValueType::I8(v) => SimpleInt8(Int8Gadget::new_witness(
                             Namespace::new(cs.clone(), None),
                             || Ok(v),
                         )?),
@@ -735,6 +775,13 @@ pub fn process_operands(
             (Operand::Literal(Literal::U64(v)), Some(None)) => bail!(
                 "Literal \"{}\"u64 not assigned in registers",
                 Operand::Literal(Literal::U64(*v))
+            ),
+            (Operand::Literal(Literal::I8(literal_value)), Some(Some(v))) => {
+                instruction_operands.insert(format!("{}i8", **literal_value), v.clone());
+            }
+            (Operand::Literal(Literal::I8(v)), Some(None)) => bail!(
+                "Literal \"{}\"i8 not assigned in registers",
+                Operand::Literal(Literal::I8(*v))
             ),
             (Operand::Literal(_), _) => bail!("Literal operand not supported"),
             (Operand::ProgramID(_), _) => bail!("ProgramID operands are not supported"),

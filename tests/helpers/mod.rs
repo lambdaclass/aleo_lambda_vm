@@ -175,6 +175,11 @@ pub mod test_helpers {
                 | ValueType::Private(PlaintextType::Literal(LiteralType::U128)) => {
                     UserInputValueType::U128(1_u128)
                 }
+                // Int
+                ValueType::Public(PlaintextType::Literal(LiteralType::I8))
+                | ValueType::Private(PlaintextType::Literal(LiteralType::I8)) => {
+                    UserInputValueType::I8(1_i8)
+                }
                 // Address
                 ValueType::Public(PlaintextType::Literal(LiteralType::Address))
                 | ValueType::Private(PlaintextType::Literal(LiteralType::Address)) => {
