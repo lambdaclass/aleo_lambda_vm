@@ -397,7 +397,7 @@ pub(crate) fn process_inputs(
                 Namespace::new(cs.clone(), None),
                 || Ok(f),
             )?),
-            // Private Boolean
+            // Public Boolean
             (
                 ValueType::Public(PlaintextType::Literal(LiteralType::Boolean)),
                 UserInputValueType::Boolean(b),
